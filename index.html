@@ -588,8 +588,57 @@ body::after {
 .prog-countdown.urgent { color: var(--vis); animation: urgentpulse 1.5s ease-in-out infinite; }
 @keyframes urgentpulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 
-/* ── RIGHT PANEL ── */
-.col-r { padding-left: 22px; }
+/* ── Steer button float animation ── */
+.steer-btns { position: relative; }
+.s-btn { position: relative; overflow: visible; }
+
+.float-burst {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  font-size: 1.1rem;
+  animation: floatup .9s ease-out forwards;
+}
+@keyframes floatup {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  60%  { opacity: 1; transform: translateY(-52px) scale(1.3); }
+  100% { opacity: 0; transform: translateY(-90px) scale(0.8); }
+}
+
+/* ── Mood arc in transcript ── */
+.mood-arc {
+  display: flex; align-items: center; gap: 4px;
+  margin-top: 8px; flex-wrap: wrap;
+}
+.mood-pip {
+  font-family: var(--f-mono); font-size: .5rem;
+  letter-spacing: .06em; padding: 2px 7px;
+  border: 1px solid var(--wire);
+  color: var(--ink4); transition: all .3s;
+  white-space: nowrap;
+}
+.mood-pip.current {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-glow);
+}
+.mood-arc-label {
+  font-family: var(--f-mono); font-size: .46rem;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink4); margin-right: 2px;
+}
+
+/* ── Speaker mood in now-speaking block ── */
+.ns-mood-track {
+  display: flex; align-items: center; gap: 6px;
+  margin-top: 6px; flex-wrap: wrap;
+}
+.ns-mood-pip {
+  font-family: var(--f-serif); font-style: italic;
+  font-size: .65rem; color: var(--ink3);
+  transition: color .4s;
+}
+.ns-mood-pip.live { color: var(--gold); }
 
 .cc-label {
   font-family: var(--f-mono); font-size: .48rem;
@@ -1013,6 +1062,7 @@ let S = {
   running:false, paused:false, phase:0, elapsed:0,
   locked:[], frontRunners:[], candidates:[], risks:[], qs:[],
   turnCount:0, topic:'', history:[], steerCmd:null, tone:'sharp',
+  moodHistory:{ v:[], o:[] }, // evolving mood arc per speaker
 };
 let timerRef = null;
 const $ = id => document.getElementById(id);
@@ -1086,10 +1136,23 @@ function appendTx(t,fresh){
   const el=document.createElement('div');
   el.className=`tx-turn${fresh?' fresh':''} ${t.sp}`;
   const lbl=t.sp==='v'?'Visionary':'Operator';
+
+  // Build mood arc for this speaker
+  const moods=S.moodHistory[t.sp]||[];
+  let moodArcHtml='';
+  if(moods.length>0){
+    const pips=moods.map((m,i)=>{
+      const isCurrent=(i===moods.length-1);
+      return `<span class="mood-pip${isCurrent?' current':''}">${m}</span>`;
+    }).join('<span style="color:var(--ink4);font-size:.5rem;margin:0 1px">›</span>');
+    moodArcHtml=`<div class="mood-arc"><span class="mood-arc-label">arc</span>${pips}</div>`;
+  }
+
   el.innerHTML=`<div class="tx-av ${t.sp}">${t.sp==='v'?'V':'O'}</div>
   <div class="tx-r">
     <div class="tx-byline ${t.sp}">${lbl}${t.mood?` <span class="tx-mood">${t.mood}</span>`:''}</div>
     <div class="tx-txt">${t.text}</div>
+    ${moodArcHtml}
   </div>`;
   body.appendChild(el);
   el.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -1164,15 +1227,25 @@ function buildSystemPrompt(speaker){
      +(_g<40?' Market gap score low — anchor to a real demand signal.':'')
      +(Math.abs(_o-_g)>20?' Scores diverging — work to close the gap.':'')
     :'';
-  const meta=`\n\nIMPORTANT: After your spoken lines, output ONLY this on a completely new line — no other text after it:\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
+
+  // Mood arc — feed last mood back and ask model to evolve it
+  const myMoods=S.moodHistory[speaker]||[];
+  const lastMood=myMoods.length>0?myMoods[myMoods.length-1]:null;
+  const moodInstruction=lastMood
+    ?`\n\nYOUR EMOTIONAL ARC: Your mood has evolved through [${myMoods.slice(-4).join(' → ')}]. You're currently feeling "${lastMood}". Let your emotional state evolve naturally from here — don't reset, build on it.`
+    :`\n\nYOUR EMOTIONAL ARC: This is your first turn. Pick a starting mood that fits your character and the opening. It will evolve from here.`;
+
+  const meta=`\n\n---\nSIGNAL BLOCK (never spoken aloud, system use only):\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"1-3 word emotional state","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
 
   const lenRule=S.turnCount===0
-    ? `LENGTH: This is the opening — 3 sentences max. Set the frame, don't resolve it.`
-    : `LENGTH: 1-2 sentences only. This is a live conversation, not a monologue. Be punchy.`;
+    ? `LENGTH: Opening — 2-3 sentences max. Set the scene, don't resolve it.`
+    : `LENGTH: 1-2 sentences only. Punchy. Conversational. Like you're talking, not presenting.`;
 
-  if(speaker==='v') return `You are The Visionary on a sharp unscripted business strategy podcast. ${tone}\n\n${lenRule} Spoken words only — no asterisks, no stage directions. Often start with "Right," or "Okay so —".\n\nRespond directly to what The Operator just said. Move the idea forward, don't recap.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: cast wide. Exploring: surface 2-3 directions. Narrowing: name the strongest. Building: stress-test model/customer/moat. Wrapping: land the verdict.${meta}`;
+  const voiceRule=`VOICE: Speak like a sharp human, not a consultant. No jargon, no bullet-point thinking, no *asterisks*. If you catch yourself being technical, pull back to the human reality — who actually feels this problem, what does it cost them, why hasn't anyone fixed it. Keep the thread. Don't let the conversation drift from its core.`;
 
-  return `You are The Operator on a sharp unscripted business strategy podcast. ${tone}\n\n${lenRule} Spoken words only — no asterisks, no stage directions. Often start with "Sure. And who pays for that?" or "Here's the real problem:".\n\nRespond directly to what The Visionary just said. React — don't repeat or summarise.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: push back or sharpen. Exploring: unit economics test. Narrowing: lock in or challenge. Building: stress-test ruthlessly. Wrapping: clear verdict.${meta}`;
+  if(speaker==='v') return `You are The Visionary on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\nOften start with "Right," or "Okay so —". Spoken words only.\n\nRespond directly to what The Operator just said. Move the idea forward.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}${moodInstruction}\n\nPhase guide — Opening: cast wide. Exploring: 2-3 directions. Narrowing: name the strongest. Building: stress-test it. Wrapping: land the verdict.${meta}`;
+
+  return `You are The Operator on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\nOften start with "Sure. And who actually pays for that?" or "Here's what I keep coming back to:". Spoken words only.\n\nRespond directly to what The Visionary just said. React — don't repeat.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}${moodInstruction}\n\nPhase guide — Opening: push back or sharpen. Exploring: unit economics. Narrowing: lock in or challenge. Building: stress-test ruthlessly. Wrapping: clear verdict.${meta}`;
 }
 
 function buildMessages(speaker){
@@ -1204,18 +1277,33 @@ async function generateTurn(speaker){
   const data=await resp.json();
   const raw=(data.text||'').trim();
 
-  // Parse metadata — robust match regardless of newline format
+  // Bulletproof metadata extraction
+  // Strip everything from the signal block separator onwards
   let text=raw, meta={};
-  const metaMatch=raw.match(/\n?METADATA:\s*(\{[\s\S]*?\})\s*$/);
-  if(metaMatch){
-    text=raw.slice(0,raw.indexOf(metaMatch[0])).trim();
-    try{meta=JSON.parse(metaMatch[1]);}catch(e){}
+  const splitMarkers=['\n---\nSIGNAL BLOCK','\nMETADATA:','METADATA:'];
+  let splitAt=-1;
+  for(const marker of splitMarkers){
+    const idx=raw.indexOf(marker);
+    if(idx!==-1&&(splitAt===-1||idx<splitAt)) splitAt=idx;
   }
-  // Strip any leaked JSON from the spoken text
-  text=text.replace(/\{["'\s]*o["'\s]*:\s*\d[\s\S]*$/,'').trim();
+  if(splitAt!==-1){
+    const metaPart=raw.slice(splitAt);
+    text=raw.slice(0,splitAt).trim();
+    const jsonMatch=metaPart.match(/\{[\s\S]*\}/);
+    if(jsonMatch){try{meta=JSON.parse(jsonMatch[0]);}catch(e){}}
+  }
+  // Final safety — strip any remaining *asterisks* and stray JSON fragments
+  text=text.replace(/\*([^*]+)\*/g,'$1').replace(/\{["'\s]*o["'\s]*:\s*\d[\s\S]*$/,'').trim();
 
   // Guard: empty text cascades into blank rows — skip and return null
   if(!text) return null;
+
+  // Track mood arc per speaker (keep last 8)
+  if(meta.mood){
+    if(!S.moodHistory[speaker]) S.moodHistory[speaker]=[];
+    S.moodHistory[speaker].push(meta.mood);
+    if(S.moodHistory[speaker].length>8) S.moodHistory[speaker].shift();
+  }
 
   S.history.push({sp:speaker, text});
   return {sp:speaker, text, mood:meta.mood||'', meta};
@@ -1412,6 +1500,7 @@ function initEpisode(topic,tone){
     running:false, paused:false, phase:0, elapsed:0,
     locked:[], frontRunners:[], candidates:[], risks:[], qs:[],
     turnCount:0, topic:topic||'', history:[], steerCmd:null, tone:tone||'sharp',
+    moodHistory:{ v:[], o:[] },
   };
   $('setup').style.display='none';
   $('episode').classList.add('on');
@@ -1464,12 +1553,41 @@ $('restart-btn').addEventListener('click',()=>{
   setTimeout(()=>initEpisode(S.topic,S.tone),150);
 });
 
+// Emoji floats for each steer command
+const STEER_FLOATS={
+  'go-deeper':'🔍','challenge-that':'⚡','more-practical':'📐',
+  'more-original':'✨','off-track':'🎯','compare-top-two':'⚖️',
+  'lock-that-in':'🔒','kill-that':'💀','move-on':'→','wrap-it-up':'🏁',
+};
+
+function spawnFloat(btn, emoji){
+  const rect=btn.getBoundingClientRect();
+  const count=5+Math.floor(Math.random()*4);
+  for(let i=0;i<count;i++){
+    const el=document.createElement('div');
+    el.className='float-burst';
+    el.textContent=emoji;
+    // Spread horizontally around button centre
+    const x=rect.left+rect.width/2+(Math.random()-.5)*rect.width*1.2;
+    const y=rect.top+rect.height/2;
+    el.style.left=x+'px';
+    el.style.top=y+'px';
+    el.style.animationDelay=(Math.random()*0.2)+'s';
+    el.style.fontSize=(0.9+Math.random()*0.5)+'rem';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 1100);
+  }
+}
+
 document.querySelectorAll('.s-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     if(!S.running) return;
     const cmd=btn.dataset.cmd;
-    // Use the natural language redirect text — this goes into the prompt
     S.steerCmd=btn.dataset.steer||cmd;
+
+    // Float burst
+    spawnFloat(btn, STEER_FLOATS[cmd]||'↗');
+
     if(cmd==='lock-that-in'&&S.frontRunners.length){
       const idea=S.frontRunners[0];
       if(!S.locked.includes(idea)) S.locked.push(idea);
@@ -1478,13 +1596,12 @@ document.querySelectorAll('.s-btn').forEach(btn=>{
     if(cmd==='kill-that'){S.frontRunners=[]; $('sl-front').innerHTML='<div class="state-nil">Searching…</div>';}
     if(cmd==='wrap-it-up'){S.phase=4; setPhaseUI(4);}
     if(cmd==='move-on'&&S.phase<4){S.phase++; setPhaseUI(S.phase);}
-    // Flash the button and show a redirect notice
+
     btn.classList.add('hit');
     setTimeout(()=>btn.classList.remove('hit'),800);
-    // Brief visual indicator in dateline
     const prev=$('dateline-l').textContent;
     $('dateline-l').textContent=`↗ Redirecting — ${btn.textContent}…`;
-    setTimeout(()=>{if(!S.running)return; $('dateline-l').textContent=prev;},2000);
+    setTimeout(()=>{if(S.running) $('dateline-l').textContent=prev;},2000);
   });
 });
 
