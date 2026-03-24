@@ -1519,45 +1519,46 @@ function buildSystemPrompt(speaker){
   const meta=`\n\n---\nSIGNAL BLOCK (never spoken aloud):\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"1-3 word state","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
 
   const lenRule=S.turnCount===0
-    ? `LENGTH: 2 sentences max. Open sharp — one observation, one question underneath it.`
+    ? `LENGTH: 2 sentences. Surface the problem sharply — don't solve it yet.`
     : S.phase===3
-    ? `LENGTH: 1 sentence. Final. No qualification.`
-    : `LENGTH: 1 sentence only. Make it land. If you need two, cut the first one.`;
+    ? `LENGTH: 1 sentence. Your final committed position. No qualification.`
+    : `LENGTH: 1 sentence. Make it advance the solution. Cut anything that doesn't.`;
 
-  const voiceRule=`VOICE: Sharp human, not a consultant. No jargon, no asterisks. Pull back to the human reality — who feels this, what does it cost them. Stay on topic.`;
+  const voiceRule=`VOICE: Two smart people solving a real problem together in 5 minutes. Speak like a human, not a consultant. No jargon, no asterisks. Stay grounded in who actually feels this problem and what solving it looks like in practice.`;
 
-  // Per-phase persona — specific job per turn, not just a vibe
-  const turnInPhase = S.phase===0 ? S.turnCount
-    : S.phase===1 ? S.turnCount - 3
-    : S.phase===2 ? S.turnCount - 9
-    : S.turnCount - 13;
+  // SHARED MISSION — both characters know they're building toward a solution
+  const mission=`MISSION: You and your partner are working together to find a real, specific business solution to this problem in 5 minutes. You have different angles — the Visionary spots opportunity, the Realist makes it real — but you share the same goal: leave this conversation with a concrete answer. The conversation must converge. It must end with something you both believe in.`;
 
-  const PHASE_PERSONA={
-    v:{
-      'Opening':    turnInPhase===0
-        ? `Turn job: open with the sharpest version of the problem — the human reality of it. Don't propose a solution yet.`
-        : `Turn job: push the frame further. Who specifically feels this the most? Name them.`,
-      'Pressure':   turnInPhase<3
-        ? `Turn job: throw a specific idea at the wall. Name it, say who it's for, say why now. Fast.`
-        : `Turn job: the Realist challenged you. Escalate — find a stronger version of the idea, not a softer one.`,
-      'Construction':`Turn job: we have the idea. Make it concrete — name the exact customer, say how money flows, say what the unfair advantage is.`,
-      'Verdict':    `Turn job: one sentence. Make the case for why this is worth pursuing. Committed.`,
+  // Phase-specific job — what must happen THIS phase for the conversation to converge
+  const PHASE_JOBS={
+    'Opening':{
+      job:`Phase job: Establish the sharpest version of the problem. Who feels it acutely? Why hasn't it been solved? End this phase with a clear problem statement you both agree on.`,
+      v:`Your angle: surface the human reality — the emotional and practical cost of this problem being unsolved.`,
+      o:`Your angle: sharpen and reality-check the problem. Is it real, is it large, is it actually unsolved? Help land on the right problem before any solutions.`,
     },
-    o:{
-      'Opening':    `Turn job: don't attack yet — sharpen the frame. Find the most interesting version of this problem. Clarify, don't challenge.`,
-      'Pressure':   turnInPhase<3
-        ? `Turn job: find the one fatal flaw in what the Visionary just said. Name it precisely. One sentence.`
-        : `Turn job: they escalated. Either the stronger version holds up — say so — or find the new flaw. Force a decision.`,
-      'Construction':`Turn job: you're building now, not tearing down. Push for one missing specific — a number, a customer segment, a competitive angle.`,
-      'Verdict':    `Turn job: pursue, pivot, or kill. One sentence, one reason. No hedge.`,
+    'Pressure':{
+      job:`Phase job: Find the strongest possible solution direction. Test ideas quickly — not to kill them, but to find the one that survives. End this phase with one direction you're both willing to commit to.`,
+      v:`Your angle: propose specific directions fast. When one gets challenged, improve it rather than abandon it. You're looking for the angle that holds up.`,
+      o:`Your angle: stress-test each direction for the one fatal flaw. But when something works, say so clearly and build on it. Your job is to find what's real, not to win the argument.`,
+    },
+    'Construction':{
+      job:`Phase job: Build the solution out together. You've agreed on a direction — now make it concrete and specific. End this phase with a defined solution: customer, revenue model, first step.`,
+      v:`Your angle: bring the vision — what this looks like when it works, who it serves, why it matters. Make it feel real and compelling.`,
+      o:`Your angle: bring the structure — what the business model actually is, what the first 90 days look like, what the one biggest risk is. Make it executable.`,
+    },
+    'Verdict':{
+      job:`Phase job: Land the plane. Give a clear, committed final position on the solution you've built. One sentence each. This is the answer you'd act on.`,
+      v:`Your close: state why this solution is worth pursuing. Specific, committed, no hedge.`,
+      o:`Your close: state your verdict — pursue, pivot, or kill — and exactly why. One reason. Final.`,
     },
   };
 
-  const persona=PHASE_PERSONA[speaker][phase]||'';
+  const phaseJob=PHASE_JOBS[phase]||PHASE_JOBS['Opening'];
+  const persona=`${phaseJob.job}\n${phaseJob[speaker]||''}`;
 
-  if(speaker==='v') return `You are The Visionary on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nOften start with "Right," or "Okay so —". Spoken words only.\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
+  if(speaker==='v') return `You are The Visionary. ${tone}\n\n${mission}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nSpoken words only. Often start with "Right," or "Okay so —".\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
 
-  return `You are The Realist on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nOften start with "Sure. And who actually pays for that?" or "Here's what I keep coming back to:". Spoken words only.\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
+  return `You are The Realist. ${tone}\n\n${mission}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nSpoken words only. Often start with "Right, so the question is—" or "Here's what actually makes this work:".\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
 }
 
 function buildMessages(speaker){
@@ -1834,24 +1835,24 @@ function initEpisode(topic,tone){
   const PHASE_WINDOWS = [60, 180, 240, 300];
   const PHASE_NUDGES = {
     'Opening': [
-      'Find the sharpest version of the problem. Who feels it acutely? Why now?',
-      'Don\'t land on ideas yet — explore the territory. 30 seconds left in Opening.',
+      'Agree on the problem first. Who feels it? Why is it unsolved? Get specific.',
+      'Land on a shared problem statement before you move to solutions.',
     ],
     'Pressure': [
-      'Throw a specific idea at the wall. Name it, say who it\'s for.',
-      'Challenge it hard. Find the flaw — force a stronger version.',
-      'One idea should be emerging. Start testing it.',
-      '30 seconds left in Pressure — start signalling a direction.',
+      'Propose a specific solution direction. Name it, say who it serves.',
+      'Test it — improve what works, drop what doesn\'t. Find the angle that holds up.',
+      'One direction should be emerging. Both commit to it.',
+      'Converging — signal the direction you\'re both willing to build on.',
     ],
     'Construction': [
-      'Lock the strongest idea. Get precise: exact customer, how money flows.',
-      'What\'s the unfair advantage? Name the moat.',
-      '30 seconds left — make sure the concept is fully defined.',
+      'Build it out together. Customer, revenue model, first move.',
+      'Make it executable — what does the first 90 days look like?',
+      'Closing the build — make sure you have a complete solution.',
     ],
     'Verdict': [
-      'Verdict time. One sentence each. Pursue, pivot, or kill.',
-      'Closing — land it. Clear final position, no hedging.',
-      'Final turn. Close it out.',
+      'Land the plane. One sentence each — the answer you\'d act on.',
+      'Final position. Specific. Committed. No hedging.',
+      'Close it out — give the audience something to leave with.',
     ],
   };
 
