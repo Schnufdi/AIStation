@@ -2161,6 +2161,8 @@ $('gen-btn').addEventListener('click',async()=>{
   $('ideas-generating').style.display='flex';
   $('ideas-grid').innerHTML='';
   $('begin-section').style.display='none';
+  // Immediately scroll so user sees the loading indicator
+  setTimeout(()=>$('ideas-section').scrollIntoView({behavior:'smooth',block:'start'}),50);
 
   try{
     const resp=await fetch('/api/generate',{
@@ -2211,6 +2213,9 @@ Rules: make each angle genuinely different (different customer, model, or insigh
       });
       $('ideas-grid').appendChild(card);
     });
+
+    // Scroll down to show the generated ideas
+    setTimeout(()=>$('ideas-grid').scrollIntoView({behavior:'smooth',block:'start'}),100);
 
   }catch(e){
     $('ideas-generating').style.display='none';
