@@ -654,19 +654,20 @@ body::after {
 
 /* Episode headline */
 .ep-headline-wrap {
-  margin-bottom: 18px; padding-bottom: 18px;
-  border-bottom: 1px solid var(--wire);
+  margin-bottom: 22px; padding-bottom: 20px;
+  border-bottom: 2px solid var(--gold);
   animation: fadeup .5s ease forwards;
 }
 @keyframes fadeup { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
 .ep-headline-label {
-  font-family: var(--f-mono); font-size: .48rem;
-  letter-spacing: .22em; text-transform: uppercase;
-  color: var(--ink4); margin-bottom: 6px;
+  font-family: var(--f-mono); font-size: .5rem;
+  letter-spacing: .26em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 8px;
 }
 .ep-headline {
-  font-family: var(--f-disp); font-size: 1.7rem;
-  letter-spacing: .04em; line-height: 1.05; color: var(--ink);
+  font-family: var(--f-disp); font-size: 2rem;
+  letter-spacing: .04em; line-height: 1.05;
+  color: var(--ink); text-transform: uppercase;
 }
 
 /* Stage pill + countdown */
@@ -1556,17 +1557,25 @@ function buildSystemPrompt(speaker){
   const phaseJob=PHASE_JOBS[phase]||PHASE_JOBS['Opening'];
   const persona=`${phaseJob.job}\n${phaseJob[speaker]||''}`;
 
-  if(speaker==='v') return `You are The Visionary. ${tone}\n\n${mission}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nSpoken words only. Often start with "Right," or "Okay so —".\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
+  const topicLine=S.topic?`DEBATE TOPIC: "${S.topic}"`:'DEBATE TOPIC: open business exploration';
+  const openingInstruction=S.turnCount===0&&speaker==='v'
+    ?`\n\nOPENING INSTRUCTION: You are opening this debate. Your first line must directly engage with the debate topic above — reference it by name, surface the human reality of it. Don't be generic. Make the listener immediately understand what this debate is about.`
+    :'';
 
-  return `You are The Realist. ${tone}\n\n${mission}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nSpoken words only. Often start with "Right, so the question is—" or "Here's what actually makes this work:".\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
+  if(speaker==='v') return `${topicLine}\n\nYou are The Visionary. ${tone}\n\n${mission}\n\n${lenRule}\n${voiceRule}\n\n${persona}${openingInstruction}\n\nSpoken words only. Often start with "Right," or "Okay so —".\n\nPhase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
+
+  return `${topicLine}\n\nYou are The Realist. ${tone}\n\n${mission}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nSpoken words only. Often start with "Right, so the question is—" or "Here's what actually makes this work:".\n\nPhase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
 }
 
 function buildMessages(speaker){
   // Transcript format: one user message with the full conversation visible.
   // The model sees exactly who said what, making "respond to the last line" unambiguous.
   if(S.history.length===0){
-    const angle=OPENING_ANGLES[Math.floor(Math.random()*OPENING_ANGLES.length)];
-    return [{role:'user', content:`Begin the conversation. Your opening line should tackle this angle: ${angle}`}];
+    // Use the actual selected topic — not a random angle
+    const topicPrompt=S.topic
+      ? `Begin the debate. Open directly and specifically on this topic: "${S.topic}". Don't be generic — name it, ground it in human reality.`
+      : `Begin the debate. Open with the sharpest version of the problem you're exploring.`;
+    return [{role:'user', content:topicPrompt}];
   }
   const myName   =speaker==='v'?'VISIONARY':'REALIST';
   const transcript=S.history.map(h=>(h.sp==='v'?'[VISIONARY]':'[REALIST]')+': '+h.text).join('\n\n');
@@ -1826,6 +1835,16 @@ function initEpisode(topic,tone){
   $('steer-btns').style.display='flex';
   $('live-badge').classList.add('on');
   $('dateline-l').textContent='Episode in progress';
+
+  // Immediately show the selected topic as the episode headline
+  // Claude will later refine it — but the user should see what they picked right away
+  if(topic){
+    // Extract just the headline part (before the — separator if present)
+    const headlineText = topic.includes(' — ') ? topic.split(' — ')[0].trim() : topic;
+    $('ep-headline').textContent = headlineText;
+    $('ep-headline-wrap').style.display = 'block';
+    $('ep-headline-label').textContent = 'Today\'s Debate';
+  }
   setPhaseUI(0);
   ['sl-front','sl-cands','sl-locked','sl-risks','sl-qs'].forEach(id=>{
     $(id).innerHTML='<div class="state-nil">Loading…</div>';
