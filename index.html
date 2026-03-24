@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Unscripted</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Editorial+New:ital@0;1&family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<!-- fallback if Editorial New isn't available -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+/*────────────────────────────────────────────────────────
+  DESIGN TOKENS
+────────────────────────────────────────────────────────*/
+:root{
+  --ink:       #0f0f0f;
+  --ink2:      #1c1c1c;
+  --ink3:      #2e2e2e;
+  --mid:       #6b6b6b;
+  --pale:      #a8a8a8;
+  --rule:      #e2e2e2;
+  --rule2:     #f0f0f0;
+  --paper:     #fafaf8;
+  --paper2:    #f4f4f1;
+  --paper3:    #eeecea;
+
+  /* Accent — not gold. A sharp editorial red-orange */
+  --acc:       #c8410a;
+  --acc-lt:    #f5e6de;
+  --acc2:      #1a5c9e;   /* Operator — ink blue */
+  --acc2-lt:   #dde9f7;
+
+  /* Signal colours */
+  --sig-lo:    #c0392b;
+  --sig-mid:   #e67e22;
+  --sig-hi:    #27ae60;
+
+  --f-disp:   'Cormorant Garamond', 'Georgia', serif;
+  --f-body:   'Inter', system-ui, sans-serif;
+  --f-mono:   'JetBrains Mono', monospace;
+
+  --r:  6px;
+  --r2: 12px;
+  --r3: 20px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-weight:300;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/*────────────────────────────────────────────────────────
+  LAYOUT SHELL
+────────────────────────────────────────────────────────*/
+.shell{
+  display:grid;
+  grid-template-rows:auto 1fr;
+  min-height:100vh;
+}
+
+/*────────────────────────────────────────────────────────
+  MASTHEAD — newspaper-style top bar
+────────────────────────────────────────────────────────*/
+.masthead{
+  border-bottom:3px solid var(--ink);
+  padding:0 40px;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  align-items:stretch;
+}
+.mast-left{
+  display:flex;align-items:center;
+  border-right:1px solid var(--rule);
+  padding:14px 24px 14px 0;
+  gap:20px;
+}
+.mast-ep-num{
+  font-family:var(--f-mono);
+  font-size:.65rem;
+  color:var(--mid);
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  line-height:1.4;
+}
+.mast-ep-num span{display:block;color:var(--acc);font-weight:400}
+.mast-sep{width:1px;height:28px;background:var(--rule)}
+
+.mast-center{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:16px 32px;
+  border-right:1px solid var(--rule);
+}
+.wordmark{
+  font-family:var(--f-disp);
+  font-size:2.4rem;
+  font-weight:300;
+  letter-spacing:-.04em;
+  line-height:1;
+  color:var(--ink);
+}
+.wordmark em{font-style:italic;color:var(--acc)}
+.mast-sub{
+  font-size:.6rem;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--pale);
+  margin-top:4px;
+}
+
+.mast-right{
+  display:flex;align-items:center;justify-content:flex-end;
+  padding:14px 0 14px 24px;
+  gap:16px;
+}
+.live-badge{
+  display:flex;align-items:center;gap:7px;
+  background:var(--ink);color:#fff;
+  font-family:var(--f-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;
+  padding:5px 12px;border-radius:2px;
+  opacity:0;transition:opacity .4s;
+}
+.live-badge.on{opacity:1}
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:pulse .9s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.clock-display{
+  font-family:var(--f-mono);font-size:.75rem;color:var(--mid);
+  min-width:36px;text-align:right;
+}
+
+/*────────────────────────────────────────────────────────
+  BELOW MASTHEAD — thin rule row
+────────────────────────────────────────────────────────*/
+.dateline{
+  border-bottom:1px solid var(--rule);
+  padding:7px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.dateline-l{font-family:var(--f-mono);font-size:.6rem;color:var(--pale);letter-spacing:.08em}
+.dateline-r{display:flex;gap:16px}
+.dl-tag{
+  font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);
+  border:1px solid var(--rule);padding:2px 8px;border-radius:2px;
+}
+.dl-tag.active{border-color:var(--acc);color:var(--acc)}
+
+/*────────────────────────────────────────────────────────
+  MAIN CONTENT
+────────────────────────────────────────────────────────*/
+.content{padding:0 40px 80px}
+
+/*────────────────────────────────────────────────────────
+  SETUP SCREEN — editorial landing
+────────────────────────────────────────────────────────*/
+#setup{
+  max-width:860px;margin:0 auto;
+  padding:56px 0 64px;
+}
+.setup-overline{
+  font-family:var(--f-mono);font-size:.62rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--acc);margin-bottom:20px;
+  display:flex;align-items:center;gap:12px;
+}
+.setup-overline::after{content:'';flex:1;height:1px;background:var(--rule)}
+
+.setup-headline{
+  font-family:var(--f-disp);
+  font-size:4.2rem;font-weight:300;line-height:1.05;
+  letter-spacing:-.03em;
+  margin-bottom:24px;
+  max-width:720px;
+}
+.setup-headline em{font-style:italic;color:var(--acc)}
+
+.setup-lede{
+  font-size:.97rem;color:var(--mid);line-height:1.8;
+  max-width:500px;margin-bottom:48px;
+  border-left:3px solid var(--rule);padding-left:20px;
+}
+
+/* Host bylines — editorial style */
+.bylines{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;
+  border:1px solid var(--rule);margin-bottom:48px;
+  max-width:640px;
+}
+.byline{padding:24px 28px;position:relative}
+.byline:first-child{border-right:1px solid var(--rule)}
+.byline-role{
+  font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;
+  text-transform:uppercase;margin-bottom:8px;
+}
+.byline.v .byline-role{color:var(--acc)}
+.byline.o .byline-role{color:var(--acc2)}
+.byline-name{
+  font-family:var(--f-disp);font-size:1.5rem;font-weight:300;
+  font-style:italic;margin-bottom:10px;
+}
+.byline.v .byline-name{color:var(--acc)}
+.byline.o .byline-name{color:var(--acc2)}
+.byline-desc{font-size:.8rem;color:var(--mid);line-height:1.65;margin-bottom:12px}
+.byline-sig{
+  font-family:var(--f-disp);font-style:italic;font-size:.85rem;
+  color:var(--pale);padding-top:12px;border-top:1px solid var(--rule2);
+}
+
+/* Input area */
+.input-section{max-width:640px}
+.input-label{
+  font-family:var(--f-mono);font-size:.6rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--mid);margin-bottom:10px;
+}
+.input-row{
+  display:flex;border:1px solid var(--ink2);
+  border-radius:var(--r);overflow:hidden;margin-bottom:14px;
+  transition:box-shadow .2s;
+}
+.input-row:focus-within{box-shadow:0 0 0 3px var(--acc-lt)}
+.topic-inp{
+  flex:1;padding:14px 18px;border:none;background:transparent;
+  font-family:var(--f-body);font-size:.92rem;color:var(--ink);outline:none;
+}
+.topic-inp::placeholder{color:var(--pale)}
+.go-btn{
+  padding:14px 24px;background:var(--ink);color:#fff;border:none;
+  font-family:var(--f-body);font-size:.82rem;font-weight:500;
+  cursor:pointer;letter-spacing:.02em;transition:background .15s;white-space:nowrap;
+}
+.go-btn:hover{background:var(--acc)}
+.go-btn:disabled{opacity:.4;cursor:not-allowed}
+
+.suggest-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.sug{
+  padding:5px 12px;border:1px solid var(--rule);border-radius:2px;
+  background:transparent;font-family:var(--f-body);font-size:.74rem;
+  color:var(--mid);cursor:pointer;transition:all .15s;letter-spacing:.01em;
+}
+.sug:hover{border-color:var(--ink);color:var(--ink)}
+
+.loading-hint{
+  display:none;align-items:center;gap:8px;
+  font-family:var(--f-mono);font-size:.65rem;color:var(--pale);letter-spacing:.06em;
+  margin-top:12px;
+}
+.loading-hint.on{display:flex}
+.ld-dot{width:4px;height:4px;border-radius:50%;background:var(--pale);animation:ldblink 1.2s ease-in-out infinite}
+.ld-dot:nth-child(2){animation-delay:.2s}.ld-dot:nth-child(3){animation-delay:.4s}
+@keyframes ldblink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+/*────────────────────────────────────────────────────────
+  EPISODE LAYOUT — 3-column broadsheet
+────────────────────────────────────────────────────────*/
+#episode{display:none}
+#episode.on{display:block}
+
+.broadsheet{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 3px minmax(0,1.6fr) 3px minmax(0,1fr);
+  gap:0;
+  padding-top:32px;
+  min-height:70vh;
+}
+/* column rule dividers */
+.col-rule{background:var(--rule);margin:0 0}
+
+/* Column headers — newspaper section labels */
+.col-head{
+  font-family:var(--f-mono);font-size:.58rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--pale);
+  border-bottom:1px solid var(--rule);
+  padding-bottom:8px;margin-bottom:20px;
+}
+
+/*────────────────────────────────────────────────────────
+  LEFT COLUMN — Barometers + State
+────────────────────────────────────────────────────────*/
+.col-left{padding:0 28px 0 0}
+
+/* BAROMETERS */
+.baro-section{margin-bottom:32px}
+.baro-block{margin-bottom:24px}
+.baro-name{
+  font-family:var(--f-disp);font-style:italic;
+  font-size:1.05rem;font-weight:300;
+  color:var(--ink);margin-bottom:2px;
+}
+.baro-reading{
+  font-family:var(--f-mono);font-size:1.8rem;font-weight:300;
+  line-height:1;margin-bottom:6px;transition:color .8s;
+  letter-spacing:-.04em;
+}
+.baro-label{font-size:.72rem;color:var(--mid);margin-bottom:10px;line-height:1.45;min-height:2.4em;transition:color .4s}
+
+/* Arc gauge — two thin lines */
+.arc-gauge{position:relative;width:100%;height:48px;margin-bottom:6px}
+.arc-svg{width:100%;height:100%}
+
+/* Horizontal gauge bar */
+.gauge-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.gauge-track{flex:1;height:2px;background:var(--rule);position:relative}
+.gauge-fill{position:absolute;left:0;top:0;height:100%;transition:width 1.2s cubic-bezier(.4,0,.2,1),background 1.2s}
+.gauge-head{
+  position:absolute;right:0;top:50%;
+  width:8px;height:8px;border-radius:50%;
+  transform:translate(50%,-50%);
+  transition:left 1.2s cubic-bezier(.4,0,.2,1),background 1.2s,box-shadow 1.2s;
+  left:0;
+}
+.gauge-pct{font-family:var(--f-mono);font-size:.65rem;color:var(--pale);min-width:28px;text-align:right}
+.gauge-scale{display:flex;justify-content:space-between;padding:0 2px}
+.gauge-tick{font-size:.58rem;color:var(--rule);letter-spacing:.02em}
+
+/* Tension callout */
+.tension-box{
+  border-left:2px solid var(--acc);
+  padding:10px 14px;
+  background:var(--acc-lt);
+  font-size:.75rem;line-height:1.55;color:var(--ink2);
+  display:none;margin-top:16px;
+}
+.tension-box.on{display:block}
+.tension-box strong{color:var(--acc);font-weight:500}
+
+/* STATE PANEL */
+.state-section{border-top:1px solid var(--rule);padding-top:20px}
+.state-block{margin-bottom:18px}
+.state-block-head{
+  font-family:var(--f-mono);font-size:.57rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--pale);
+  margin-bottom:8px;display:flex;align-items:center;gap:8px;
+}
+.state-block-head::after{content:'';flex:1;height:1px;background:var(--rule2)}
+.state-entry{
+  font-size:.78rem;color:var(--mid);padding:4px 0;
+  border-bottom:1px solid var(--rule2);line-height:1.4;
+}
+.state-entry:last-child{border-bottom:none}
+.state-entry.lead{color:var(--ink);font-weight:500}
+.state-entry.locked{color:var(--sig-hi)}
+.state-nil{font-size:.73rem;color:var(--rule);font-style:italic}
+
+.phase-strip{display:flex;gap:3px;margin-bottom:20px}
+.ph-seg{flex:1;height:3px;background:var(--rule);transition:background .5s}
+.ph-seg.past{background:var(--pale)}
+.ph-seg.now{background:var(--acc)}
+.ph-name{font-family:var(--f-mono);font-size:.6rem;color:var(--mid);letter-spacing:.08em;margin-top:5px}
+
+/*────────────────────────────────────────────────────────
+  CENTRE COLUMN — Player + Transcript
+────────────────────────────────────────────────────────*/
+.col-mid{padding:0 32px}
+
+/* NOW SPEAKING block */
+.now-speaking{
+  border:1px solid var(--rule);
+  border-radius:var(--r);
+  padding:20px;
+  margin-bottom:20px;
+  position:relative;
+  overflow:hidden;
+  min-height:90px;
+  transition:border-color .3s;
+}
+.now-speaking.v{border-color:var(--acc)}
+.now-speaking.o{border-color:var(--acc2)}
+.ns-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ns-who{display:flex;align-items:center;gap:10px}
+.ns-avatar{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-disp);font-size:.85rem;font-style:italic;
+  font-weight:300;flex-shrink:0;transition:all .3s;
+}
+.ns-avatar.v{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc)}
+.ns-avatar.o{background:var(--acc2-lt);color:var(--acc2);border:1px solid var(--acc2)}
+.ns-avatar.idle{background:var(--rule2);color:var(--pale);border:1px solid var(--rule)}
+.ns-name-block{}
+.ns-name{font-size:.7rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+.ns-name.v{color:var(--acc)}
+.ns-name.o{color:var(--acc2)}
+.ns-name.idle{color:var(--pale)}
+.ns-mood{font-size:.6rem;color:var(--pale);margin-top:1px;font-style:italic}
+
+/* waveform */
+.waveform{display:flex;align-items:center;gap:2px;height:20px}
+.wv{width:2px;border-radius:1px;background:var(--rule);transform-origin:center}
+.wv:nth-child(1){height:25%}.wv:nth-child(2){height:55%}.wv:nth-child(3){height:90%}
+.wv:nth-child(4){height:40%}.wv:nth-child(5){height:70%}.wv:nth-child(6){height:35%}.wv:nth-child(7){height:80%}
+.waveform.live .wv{animation:wvd .8s ease-in-out infinite}
+.waveform.live.v .wv{background:var(--acc)}
+.waveform.live.o .wv{background:var(--acc2)}
+.wv:nth-child(1){animation-delay:0s}.wv:nth-child(2){animation-delay:.06s}.wv:nth-child(3){animation-delay:.13s}
+.wv:nth-child(4){animation-delay:.2s}.wv:nth-child(5){animation-delay:.06s}.wv:nth-child(6){animation-delay:.17s}.wv:nth-child(7){animation-delay:.04s}
+@keyframes wvd{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.15)}}
+
+.ns-text{font-size:.9rem;line-height:1.6;color:var(--mid);font-style:italic}
+.ns-text.live{color:var(--ink);font-style:normal}
+
+/* Progress bar */
+.prog-wrap{margin-bottom:18px}
+.prog-track{height:1px;background:var(--rule);position:relative}
+.prog-fill{position:absolute;left:0;top:0;height:100%;background:var(--ink);width:0%;transition:width .6s ease}
+.prog-labels{display:flex;justify-content:space-between;margin-top:5px}
+.prog-l{font-family:var(--f-mono);font-size:.58rem;color:var(--pale)}
+
+/* Player controls */
+.player-ctrls{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.pc-btn{
+  width:38px;height:38px;border-radius:50%;border:1px solid var(--rule);
+  background:transparent;color:var(--mid);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:.85rem;
+  transition:all .15s;
+}
+.pc-btn:hover{border-color:var(--ink);color:var(--ink)}
+.pc-play{
+  width:44px;height:44px;background:var(--ink);color:#fff;
+  border-color:var(--ink);font-size:.9rem;
+}
+.pc-play:hover{background:var(--acc);border-color:var(--acc)}
+.pc-play:disabled{opacity:.35;cursor:not-allowed}
+.pc-spacer{flex:1}
+
+/* Steering */
+.steer-head{
+  font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--pale);
+  margin-bottom:10px;
+}
+.steer-btns{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:24px}
+.sb{
+  padding:5px 10px;border:1px solid var(--rule);border-radius:2px;
+  background:transparent;font-family:var(--f-body);font-size:.72rem;
+  color:var(--mid);cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.sb:hover{border-color:var(--ink);color:var(--ink);background:var(--paper2)}
+.sb.hit{background:var(--ink);color:#fff;border-color:var(--ink)}
+.sb[data-cmd="lock-that-in"]:hover{border-color:var(--sig-hi);color:var(--sig-hi);background:#f0faf4}
+.sb[data-cmd="kill-that"]:hover{border-color:var(--sig-lo);color:var(--sig-lo);background:#fdf0f0}
+.sb[data-cmd="wrap-it-up"]:hover{border-color:var(--acc2);color:var(--acc2);background:var(--acc2-lt)}
+
+/* TRANSCRIPT */
+.transcript-head{
+  font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--pale);
+  border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:20px;
+  display:flex;justify-content:space-between;
+}
+.tx-body{max-height:520px;overflow-y:auto;padding-right:4px}
+.tx-body::-webkit-scrollbar{width:2px}
+.tx-body::-webkit-scrollbar-thumb{background:var(--rule)}
+
+.tx-turn{
+  display:grid;grid-template-columns:24px 1fr;
+  gap:0 12px;margin-bottom:22px;
+  animation:fadein .35s ease;
+}
+@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.tx-initial{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--f-disp);font-size:.75rem;font-style:italic;font-weight:300;
+  flex-shrink:0;margin-top:1px;
+}
+.tx-initial.v{background:var(--acc-lt);color:var(--acc)}
+.tx-initial.o{background:var(--acc2-lt);color:var(--acc2)}
+.tx-right{}
+.tx-byline{
+  font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
+  margin-bottom:4px;display:flex;align-items:center;gap:8px;
+}
+.tx-byline.v{color:var(--acc)}
+.tx-byline.o{color:var(--acc2)}
+.tx-mood{
+  font-size:.57rem;color:var(--pale);padding:1px 6px;
+  border:1px solid var(--rule);border-radius:1px;font-style:italic;
+  font-family:var(--f-disp);
+}
+.tx-text{font-size:.87rem;line-height:1.7;color:#555;font-weight:300}
+.tx-turn.fresh .tx-text{color:var(--ink);font-weight:400}
+
+.typing-row .tx-text{display:flex;gap:3px;padding:6px 0}
+.ty-d{width:4px;height:4px;border-radius:50%;background:var(--rule);animation:tyd 1s ease-in-out infinite}
+.ty-d:nth-child(2){animation-delay:.17s}.ty-d:nth-child(3){animation-delay:.34s}
+@keyframes tyd{0%,80%,100%{opacity:.2;transform:scale(.75)}40%{opacity:1;transform:scale(1)}}
+
+/*────────────────────────────────────────────────────────
+  RIGHT COLUMN — Business concept card
+────────────────────────────────────────────────────────*/
+.col-right{padding:0 0 0 28px}
+
+.concept-card{
+  border:1px solid var(--rule);
+  padding:24px;
+  position:relative;
+}
+.concept-label{
+  font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--pale);margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.concept-label::after{content:'';flex:1;height:1px;background:var(--rule2)}
+
+.concept-name{
+  font-family:var(--f-disp);font-size:1.8rem;font-weight:300;
+  font-style:italic;line-height:1.1;margin-bottom:6px;
+  color:var(--ink);min-height:44px;
+  transition:all .4s;
+}
+.concept-pitch{
+  font-size:.82rem;color:var(--mid);line-height:1.65;
+  margin-bottom:20px;min-height:60px;border-left:2px solid var(--rule2);padding-left:12px;
+}
+
+.concept-facts{border-top:1px solid var(--rule);padding-top:16px;margin-bottom:16px}
+.cf-row{
+  display:grid;grid-template-columns:80px 1fr;
+  gap:6px;padding:8px 0;border-bottom:1px solid var(--rule2);
+  align-items:start;
+}
+.cf-row:last-child{border-bottom:none}
+.cf-key{font-family:var(--f-mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);padding-top:2px}
+.cf-val{font-size:.8rem;color:var(--ink2);line-height:1.5}
+.cf-val.nil{color:var(--pale);font-style:italic}
+
+/* Model highlight badge */
+.model-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 10px;border-radius:2px;font-size:.7rem;
+  font-weight:500;letter-spacing:.02em;margin-bottom:6px;
+}
+.model-badge.sub{background:#edf7f0;color:#1e7a42}
+.model-badge.mkt{background:#eef4fd;color:#1a5c9e}
+.model-badge.lic{background:#fef9ee;color:#9a6c00}
+.model-badge.b2b{background:#f9eef9;color:#7a1a7a}
+.model-badge.hw {background:#fef0ee;color:#c8410a}
+
+.verdict-strip{
+  border-top:1px solid var(--rule);
+  padding-top:14px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.verdict-word{
+  font-family:var(--f-disp);font-size:1.1rem;font-style:italic;font-weight:300;
+}
+.verdict-word.pursue{color:var(--sig-hi)}
+.verdict-word.pivot{color:var(--sig-mid)}
+.verdict-word.kill{color:var(--sig-lo)}
+.verdict-why{font-size:.7rem;color:var(--pale);max-width:160px;text-align:right;line-height:1.45}
+
+/*────────────────────────────────────────────────────────
+  FINAL FULL-WIDTH SUMMARY
+────────────────────────────────────────────────────────*/
+.final-banner{
+  display:none;
+  border-top:3px solid var(--ink);
+  margin-top:40px;
+  padding-top:40px;
+}
+.final-banner.on{display:block}
+.final-eyebrow{
+  font-family:var(--f-mono);font-size:.6rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--acc);margin-bottom:16px;
+  display:flex;align-items:center;gap:12px;
+}
+.final-eyebrow::after{content:'';flex:1;height:1px;background:var(--rule)}
+.final-name{
+  font-family:var(--f-disp);font-size:3.8rem;font-weight:300;
+  font-style:italic;letter-spacing:-.03em;line-height:1;
+  margin-bottom:12px;
+}
+.final-pitch{
+  font-size:1.1rem;color:var(--mid);line-height:1.7;
+  max-width:640px;margin-bottom:32px;
+}
+.final-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+  border:1px solid var(--rule);margin-bottom:24px;
+}
+@media(max-width:800px){.final-grid{grid-template-columns:repeat(2,1fr)}}
+.fg-cell{padding:20px 22px;border-right:1px solid var(--rule)}
+.fg-cell:last-child{border-right:none}
+.fg-key{font-family:var(--f-mono);font-size:.57rem;letter-spacing:.12em;text-transform:uppercase;color:var(--pale);margin-bottom:6px}
+.fg-val{font-size:.82rem;color:var(--ink);line-height:1.55}
+.final-verdict-row{
+  display:flex;align-items:center;gap:20px;
+  border-top:1px solid var(--rule);padding-top:20px;
+}
+.fv-word{font-family:var(--f-disp);font-size:2rem;font-style:italic;font-weight:300}
+.fv-word.pursue{color:var(--sig-hi)}.fv-word.pivot{color:var(--sig-mid)}.fv-word.kill{color:var(--sig-lo)}
+.fv-desc{font-size:.8rem;color:var(--mid);line-height:1.6;max-width:440px}
+.final-baro-row{display:flex;gap:32px;margin-top:24px;padding-top:20px;border-top:1px solid var(--rule2)}
+.fbr-item{}
+.fbr-l{font-family:var(--f-mono);font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);margin-bottom:6px}
+.fbr-track{width:140px;height:2px;background:var(--rule);position:relative;margin-bottom:4px}
+.fbr-fill{position:absolute;left:0;top:0;height:100%;transition:width 1s,background 1s}
+.fbr-val{font-family:var(--f-mono);font-size:.65rem;color:var(--mid)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- MASTHEAD -->
+  <header class="masthead">
+    <div class="mast-left">
+      <div class="mast-ep-num">
+        Episode<span id="ep-num">001</span>
+      </div>
+      <div class="mast-sep"></div>
+      <div class="mast-ep-num">
+        Mode<span>Business Idea</span>
+      </div>
+    </div>
+    <div class="mast-center">
+      <div class="wordmark">Un<em>scripted</em></div>
+      <div class="mast-sub">Live AI Conversation Engine</div>
+    </div>
+    <div class="mast-right">
+      <div class="live-badge" id="live-badge"><div class="live-dot"></div>On Air</div>
+      <div class="clock-display" id="clock">—</div>
+    </div>
+  </header>
+
+  <!-- DATELINE -->
+  <div class="dateline">
+    <div class="dateline-l" id="dateline-l">Ready to begin</div>
+    <div class="dateline-r">
+      <div class="dl-tag" id="phase-tag">Pre-show</div>
+      <div class="dl-tag active">Business Idea Creation</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ═══ SETUP ═══ -->
+    <div id="setup">
+      <div class="setup-overline">Season One · Episode One</div>
+      <h1 class="setup-headline">Two smart people.<br>No script.<br><em>One real idea.</em></h1>
+      <p class="setup-lede">A Visionary and an Operator explore a business idea from scratch — live, in conversation. The idea forms in real time. You can steer it.</p>
+
+      <div class="bylines">
+        <div class="byline v">
+          <div class="byline-role">The Visionary</div>
+          <div class="byline-name">Idea Architect</div>
+          <div class="byline-desc">Reads human desire before it becomes a market. Drawn to the emotional logic inside every business. Gets excited mid-thought and rarely apologises.</div>
+          <div class="byline-sig">"Right, but what does it feel like to actually need this?"</div>
+        </div>
+        <div class="byline o">
+          <div class="byline-role">The Operator</div>
+          <div class="byline-name">Commercial Realist</div>
+          <div class="byline-desc">Knows the structural reasons ideas fail. Not cynical — just honest. Will find the flaw no one wants to name. Appreciates a strong counter-argument.</div>
+          <div class="byline-sig">"Sure. And who pays for that, exactly?"</div>
+        </div>
+      </div>
+
+      <div class="input-section">
+        <div class="input-label">Episode theme — or leave blank to explore freely</div>
+        <div class="input-row">
+          <input class="topic-inp" id="topic-inp" type="text" placeholder="e.g. the loneliness economy, tools for creative freelancers…"/>
+          <button class="go-btn" id="go-btn">Begin episode →</button>
+        </div>
+        <div class="suggest-row">
+          <button class="sug" data-ex="creator economy infrastructure">creator economy infra</button>
+          <button class="sug" data-ex="the loneliness economy">loneliness economy</button>
+          <button class="sug" data-ex="B2B tools for independent tradespeople">trades B2B</button>
+          <button class="sug" data-ex="behavioural health for high performers">high-performer health</button>
+          <button class="sug" data-ex="the attention recession">attention recession</button>
+          <button class="sug" data-ex="">surprise me</button>
+        </div>
+        <div class="loading-hint" id="load-hint">
+          <div class="ld-dot"></div><div class="ld-dot"></div><div class="ld-dot"></div>
+          <span>Preparing the conversation engine…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ EPISODE ═══ -->
+    <div id="episode">
+
+      <div class="broadsheet">
+
+        <!-- LEFT — barometers + state -->
+        <div class="col-left">
+          <div class="col-head">Live Signal</div>
+
+          <div class="baro-section">
+
+            <!-- ORIGINALITY GAUGE -->
+            <div class="baro-block">
+              <div class="baro-name">Originality</div>
+              <div class="baro-reading" id="orig-reading">—</div>
+              <div class="baro-label" id="orig-label">Waiting for ideas to surface…</div>
+              <div class="gauge-row">
+                <div class="gauge-track" style="flex:1;position:relative">
+                  <div class="gauge-fill" id="orig-fill"></div>
+                  <div class="gauge-head" id="orig-head"></div>
+                </div>
+                <div class="gauge-pct" id="orig-pct">—</div>
+              </div>
+              <div class="gauge-scale">
+                <span class="gauge-tick">Generic</span>
+                <span class="gauge-tick">Interesting</span>
+                <span class="gauge-tick">Original</span>
+              </div>
+            </div>
+
+            <!-- GAP GAUGE -->
+            <div class="baro-block">
+              <div class="baro-name">Market Gap</div>
+              <div class="baro-reading" id="gap-reading">—</div>
+              <div class="baro-label" id="gap-label">Waiting for a direction to emerge…</div>
+              <div class="gauge-row">
+                <div class="gauge-track" style="flex:1;position:relative">
+                  <div class="gauge-fill" id="gap-fill"></div>
+                  <div class="gauge-head" id="gap-head"></div>
+                </div>
+                <div class="gauge-pct" id="gap-pct">—</div>
+              </div>
+              <div class="gauge-scale">
+                <span class="gauge-tick">Crowded</span>
+                <span class="gauge-tick">Niche</span>
+                <span class="gauge-tick">Open</span>
+              </div>
+            </div>
+
+            <div class="tension-box" id="tension">
+              <strong>Signal tension —</strong> <span id="tension-msg"></span>
+            </div>
+          </div>
+
+          <!-- STATE -->
+          <div class="state-section">
+            <div class="col-head">Concept State</div>
+
+            <div class="phase-strip">
+              <div class="ph-seg" id="ph0"></div><div class="ph-seg" id="ph1"></div>
+              <div class="ph-seg" id="ph2"></div><div class="ph-seg" id="ph3"></div><div class="ph-seg" id="ph4"></div>
+            </div>
+            <div class="ph-name" id="ph-name">Opening</div>
+
+            <div class="state-block">
+              <div class="state-block-head">Front-runner</div>
+              <div id="sl-front"><div class="state-nil">Emerging…</div></div>
+            </div>
+            <div class="state-block">
+              <div class="state-block-head">In play</div>
+              <div id="sl-cands"><div class="state-nil">Exploring…</div></div>
+            </div>
+            <div class="state-block">
+              <div class="state-block-head">Locked</div>
+              <div id="sl-locked"><div class="state-nil">Nothing locked</div></div>
+            </div>
+            <div class="state-block">
+              <div class="state-block-head">Risks</div>
+              <div id="sl-risks"><div class="state-nil">Not yet flagged</div></div>
+            </div>
+            <div class="state-block">
+              <div class="state-block-head">Open questions</div>
+              <div id="sl-qs"><div class="state-nil">Still exploring</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-rule"></div>
+
+        <!-- CENTRE — player + transcript -->
+        <div class="col-mid">
+          <div class="col-head">Live Conversation</div>
+
+          <!-- NOW SPEAKING -->
+          <div class="now-speaking idle" id="now-spk">
+            <div class="ns-top">
+              <div class="ns-who">
+                <div class="ns-avatar idle" id="ns-av">—</div>
+                <div class="ns-name-block">
+                  <div class="ns-name idle" id="ns-name">Ready</div>
+                  <div class="ns-mood" id="ns-mood"></div>
+                </div>
+              </div>
+              <div class="waveform" id="waveform">
+                <div class="wv"></div><div class="wv"></div><div class="wv"></div>
+                <div class="wv"></div><div class="wv"></div><div class="wv"></div><div class="wv"></div>
+              </div>
+            </div>
+            <div class="ns-text" id="ns-text">Press play to begin the conversation.</div>
+          </div>
+
+          <!-- PROGRESS -->
+          <div class="prog-wrap">
+            <div class="prog-track"><div class="prog-fill" id="prog"></div></div>
+            <div class="prog-labels">
+              <span class="prog-l" id="prog-phase">Opening</span>
+              <span class="prog-l" id="prog-pct">0%</span>
+            </div>
+          </div>
+
+          <!-- CONTROLS -->
+          <div class="player-ctrls">
+            <button class="pc-btn pc-play" id="play-btn">▶</button>
+            <button class="pc-btn" id="restart-btn" title="Restart">↺</button>
+            <div class="pc-spacer"></div>
+          </div>
+
+          <!-- STEERING -->
+          <div class="steer-head" id="steer-section" style="display:none">Steer the conversation</div>
+          <div class="steer-btns" id="steer-btns" style="display:none">
+            <button class="sb" data-cmd="lock-that-in">Lock that in</button>
+            <button class="sb" data-cmd="go-deeper">Go deeper</button>
+            <button class="sb" data-cmd="off-track">Off track</button>
+            <button class="sb" data-cmd="challenge-that">Challenge that</button>
+            <button class="sb" data-cmd="compare-top-two">Compare top two</button>
+            <button class="sb" data-cmd="more-practical">More practical</button>
+            <button class="sb" data-cmd="more-original">More original</button>
+            <button class="sb" data-cmd="kill-that">Kill that</button>
+            <button class="sb" data-cmd="move-on">Move on</button>
+            <button class="sb" data-cmd="wrap-it-up">Wrap it up</button>
+          </div>
+
+          <!-- TRANSCRIPT -->
+          <div class="transcript-head">
+            <span>Transcript</span>
+            <span id="turn-count">0 exchanges</span>
+          </div>
+          <div class="tx-body" id="tx-body"></div>
+        </div>
+
+        <div class="col-rule"></div>
+
+        <!-- RIGHT — concept card -->
+        <div class="col-right">
+          <div class="col-head">Concept in Progress</div>
+
+          <div class="concept-card">
+            <div class="concept-label">Working concept</div>
+            <div class="concept-name" id="cc-name">—</div>
+            <div class="concept-pitch" id="cc-pitch">The idea is forming. Check back as the conversation develops.</div>
+
+            <div class="concept-facts">
+              <div class="cf-row">
+                <div class="cf-key">Customer</div>
+                <div class="cf-val nil" id="cc-cust">Emerging</div>
+              </div>
+              <div class="cf-row">
+                <div class="cf-key">Model</div>
+                <div class="cf-val nil" id="cc-model">
+                  <span class="model-badge sub" id="model-badge" style="display:none"></span>
+                  <span id="cc-model-text">To be shaped</span>
+                </div>
+              </div>
+              <div class="cf-row">
+                <div class="cf-key">Moat</div>
+                <div class="cf-val nil" id="cc-moat">Unclear</div>
+              </div>
+              <div class="cf-row">
+                <div class="cf-key">MVP</div>
+                <div class="cf-val nil" id="cc-mvp">Not yet defined</div>
+              </div>
+              <div class="cf-row">
+                <div class="cf-key">Risk</div>
+                <div class="cf-val nil" id="cc-risk">Not yet identified</div>
+              </div>
+            </div>
+
+            <div class="verdict-strip">
+              <div class="verdict-word" id="cc-verdict" style="color:var(--pale);font-family:var(--f-disp);font-style:italic">Pending…</div>
+              <div class="verdict-why" id="cc-verdict-why"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /broadsheet -->
+
+      <!-- FINAL BANNER -->
+      <div class="final-banner" id="final-banner">
+        <div class="final-eyebrow">Episode complete — final concept</div>
+        <div class="final-name" id="fn-name">—</div>
+        <div class="final-pitch" id="fn-pitch">—</div>
+        <div class="final-grid">
+          <div class="fg-cell"><div class="fg-key">Customer</div><div class="fg-val" id="fn-cust">—</div></div>
+          <div class="fg-cell"><div class="fg-key">Revenue model</div><div class="fg-val" id="fn-rev">—</div></div>
+          <div class="fg-cell"><div class="fg-key">Biggest risk</div><div class="fg-val" id="fn-risk">—</div></div>
+          <div class="fg-cell" style="border-right:none"><div class="fg-key">MVP</div><div class="fg-val" id="fn-mvp">—</div></div>
+        </div>
+        <div class="final-verdict-row">
+          <div class="fv-word pursue" id="fn-verdict">Pursue</div>
+          <div class="fv-desc" id="fn-why">—</div>
+        </div>
+        <div class="final-baro-row">
+          <div class="fbr-item">
+            <div class="fbr-l">Originality</div>
+            <div class="fbr-track"><div class="fbr-fill" id="fbr-o"></div></div>
+            <div class="fbr-val" id="fbr-ov">—</div>
+          </div>
+          <div class="fbr-item">
+            <div class="fbr-l">Market Gap</div>
+            <div class="fbr-track"><div class="fbr-fill" id="fbr-g"></div></div>
+            <div class="fbr-val" id="fbr-gv">—</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /episode -->
+
+  </div><!-- /content -->
+</div><!-- /shell -->
+
+<script>
+'use strict';
+/*════════════════════════════════════════════════════════
+  SCRIPT DATA
+  Creative business models:
+  - Decentralised IP licensing
+  - Data cooperative with revenue share
+  - Inverse subscription (pay when you don't use it)
+  - Community-owned infrastructure
+  - Attention arbitrage marketplace
+  - Embodied AI hardware play
+  - B2B2C trust layer
+  - Cohort-based consumption clubs
+════════════════════════════════════════════════════════*/
+const SCRIPT = [
+
+/* ── OPENING ── phase 0 */
+{sp:'v',ph:0,mood:'restless',
+ text:"Right. Nothing prepared, nothing decided — which is exactly how I like it. So let's not start with 'what's a good idea'. Let's start with the question underneath that question: where are people spending money in ways that make them feel vaguely ashamed, or vaguely tricked, or vaguely like there should be something better by now?",
+ o:14,g:12,ol:"Wide open. No signals yet.",gl:"Exploring demand terrain.",
+ cn:null,cp:null,cu:null,cm:null,cmb:null,cmo:null,cv:null,cvw:null,cmt:null,crisk:null,cmvp:null},
+
+{sp:'o',ph:0,mood:'precise',
+ text:"That's a sharper frame than 'what problem exists'. Shame and friction are better starting points commercially, because people will pay to remove them. The other one I'd add: where are people paying for something repeatedly that they don't actually want, just because the alternative is more expensive? That's a very exploitable gap.",
+ o:16,g:14,ol:"Structural framing. No category yet.",gl:"Recurring reluctant spend — real market signal.",
+ cn:null,cp:null,cu:null,cm:null,cmb:null,cmo:null,cv:null,cvw:null,cmt:null,crisk:null,cmvp:null},
+
+{sp:'v',ph:0,mood:'circling',
+ text:"Okay so — freelancers. Independent creatives. I keep coming back to them. They're the fastest-growing labour segment globally. And yet every tool they use was built for someone else: agencies, enterprises, employees. They're constantly retrofitting. There's something in the infrastructure gap.",
+ o:34,g:38,ol:"Creator infrastructure: underbuilt relative to segment size.",gl:"Freelance economy: $1.5T globally, tooling still enterprise-retrofitted.",
+ cn:"Creator OS",cp:"The infrastructure layer the freelance economy was never given.",
+ cu:"Independent creative professionals",cm:null,cmb:null,cmo:null,cv:null,cvw:null,cmt:null,crisk:null,cmvp:null},
+
+{sp:'o',ph:0,mood:'sceptical',
+ text:"Every VC in 2021 threw money at 'creator economy' tools and most of them are dead. Notion, Lemon Squeezy, Gumroad — they're fighting for that space. The structural problem is that the TAM is real but the monetisation is hard: creators are price-sensitive because their income is lumpy.",
+ o:30,g:34,ol:"Known territory — needs differentiation from failed wave.",gl:"Prior attempts confirm demand. Monetisation structure is the real problem.",
+ cn:"Creator OS",cp:"The infrastructure layer the freelance economy was never given.",
+ cu:"Independent creative professionals",cm:null,cmb:null,cmo:null,cv:null,cvw:null,cmt:null,crisk:null,cmvp:null},
+
+/* ── EXPLORATION ── phase 1 */
+{sp:'v',ph:1,mood:'pivoting',
+ text:"What if the business model is the innovation, not the product? Creatives hate subscriptions because their income is variable. What if you charged inversely to usage — you pay a retainer when you're not using it heavily, but when a project kicks in, the platform takes a small percentage of the invoice? Aligned incentives.",
+ o:58,g:52,ol:"Inverse subscription model — genuinely novel in creator tooling.",gl:"Model aligns with creator cash-flow reality. Untested but structurally logical.",
+ cn:"Frequency",cp:"The first creator platform that gets paid when you do.",
+ cu:"Project-based creative freelancers, £40-150k/yr",cm:"Revenue-share on invoices + low base retainer",cmb:"b2b",cmo:null,cv:null,cvw:null,cmt:"Revenue-aligned subscription",crisk:null,cmvp:null},
+
+{sp:'o',ph:1,mood:'leaning-in',
+ text:"That's actually interesting because it solves the churn problem differently. Traditional SaaS loses users between projects. If you're collecting a small percentage of invoices — say 0.5 to 1% — your revenue goes up when the user earns more. You become a stakeholder in their success, not just a tool provider. The accounting gets complex, but the alignment is genuinely different.",
+ o:62,g:56,ol:"Revenue-share aligns platform and creator incentives. Novel.",gl:"Addressable if creator volume is large enough. Requires payment rails.",
+ cn:"Frequency",cp:"The first creator platform that gets paid when you do.",
+ cu:"Project-based creative freelancers, £40-150k/yr",cm:"0.8% of invoiced revenue + £9/mo base",cmb:"b2b",cmo:null,cv:null,cvw:null,cmt:"Revenue-aligned subscription",crisk:"Payment rail complexity",cmvp:null},
+
+{sp:'v',ph:1,mood:'building',
+ text:"And here's where it gets bigger — if you're already sitting on invoice data, you know exactly what these people earn, when they earn it, their client concentration, their revenue volatility. That's a credit data set that doesn't exist for freelancers. Banks can't lend to them because they don't have payslips. You do.",
+ o:70,g:68,ol:"Invoice-as-credit-signal is a structural insight. Opens B2B2C fintech layer.",gl:"SME credit gap in freelance economy: documented, large, underserved.",
+ cn:"Frequency",cp:"Creator platform that becomes a financial operating system for the self-employed.",
+ cu:"Self-employed creatives, £30-150k/yr, unbanked for credit",cm:"Revenue-share + embedded financial products",cmb:"b2b",cmo:"Invoice data as credit infrastructure",cv:null,cvw:null,cmt:"Revenue-share + fintech",crisk:"Regulatory (lending licence)",cmvp:null},
+
+{sp:'o',ph:1,mood:'sharpening',
+ text:"Now you're describing two products: a productivity layer and a fintech layer. That's a real risk — you lose focus and deliver neither well. But — and this is important — the order of operations matters. You build trust on the tooling side first, accumulate the data, and then layer in financial services once you have a verified user base. It's the exact playbook Square used.",
+ o:68,g:66,ol:"Square reference is apt. Two-phase model reduces complexity risk.",gl:"Proven playbook. Execution sequencing is the critical variable.",
+ cn:"Frequency",cp:"Start with creator tooling. Become their financial backbone.",
+ cu:"Self-employed creatives initially, expand to all freelancers",cm:"Phase 1: revenue-share / Phase 2: embedded finance",cmb:"b2b",cmo:"Invoice data → credit scoring → lending",cv:null,cvw:null,cmt:"Two-phase: tooling then fintech",crisk:"Scope creep / focus",cmvp:null},
+
+/* ── NARROWING ── phase 2 */
+{sp:'v',ph:2,mood:'focusing',
+ text:"Okay so let's name the thing we're actually building. Not a creator tool. Not a fintech. A financial operating system for the self-employed — built around the invoice as the atomic unit of their economic life. Everything flows from the invoice: cashflow visibility, tax, credit, client relationship. The brand should feel like a trusted institution, not a startup.",
+ o:74,g:72,ol:"'FOS for the self-employed' is a distinct and ownable category frame.",gl:"No single company owns this position globally. Gap is real and large.",
+ cn:"Memo",cp:"A financial operating system built around the invoice — the atomic unit of freelance life.",
+ cu:"Self-employed professionals, all sectors, globally portable",cm:"Revenue-share 0.8% + embedded financial products (credit, tax, insurance)",cmb:"b2b",cmo:"Invoice data moat + switching cost from financial relationships",cv:null,cvw:null,cmt:"Revenue-share + embedded finance",crisk:"Regulatory complexity across markets",cmvp:null},
+
+{sp:'o',ph:2,mood:'testing',
+ text:"I like 'Memo' as a name. Clean, confident, slightly institutional. Here's the unit economics question though: if you take 0.8% of invoiced revenue, and your average freelancer invoices £60,000 a year, you're collecting £480 from them annually. You need about 2,000 users at that rate just to hit £1M ARR. That's a very specific go-to-market job.",
+ o:72,g:70,ol:"Naming is strong. Unit economics require focused early acquisition.",gl:"Target cohort well-defined. CAC and LTV need careful modelling.",
+ cn:"Memo",cp:"A financial operating system built around the invoice — the atomic unit of freelance life.",
+ cu:"Freelancers billing £40-120k/yr — the 'professional layer' of the gig economy",cm:"0.8% of invoiced revenue + embedded finance margin",cmb:"b2b",cmo:"Data moat + financial product switching cost",cv:null,cvw:null,cmt:"Revenue-share + embedded finance",crisk:"CAC vs LTV at low revenue-share rate",cmvp:null},
+
+{sp:'v',ph:2,mood:'countering',
+ text:"But the embedded finance layer changes that calculus completely. If you're providing credit — even invoice financing, which is the natural first product — the margin on that is 12-18% APR. A freelancer drawing down £10,000 against an outstanding invoice gives you £1,200-1,800 on a single transaction. That's not a SaaS business. That's a financial services business with SaaS distribution.",
+ o:76,g:74,ol:"Invoice financing reframes unit economics entirely. Margin profile changes.",gl:"Invoice financing: £150B market in UK alone. No consumer-grade product exists.",
+ cn:"Memo",cp:"Invoice financing for freelancers — finally at consumer grade.",
+ cu:"Professional freelancers with outstanding invoices, regular billing cycles",cm:"Invoice financing (12-18% APR) + 0.8% revenue-share tooling base",cmb:"b2b",cmo:"Invoice data → near-zero-risk credit underwriting",cv:null,cvw:null,cmt:"Fintech-primary, tooling as distribution",crisk:"Lending licence and balance sheet",cmvp:null},
+
+/* ── BUSINESS DESIGN ── phase 3 */
+{sp:'o',ph:3,mood:'building',
+ text:"If invoice financing is the primary product, the risk profile changes dramatically in your favour. You're lending against a known receivable from a known client — this is the lowest-risk form of credit. Traditional banks won't do it for freelancers because of verification friction. You've already solved that friction by being the invoice layer. Your underwriting cost is near zero.",
+ o:78,g:78,ol:"Near-zero underwriting cost is a structural moat. Not just a product advantage.",gl:"Banks structurally prevented from competing — regulatory and verification overhead.",
+ cn:"Memo",cp:"The self-employed bank. Invoice financing, finally without the friction.",
+ cu:"Professional freelancers, 28-48, billing £40k+ annually, UK-first",cm:"Invoice financing (14% APR) + 0.8% platform fee + future: insurance, pension",cmb:"b2b",cmo:"Underwriting moat from invoice data + switching cost from financial relationships",cv:"Pursue",cvw:"Structural market gap, novel model, clear moat",cmt:"Fintech with SaaS distribution",crisk:"FCA licence",cmvp:null},
+
+{sp:'v',ph:3,mood:'expanding',
+ text:"And the expansion arc is obvious from there. Once you're a trusted financial relationship — you have their invoice data, you've extended them credit, you've been there when a client paid late — you become the natural home for freelancer pensions, freelancer insurance, freelancer tax filing. You're not adding features. You're completing a picture that no one has ever drawn for this customer.",
+ o:80,g:80,ol:"Platform coherence is strong. Each product reinforces data and trust moat.",gl:"Adjacent products are large markets with same distribution advantage.",
+ cn:"Memo",cp:"The complete financial life of the self-employed, finally in one place.",
+ cu:"Professional freelancers — the 50M+ people globally outside traditional employment",cm:"Invoice financing → pension → insurance → tax → the full financial stack",cmb:"b2b",cmo:"Full financial relationship + multi-product switching cost",cv:"Pursue",cvw:"First-mover in neglected segment with structural advantages",cmt:"Embedded finance platform",crisk:"Licence stack and regulatory overhead",cmvp:null},
+
+{sp:'o',ph:3,mood:'anchoring',
+ text:"Go-to-market. I'd launch with one profession — architects, specifically. They have long project cycles, large invoices, slow-paying clients, consistent income profiles, and professional pride that responds to a product that understands their working life. Two hundred architect users with average invoicing of £90k means £144k in platform fees and real financing volume. That's a proof of concept with a real data story.",
+ o:80,g:80,ol:"Profession-specific launch is a proven wedge strategy. Reduces noise.",gl:"Architects: well-defined TAM, high invoice value, severe cash-flow pain point.",
+ cn:"Memo",cp:"Built first for architects. Then every professional who works for themselves.",
+ cu:"UK architects initially — 40,000 registered, 60% self-employed",cm:"0.8% + invoice financing at 14% APR — target £500k ARR from 200 users by month 18",cmb:"b2b",cmo:"Profession-specific data → norms → near-perfect underwriting",cv:"Pursue",cvw:"Clear wedge, defensible data, massive expansion opportunity",cmt:"Profession-first B2B2C",crisk:"FCA licence lead time",cmvp:"200 architects, invoice tool + financing, 18 months"},
+
+/* ── WRAP ── phase 4 */
+{sp:'v',ph:4,mood:'landing',
+ text:"What I keep coming back to is that this isn't a new category — freelancer finance exists. What's new is the model. Every existing product treats the freelancer as a consumer and charges them like one. Memo treats the invoice as collateral and the freelancer as a business owner. That shift in frame is the entire product.",
+ o:84,g:83,ol:"Model innovation is the product. Positioning is commercially precise.",gl:"Existing players misframe the customer. Category is open at the right positioning.",
+ cn:"Memo",cp:"Built first for architects. Then every professional who works for themselves.",
+ cu:"UK architects → all professional freelancers → global",cm:"0.8% + invoice financing 14% APR + financial product expansion",cmb:"b2b",cmo:"Invoice data → underwriting moat → multi-product lock-in",cv:"Pursue",cvw:"Novel model, structural moat, massive overlooked market",cmt:"Fintech + SaaS distribution",crisk:"FCA licence lead time (6-12 months)",cmvp:"200 architects, invoice tool + financing, month 18"},
+
+{sp:'o',ph:4,mood:'closing',
+ text:"Here's the verdict: Memo is a financial services company with a software wedge, in a segment that banks structurally can't serve well, using a data advantage that takes years to replicate, starting with a profession tight enough to actually reach, and expanding from there. The risks are real — regulatory timeline, balance sheet for financing, staying focused during expansion. But the market case is unusually clean. I'd pursue this.",
+ o:86,g:85,ol:"Model is novel, moat is structural, positioning is precise.",gl:"Underserved segment at scale. Structural barriers to competitive entry.",
+ cn:"Memo",cp:"Built first for architects. Then every professional who works for themselves.",
+ cu:"UK architects → all professional freelancers → global",cm:"0.8% + invoice financing 14% APR + financial product expansion",cmb:"b2b",cmo:"Invoice data → underwriting moat → multi-product lock-in",cv:"Pursue",cvw:"Novel model, structural moat, massive overlooked market",cmt:"Fintech + SaaS distribution",crisk:"FCA licence (6-12mo) + balance sheet",cmvp:"200 architects, invoice tool + financing, month 18"},
+
+{sp:'v',ph:4,mood:'wrapping',
+ text:"Memo. The financial operating system for people who work for themselves. Started with architects. Built for everyone who sends an invoice and then waits. Yeah — that's a business. That's actually a big one.",
+ o:87,g:86,ol:"Fully formed. Category-defining if executed.",gl:"50 million+ addressable globally. First-mover position available now.",
+ cn:"Memo",cp:"Built first for architects. Then every professional who works for themselves.",
+ cu:"UK architects → all professional freelancers → global",cm:"0.8% platform + 14% APR invoice financing + expansion products",cmb:"b2b",cmo:"Invoice data moat + multi-product financial relationships",cv:"Pursue",cvw:"Novel model, structural moat, massive overlooked market",cmt:"Fintech + SaaS distribution",crisk:"FCA licence (6-12mo) + balance sheet",cmvp:"200 architects, invoice tool + financing, month 18"},
+];
+
+const FINAL = {
+  name:"Memo",
+  pitch:"A financial operating system for self-employed professionals — built around the invoice as the atomic unit of freelance economic life. Starts with architects. Becomes the financial backbone of independent work, globally.",
+  cust:"UK architects first (40,000 registered, 60% self-employed) — then all professional freelancers globally.",
+  rev:"0.8% platform fee on invoiced revenue + 14% APR invoice financing + expansion into pension, insurance, tax filing.",
+  risk:"FCA lending licence (6-12 month lead time) and initial balance sheet for financing — must be secured before product launch.",
+  mvp:"200 architects. Invoice management tool + invoice financing product. £500k ARR target by month 18. Manual underwriting first.",
+  verdict:"pursue",
+  why:"Structural market gap, novel revenue-aligned model, near-zero underwriting cost from proprietary invoice data, and an expansion arc that compounds naturally.",
+  o:87,g:86,
+};
+
+const PHASES = ['Opening','Exploring','Narrowing','Building','Wrapping'];
+const MODEL_TYPES = {
+  sub:{label:'Subscription',cls:'sub'},
+  mkt:{label:'Marketplace',cls:'mkt'},
+  lic:{label:'Licensing',cls:'lic'},
+  b2b:{label:'B2B / Enterprise',cls:'b2b'},
+  hw:{label:'Hardware',cls:'hw'},
+};
+
+/*════════════════════════════════════════════════════════
+  BAROMETER ENGINE
+════════════════════════════════════════════════════════*/
+let _o=0,_g=0,_oT=0,_gT=0,_braf=null;
+
+function sigColor(p){
+  if(p<30)return'#c0392b';
+  if(p<60)return'#e67e22';
+  return'#27ae60';
+}
+
+function setBaroTargets(oT,gT){
+  _oT=oT;_gT=gT;
+  if(!_braf)_braf=requestAnimationFrame(tickBaro);
+}
+
+function tickBaro(){
+  const spd=.04;
+  _o+=(_oT-_o)*spd;
+  _g+=(_gT-_g)*spd;
+
+  const oc=sigColor(_o),gc=sigColor(_g);
+
+  // Orig
+  const of=$('orig-fill'),oh=$('orig-head'),op=$('orig-pct'),or=$('orig-reading');
+  of.style.cssText=`width:${_o}%;background:linear-gradient(90deg,#c0392b,${oc})`;
+  oh.style.cssText=`left:calc(${_o}% - 4px);background:${oc};box-shadow:0 0 8px ${oc}88;width:8px;height:8px;border-radius:50%;position:absolute;top:50%;transform:translateY(-50%)`;
+  op.textContent=Math.round(_o)+'%';
+  op.style.color=oc;
+  or.textContent=Math.round(_o);
+  or.style.color=oc;
+
+  // Gap
+  const gf=$('gap-fill'),gh=$('gap-head'),gp=$('gap-pct'),gr=$('gap-reading');
+  gf.style.cssText=`width:${_g}%;background:linear-gradient(90deg,#c0392b,${gc})`;
+  gh.style.cssText=`left:calc(${_g}% - 4px);background:${gc};box-shadow:0 0 8px ${gc}88;width:8px;height:8px;border-radius:50%;position:absolute;top:50%;transform:translateY(-50%)`;
+  gp.textContent=Math.round(_g)+'%';
+  gp.style.color=gc;
+  gr.textContent=Math.round(_g);
+  gr.style.color=gc;
+
+  // Tension
+  const diff=Math.abs(_o-_g);
+  const t=$('tension'),tm=$('tension-msg');
+  if(diff>18&&_o>40){
+    t.classList.add('on');
+    tm.textContent=_o>_g
+      ?"Originality is running ahead of market evidence. The Operator will want to close this gap."
+      :"Clear market signal but the concept hasn't found a distinctive angle. Push for something less obvious.";
+  } else {
+    t.classList.remove('on');
+  }
+
+  const still=Math.abs(_o-_oT)>.25||Math.abs(_g-_gT)>.25;
+  _braf=still?requestAnimationFrame(tickBaro):null;
+}
+
+/*════════════════════════════════════════════════════════
+  STATE ENGINE
+════════════════════════════════════════════════════════*/
+let S={running:false,paused:false,idx:0,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0};
+let timerRef=null;
+
+const $=id=>document.getElementById(id);
+
+function setPhaseUI(p){
+  const names=['Opening','Exploring','Narrowing','Building','Wrapping'];
+  $('phase-tag').textContent=names[p];
+  $('ph-name').textContent=names[p];
+  $('prog-phase').textContent=names[p];
+  for(let i=0;i<5;i++)$('ph'+i).className='ph-seg'+(i<p?' past':i===p?' now':'');
+}
+
+function setSpeakerUI(t){
+  if(!t){
+    $('now-spk').className='now-speaking idle';
+    $('ns-av').className='ns-avatar idle';$('ns-av').textContent='—';
+    $('ns-name').className='ns-name idle';$('ns-name').textContent='Ready';
+    $('ns-mood').textContent='';
+    $('ns-text').className='ns-text';
+    $('ns-text').textContent='Press play to begin.';
+    $('waveform').className='waveform';
+    return;
+  }
+  const s=t.sp,lbl=s==='v'?'Visionary':'Operator';
+  $('now-spk').className=`now-speaking ${s}`;
+  $('ns-av').className=`ns-avatar ${s}`;$('ns-av').textContent=s==='v'?'V':'O';
+  $('ns-name').className=`ns-name ${s}`;$('ns-name').textContent=lbl;
+  $('ns-mood').textContent=t.mood||'';
+  const short=t.text.length>120?t.text.slice(0,117)+'…':t.text;
+  $('ns-text').className='ns-text live';$('ns-text').textContent=short;
+  $('waveform').className=`waveform live ${s}`;
+}
+
+function updateConceptCard(t){
+  if(!t.cn)return;
+  const cc=$('cc-name'),cp=$('cc-pitch'),cu=$('cc-cust'),cm=$('cc-model-text'),cb=$('model-badge'),cmo=$('cc-moat'),cv=$('cc-verdict'),cvw=$('cc-verdict-why'),cr=$('cc-risk'),cmvp=$('cc-mvp');
+
+  function setVal(el,v,nilClass){
+    el.textContent=v||'—';
+    el.className=el.className.replace(' nil','')+(v?'':' nil');
+  }
+
+  if(t.cn){cc.textContent=t.cn;cc.style.color='var(--ink)'}
+  if(t.cp){cp.textContent=t.cp;cp.style.color='var(--mid)'}
+  setVal(cu,t.cu);
+  if(t.cmt){cm.textContent=t.cmt}
+  if(t.cmb){
+    const m=MODEL_TYPES[t.cmb]||{label:t.cmb,cls:'sub'};
+    cb.textContent=m.label;
+    cb.className=`model-badge ${m.cls}`;
+    cb.style.display='inline-flex';
+  }
+  setVal(cmo,t.cmo);
+  setVal(cr,t.crisk);
+  setVal(cmvp,t.cmvp);
+
+  if(t.cv){
+    const vmap={pursue:'Pursue →',pivot:'Pivot',kill:'Kill'};
+    cv.textContent=vmap[t.cv]||t.cv;
+    cv.className=`verdict-word ${t.cv}`;
+    cvw.textContent=t.cvw||'';
+  }
+}
+
+function updateStatePanel(t){
+  const p=t.ph;
+  if(p>=1){S.candidates=['Inverse subscription for creators','Invoice-as-credit platform','Creator FOS']}
+  if(p>=2){S.frontRunners=['Memo — invoice financing for freelancers'];S.risks=['FCA licence timeline','Balance sheet for lending'];S.qs=['Which profession first?','Revenue-share vs flat fee?']}
+  if(p>=3){S.candidates=['Memo'];S.frontRunners=['Memo — financial OS for self-employed'];S.qs=['Architect wedge size?','Loan-to-value on invoices?']}
+  if(p>=4){S.risks=['FCA licence (6-12mo)','Balance sheet requirement'];S.qs=[]}
+
+  function rl(id,arr,cls=''){
+    const el=$(id);
+    el.innerHTML=arr.length?arr.map(x=>`<div class="state-entry ${cls}">${x}</div>`).join(''):'<div class="state-nil">None yet</div>';
+  }
+  rl('sl-front',S.frontRunners,'lead');
+  rl('sl-cands',S.candidates);
+  rl('sl-locked',S.locked,'locked');
+  rl('sl-risks',S.risks);
+  rl('sl-qs',S.qs);
+}
+
+function appendTx(t,fresh){
+  const body=$('tx-body');
+  const ti=body.querySelector('.typing-row');if(ti)ti.remove();
+  const el=document.createElement('div');
+  el.className=`tx-turn${fresh?' fresh':''} ${t.sp}`;
+  const lbl=t.sp==='v'?'Visionary':'Operator';
+  el.innerHTML=`<div class="tx-initial ${t.sp}">${t.sp==='v'?'V':'O'}</div>
+  <div class="tx-right">
+    <div class="tx-byline ${t.sp}">${lbl}${t.mood?` <span class="tx-mood">${t.mood}</span>`:''}</div>
+    <div class="tx-text">${t.text}</div>
+  </div>`;
+  body.appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  S.turnCount++;
+  $('turn-count').textContent=`${S.turnCount} exchange${S.turnCount!==1?'s':''}`;
+}
+
+function showTyping(sp){
+  const body=$('tx-body');
+  const ex=body.querySelector('.typing-row');if(ex)ex.remove();
+  const el=document.createElement('div');
+  el.className=`tx-turn typing-row ${sp}`;
+  el.innerHTML=`<div class="tx-initial ${sp}">${sp==='v'?'V':'O'}</div>
+  <div class="tx-right">
+    <div class="tx-byline ${sp}">${sp==='v'?'Visionary':'Operator'}</div>
+    <div class="tx-text"><div class="ty-d"></div><div class="ty-d"></div><div class="ty-d"></div></div>
+  </div>`;
+  body.appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/*════════════════════════════════════════════════════════
+  TTS
+════════════════════════════════════════════════════════*/
+const synth=window.speechSynthesis;
+let voices=[];
+if(synth){const lv=()=>{voices=synth.getVoices()};lv();synth.onvoiceschanged=lv}
+
+function getVoice(sp){
+  const pv=sp==='v'?['Samantha','Karen','Victoria','Moira']:['Daniel','Oliver','Arthur','Alex'];
+  for(const n of pv){const v=voices.find(v=>v.name.includes(n));if(v)return v}
+  const gb=voices.filter(v=>v.lang==='en-GB');
+  if(sp==='v'&&gb.length)return gb[0];
+  if(sp==='o'&&gb.length>1)return gb[1];
+  return voices.find(v=>v.lang.startsWith('en'))||voices[0]||null;
+}
+
+function speak(text,sp){
+  return new Promise(res=>{
+    if(!synth){setTimeout(res,Math.max(1400,text.split(' ').length*410));return}
+    synth.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    const v=getVoice(sp);if(v)u.voice=v;
+    u.rate=sp==='v'?1.03:.93;u.pitch=sp==='v'?1.06:.87;u.volume=1;
+    u.onend=res;u.onerror=res;
+    synth.speak(u);
+  });
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+/*════════════════════════════════════════════════════════
+  CORE LOOP
+════════════════════════════════════════════════════════*/
+async function loop(){
+  while(S.running){
+    while(S.paused&&S.running)await sleep(200);
+    if(!S.running)break;
+    if(S.idx>=SCRIPT.length)break;
+
+    const t=SCRIPT[S.idx];
+
+    // Phase
+    if(t.ph!==S.phase){S.phase=t.ph;setPhaseUI(S.phase)}
+
+    // Typing indicator
+    showTyping(t.sp);
+    setSpeakerUI(null);
+    await sleep(460+Math.random()*460);
+    if(!S.running)break;
+
+    // Remove typing, show turn
+    const body=$('tx-body');
+    const ti=body.querySelector('.typing-row');if(ti)ti.remove();
+    appendTx(t,true);
+    setSpeakerUI(t);
+
+    // Barometers
+    setBaroTargets(t.o,t.g);
+    $('orig-label').textContent=t.ol;
+    $('gap-label').textContent=t.gl;
+
+    // Concept card
+    updateConceptCard(t);
+    updateStatePanel(t);
+
+    // Progress
+    const pct=Math.min(100,(S.idx/(SCRIPT.length-1))*100);
+    $('prog').style.width=pct+'%';
+    $('prog-pct').textContent=Math.round(pct)+'%';
+    $('dateline-l').textContent=`Turn ${S.idx+1} of ${SCRIPT.length} — ${PHASES[S.phase]}`;
+
+    S.idx++;
+    await speak(t.text,t.sp);
+    if(!S.running)break;
+    body.querySelectorAll('.tx-turn.fresh').forEach(e=>e.classList.remove('fresh'));
+    await sleep(300);
+  }
+  if(S.running&&S.idx>=SCRIPT.length)wrapUp();
+}
+
+function wrapUp(){
+  S.running=false;
+  $('play-btn').textContent='▶';$('play-btn').disabled=true;
+  setSpeakerUI(null);
+  $('waveform').className='waveform';
+  $('prog').style.width='100%';$('prog-pct').textContent='100%';
+  $('phase-tag').textContent='Complete';
+  $('dateline-l').textContent='Episode complete';
+  $('live-badge').classList.remove('on');
+
+  setBaroTargets(FINAL.o,FINAL.g);
+
+  // Final banner
+  $('fn-name').textContent=FINAL.name;
+  $('fn-pitch').textContent=FINAL.pitch;
+  $('fn-cust').textContent=FINAL.cust;
+  $('fn-rev').textContent=FINAL.rev;
+  $('fn-risk').textContent=FINAL.risk;
+  $('fn-mvp').textContent=FINAL.mvp;
+  const fv=$('fn-verdict');
+  fv.className=`fv-word ${FINAL.verdict}`;
+  fv.textContent=FINAL.verdict.charAt(0).toUpperCase()+FINAL.verdict.slice(1);
+  $('fn-why').textContent=FINAL.why;
+
+  const oc=sigColor(FINAL.o),gc=sigColor(FINAL.g);
+  $('fbr-o').style.cssText=`width:${FINAL.o}%;background:${oc}`;
+  $('fbr-g').style.cssText=`width:${FINAL.g}%;background:${gc}`;
+  $('fbr-ov').textContent=FINAL.o+' / 100';$('fbr-ov').style.color=oc;
+  $('fbr-gv').textContent=FINAL.g+' / 100';$('fbr-gv').style.color=gc;
+
+  $('final-banner').classList.add('on');
+  setTimeout(()=>$('final-banner').scrollIntoView({behavior:'smooth',block:'start'}),400);
+}
+
+/*════════════════════════════════════════════════════════
+  CONTROLS
+════════════════════════════════════════════════════════*/
+$('play-btn').addEventListener('click',()=>{
+  if(!S.running&&!S.paused){S.running=true;$('play-btn').textContent='⏸';loop()}
+  else if(S.running&&!S.paused){S.paused=true;$('play-btn').textContent='▶';if(synth)synth.pause()}
+  else if(S.paused){S.paused=false;$('play-btn').textContent='⏸';if(synth)synth.resume()}
+});
+
+$('restart-btn').addEventListener('click',()=>{
+  if(!confirm('Restart this episode?'))return;
+  S.running=false;if(synth)synth.cancel();clearInterval(timerRef);
+  $('tx-body').innerHTML='';
+  $('play-btn').textContent='▶';$('play-btn').disabled=false;
+  $('final-banner').classList.remove('on');
+  _o=0;_g=0;_oT=0;_gT=0;
+  $('orig-fill').style.width='0';$('gap-fill').style.width='0';
+  $('orig-reading').textContent='—';$('gap-reading').textContent='—';
+  const topic=$('ep-title')?$('ep-title').textContent:'';
+  setTimeout(()=>initEpisode(topic),150);
+});
+
+document.querySelectorAll('.sb').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    if(!S.running)return;
+    const cmd=btn.dataset.cmd;
+    if(cmd==='lock-that-in'&&S.frontRunners.length){
+      const idea=S.frontRunners[0];
+      if(!S.locked.includes(idea))S.locked.push(idea);
+      $('sl-locked').innerHTML=S.locked.map(x=>`<div class="state-entry locked">${x}</div>`).join('');
+    }
+    if(cmd==='kill-that'){S.frontRunners=[];$('sl-front').innerHTML='<div class="state-nil">Searching…</div>'}
+    if(cmd==='wrap-it-up'){S.idx=Math.max(S.idx,SCRIPT.length-4)}
+    if(cmd==='move-on'&&S.phase<4){S.phase++;setPhaseUI(S.phase)}
+    btn.classList.add('hit');setTimeout(()=>btn.classList.remove('hit'),500);
+  });
+});
+
+function initEpisode(topic){
+  S={running:false,paused:false,idx:0,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0};
+  $('setup').style.display='none';
+  $('episode').classList.add('on');
+  $('steer-section').style.display='block';
+  $('steer-btns').style.display='flex';
+  $('live-badge').classList.add('on');
+  $('dateline-l').textContent='Episode in progress';
+  setPhaseUI(0);
+  ['sl-front','sl-cands','sl-locked','sl-risks','sl-qs'].forEach(id=>$(id).innerHTML='<div class="state-nil">Loading…</div>');
+
+  S.elapsed=0;
+  timerRef=setInterval(()=>{
+    if(!S.paused){
+      S.elapsed++;
+      const m=Math.floor(S.elapsed/60),sc=S.elapsed%60;
+      $('clock').textContent=`${m}:${sc.toString().padStart(2,'0')}`;
+    }
+  },1000);
+}
+
+$('go-btn').addEventListener('click',async()=>{
+  const topic=$('topic-inp').value.trim();
+  $('go-btn').disabled=true;
+  $('load-hint').classList.add('on');
+  await sleep(800);
+  $('load-hint').classList.remove('on');
+  $('go-btn').disabled=false;
+  initEpisode(topic);
+});
+
+$('topic-inp').addEventListener('keydown',e=>{if(e.key==='Enter')$('go-btn').click()});
+document.querySelectorAll('.sug').forEach(s=>{s.addEventListener('click',()=>{$('topic-inp').value=s.dataset.ex})});
+</script>
+</body>
+</html>
