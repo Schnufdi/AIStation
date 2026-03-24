@@ -143,7 +143,47 @@ body::after {
 /* ╔══════════════════════════════════════════════════╗
    ║  SETUP SCREEN                                    ║
    ╚══════════════════════════════════════════════════╝ */
-#setup { max-width: 960px; margin: 0 auto; padding: 60px 0 80px; }
+#setup { max-width: 1200px; margin: 0 auto; padding: 60px 0 80px; }
+.setup-inner {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 56px;
+  align-items: start;
+}
+.setup-main { }
+
+/* Arc sidebar */
+.arc-sidebar {
+  background: var(--bg2);
+  border: 1px solid var(--wire2);
+  padding: 24px;
+  position: sticky;
+  top: 72px;
+}
+.arc-title {
+  font-family: var(--f-mono);
+  font-size: .5rem; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.arc-title::after { content: ''; flex: 1; height: 1px; background: var(--wire2); }
+.arc-section { margin-bottom: 4px; }
+.arc-section-label {
+  font-family: var(--f-mono);
+  font-size: .48rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 12px;
+}
+.arc-phases { display: flex; flex-direction: column; }
+.arc-phase { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--wire); }
+.arc-phase:last-child { border-bottom: none; }
+.arc-phase-num { font-family: var(--f-disp); font-size: 1.3rem; color: var(--ink4); flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.arc-phase-name { font-family: var(--f-ui); font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink); margin-bottom: 3px; }
+.arc-phase-desc { font-family: var(--f-serif); font-style: italic; font-size: .72rem; color: var(--ink3); line-height: 1.5; margin-bottom: 3px; }
+.arc-phase-turns { font-family: var(--f-mono); font-size: .46rem; letter-spacing: .1em; text-transform: uppercase; color: var(--gold); opacity: .7; }
+.arc-signal-item { padding: 9px 0; border-bottom: 1px solid var(--wire); }
+.arc-signal-item:last-child { border-bottom: none; }
+.arc-signal-name { font-family: var(--f-ui); font-size: .62rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink2); margin-bottom: 2px; }
+.arc-signal-desc { font-family: var(--f-serif); font-style: italic; font-size: .7rem; color: var(--ink3); line-height: 1.5; }
 
 .setup-kicker {
   font-family: var(--f-mono);
@@ -756,14 +796,17 @@ body::after {
      ║  SETUP                                           ║
      ╚══════════════════════════════════════════════════╝ -->
 <div id="setup">
-  <div class="setup-kicker">Season One · Episode One</div>
-  <div class="setup-hed">
-    TWO<br>
-    <span class="ghost">SHARP</span><br>
-    <span class="accent">MINDS.</span>
-  </div>
-  <div class="setup-sub">ZERO SCRIPT.</div>
-  <p class="setup-lede">A Visionary and an Operator debate a business idea live — building, challenging, and evolving it in real time. You can steer it.</p>
+  <div class="setup-inner">
+    <!-- LEFT — main setup -->
+    <div class="setup-main">
+      <div class="setup-kicker">Season One · Episode One</div>
+      <div class="setup-hed">
+        TWO<br>
+        <span class="ghost">SHARP</span><br>
+        <span class="accent">MINDS.</span>
+      </div>
+      <div class="setup-sub">ZERO SCRIPT.</div>
+      <p class="setup-lede">A Visionary and a Realist debate a business idea live — building, challenging, and evolving it in real time. You can steer it.</p>
 
   <div class="hosts">
     <div class="host v">
@@ -775,10 +818,10 @@ body::after {
     </div>
     <div class="host o">
       <div class="host-num">02</div>
-      <div class="host-role">The Operator</div>
-      <div class="host-name">COMMERCIAL REALIST</div>
-      <div class="host-desc">Knows the structural reasons ideas fail. Not cynical — just honest. Will find the flaw no one wants to name. Appreciates a strong counter-argument.</div>
-      <div class="host-sig">"Sure. And who pays for that, exactly?"</div>
+      <div class="host-role">The Realist</div>
+      <div class="host-name">THE HARD TRUTH</div>
+      <div class="host-desc">Commercially precise, intellectually honest. Finds the flaw no one wants to name. Doesn't kill ideas — forces them to be stronger.</div>
+      <div class="host-sig">"Sure. But who actually pays for it, and why now?"</div>
     </div>
   </div>
 
@@ -805,7 +848,7 @@ body::after {
       </button>
       <button class="tone-btn" data-tone="pitch">
         <span class="tone-name">Founder Pitch</span>
-        <span class="tone-desc">Visionary sells hard. Operator is the investor who's heard it all.</span>
+        <span class="tone-desc">Visionary sells hard. Realist is the investor who's heard it all.</span>
       </button>
       <button class="tone-btn" data-tone="principles">
         <span class="tone-name">First Principles</span>
@@ -829,8 +872,75 @@ body::after {
       <div class="ld"></div><div class="ld"></div><div class="ld"></div>
       <span>Initialising conversation engine…</span>
     </div>
-  </div>
-</div>
+  </div><!-- /form-wrap -->
+  </div><!-- /setup-main -->
+
+  <!-- ARC SIDEBAR -->
+  <div class="arc-sidebar">
+    <div class="arc-title">How it works</div>
+
+    <div class="arc-section">
+      <div class="arc-section-label">The conversation arc</div>
+      <div class="arc-phases">
+        <div class="arc-phase">
+          <div class="arc-phase-num">01</div>
+          <div class="arc-phase-body">
+            <div class="arc-phase-name">Opening</div>
+            <div class="arc-phase-desc">Cast wide. Find the territory — who feels this problem, why now, what's the right frame. No one lands on an idea yet.</div>
+            <div class="arc-phase-turns">4 turns</div>
+          </div>
+        </div>
+        <div class="arc-phase">
+          <div class="arc-phase-num">02</div>
+          <div class="arc-phase-body">
+            <div class="arc-phase-name">Pressure</div>
+            <div class="arc-phase-desc">Ideas come fast. The Realist gets forensic — finds the flaw, forces a stronger version. Friction peaks here. Weak ideas die.</div>
+            <div class="arc-phase-turns">8 turns</div>
+          </div>
+        </div>
+        <div class="arc-phase">
+          <div class="arc-phase-num">03</div>
+          <div class="arc-phase-body">
+            <div class="arc-phase-name">Construction</div>
+            <div class="arc-phase-desc">One idea survives. Both hosts build together — customer, revenue, moat. The adversarial energy drops. Precision replaces speed.</div>
+            <div class="arc-phase-turns">6 turns</div>
+          </div>
+        </div>
+        <div class="arc-phase">
+          <div class="arc-phase-num">04</div>
+          <div class="arc-phase-body">
+            <div class="arc-phase-name">Verdict</div>
+            <div class="arc-phase-desc">Hard close. One sentence from each. Pursue, pivot or kill — with exactly one reason. No hedge.</div>
+            <div class="arc-phase-turns">4 turns</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arc-section" style="margin-top:28px">
+      <div class="arc-section-label">Live signals</div>
+      <div class="arc-signal-item">
+        <div class="arc-signal-name">Originality</div>
+        <div class="arc-signal-desc">How far the idea is from anything that already exists. Low = the conversation needs a less obvious angle.</div>
+      </div>
+      <div class="arc-signal-item">
+        <div class="arc-signal-name">Market Gap</div>
+        <div class="arc-signal-desc">How real and underserved the demand appears. Low = anchor back to who actually feels this problem.</div>
+      </div>
+      <div class="arc-signal-item">
+        <div class="arc-signal-name">Signal tension</div>
+        <div class="arc-signal-desc">When the scores diverge by more than 18 points, a tension alert fires and the hosts are pushed to close the gap.</div>
+      </div>
+    </div>
+
+    <div class="arc-section" style="margin-top:28px">
+      <div class="arc-section-label">Emotional arc</div>
+      <div class="arc-signal-desc" style="font-family:var(--f-serif);font-style:italic">Each host carries a mood that evolves turn by turn — fed back into their prompt so they build on it rather than reset. Watch the arc trail beneath each transcript entry.</div>
+    </div>
+  </div><!-- /arc-sidebar -->
+
+</div><!-- /setup-inner -->
+</div><!-- /setup -->
 
 <!-- ╔══════════════════════════════════════════════════╗
      ║  EPISODE                                         ║
@@ -1100,7 +1210,7 @@ function tickBaro(){
   if(diff>18&&_o>40){
     t.classList.add('on');
     tm.textContent=_o>_g
-      ?"Originality running ahead of market evidence — The Operator will push back."
+      ?"Originality running ahead of market evidence — The Realist will push back."
       :"Strong market signal but concept needs a more distinctive angle.";
   } else { t.classList.remove('on'); }
   _braf=(Math.abs(_o-_oT)>.25||Math.abs(_g-_gT)>.25)?requestAnimationFrame(tickBaro):null;
@@ -1126,7 +1236,7 @@ function setSpeakerUI(t){
     $('waveform').className='waveform';
     return;
   }
-  const s=t.sp, lbl=s==='v'?'Visionary':'Operator';
+  const s=t.sp, lbl=s==='v'?'Visionary':'Realist';
   $('now-spk').className=`now-spk ${s}`;
   $('ns-av').className=`ns-av ${s}`; $('ns-av').textContent=s==='v'?'V':'O';
   $('ns-name').className=`ns-name ${s}`; $('ns-name').textContent=lbl;
@@ -1141,7 +1251,7 @@ function appendTx(t,fresh){
   const ti=body.querySelector('.typing-row'); if(ti)ti.remove();
   const el=document.createElement('div');
   el.className=`tx-turn${fresh?' fresh':''} ${t.sp}`;
-  const lbl=t.sp==='v'?'Visionary':'Operator';
+  const lbl=t.sp==='v'?'Visionary':'Realist';
 
   // Build mood arc for this speaker
   const moods=S.moodHistory[t.sp]||[];
@@ -1154,7 +1264,7 @@ function appendTx(t,fresh){
     moodArcHtml=`<div class="mood-arc"><span class="mood-arc-label">arc</span>${pips}</div>`;
   }
 
-  el.innerHTML=`<div class="tx-av ${t.sp}">${t.sp==='v'?'V':'O'}</div>
+  el.innerHTML=`<div class="tx-av ${t.sp}">${t.sp==='v'?'V':'R'}</div>
   <div class="tx-r">
     <div class="tx-byline ${t.sp}">${lbl}${t.mood?` <span class="tx-mood">${t.mood}</span>`:''}</div>
     <div class="tx-txt">${t.text}</div>
@@ -1171,9 +1281,9 @@ function showTyping(sp){
   const ex=body.querySelector('.typing-row'); if(ex)ex.remove();
   const el=document.createElement('div');
   el.className=`tx-turn typing-row ${sp}`;
-  el.innerHTML=`<div class="tx-av ${sp}">${sp==='v'?'V':'O'}</div>
+  el.innerHTML=`<div class="tx-av ${sp}">${sp==='v'?'V':'R'}</div>
   <div class="tx-r">
-    <div class="tx-byline ${sp}">${sp==='v'?'Visionary':'Operator'}</div>
+    <div class="tx-byline ${sp}">${sp==='v'?'Visionary':'Realist'}</div>
     <div class="tx-txt"><div class="ty-d"></div><div class="ty-d"></div><div class="ty-d"></div></div>
   </div>`;
   body.appendChild(el);
@@ -1281,7 +1391,7 @@ function buildSystemPrompt(speaker){
 
   if(speaker==='v') return `You are The Visionary on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nOften start with "Right," or "Okay so —". Spoken words only.\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase} (turn ${S.turnCount})${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
 
-  return `You are The Operator on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nOften start with "Sure. And who actually pays for that?" or "Here's what I keep coming back to:". Spoken words only.\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase} (turn ${S.turnCount})${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
+  return `You are The Realist on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nOften start with "Sure. And who actually pays for that?" or "Here's what I keep coming back to:". Spoken words only.\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase} (turn ${S.turnCount})${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
 }
 
 function buildMessages(speaker){
@@ -1291,9 +1401,9 @@ function buildMessages(speaker){
     const angle=OPENING_ANGLES[Math.floor(Math.random()*OPENING_ANGLES.length)];
     return [{role:'user', content:`Begin the conversation. Your opening line should tackle this angle: ${angle}`}];
   }
-  const myName   =speaker==='v'?'VISIONARY':'OPERATOR';
-  const transcript=S.history.map(h=>(h.sp==='v'?'[VISIONARY]':'[OPERATOR]')+': '+h.text).join('\n\n');
-  const lastLabel =S.history[S.history.length-1].sp==='v'?'VISIONARY':'OPERATOR';
+  const myName   =speaker==='v'?'VISIONARY':'REALIST';
+  const transcript=S.history.map(h=>(h.sp==='v'?'[VISIONARY]':'[REALIST]')+': '+h.text).join('\n\n');
+  const lastLabel =S.history[S.history.length-1].sp==='v'?'VISIONARY':'REALIST';
   const steerLine =S.steerCmd?`\n\nLISTENER STEERING: "${S.steerCmd}" — let this shape your response naturally.`:'';
   return [{role:'user', content:`Here is the conversation so far:\n\n${transcript}\n\n---\nYou are ${myName}. ${lastLabel} just spoke. Respond directly to their last point.${steerLine}`}];
 }
