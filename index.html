@@ -671,11 +671,18 @@ body::after {
   margin-bottom: 8px;
 }
 .ep-subtitle {
-  font-family: var(--f-serif); font-style: italic;
-  font-size: .95rem; color: var(--gold); line-height: 1.5;
-  border-left: 2px solid var(--gold); padding-left: 12px;
-  margin-top: 10px;
+  margin-top: 12px;
+  display: flex; flex-direction: column; gap: 5px;
 }
+.implied-q {
+  font-family: var(--f-serif); font-style: italic;
+  font-size: .88rem; color: var(--ink3); line-height: 1.5;
+  padding: 4px 0 4px 12px;
+  border-left: 1px solid var(--gold);
+  display: block;
+  transition: color .3s;
+}
+.implied-q:first-child { color: var(--ink2); border-left-width: 2px; }
 
 /* Stage pill + countdown */
 .prog-lbls { display: flex; justify-content: space-between; align-items: center; margin-top: 7px; }
@@ -1596,9 +1603,12 @@ In Verdict: give the build verdict — what would you actually do first if you w
 
   const speakerChar=speaker==='v'?visionaryCharacter:realistCharacter;
 
-  const openingInstruction=S.turnCount===0&&speaker==='v'
-    ?`\n\nFIRST TURN: Open by setting the scene. Reference the debate topic directly — name it, then paint the human reality of it. Make the listener immediately feel why this problem exists and who is living with it. Don't propose a solution. Don't be abstract. Show us the world.`
+  const qs=S.impliedQuestions&&S.impliedQuestions.length
+    ? `\n\nUNDERLYING QUESTIONS this debate needs to answer:\n${S.impliedQuestions.map((q,i)=>`${i+1}. ${q}`).join('\n')}`
     :'';
+  const openingInstruction=S.turnCount===0&&speaker==='v'
+    ?`\n\nFIRST TURN: Open by setting the scene. Reference the debate topic directly by name. Then paint the human reality — who is affected, what the world looks like with this unsolved. Let the underlying questions above give your opening its direction. Don't propose a solution. Make us feel why this matters.${qs}`
+    : qs;
 
   if(speaker==='v') return `${topicLine}\n\n${speakerChar}\n\n${mission}\n\n${lenRule}\n${voiceRule}\n\n${persona}${openingInstruction}\n\nSpoken words only.\n\nPhase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
 
@@ -1721,28 +1731,42 @@ async function speakText(text,sp){
 
 /* ═══ CORE LOOP ═══ */
 
-async function generateHeadline(){
+async function generateImpliedQuestions(){
+  // Generate 2-3 abstract questions implied by the selected headline.
+  // These become the subtitle and seed the Visionary's opening line.
+  // The headline is NEVER overwritten.
   try{
     const resp=await fetch('/api/generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        system:`You generate punchy episode titles for a live AI business strategy conversation. 
-Output ONLY the headline — 4-8 words, title case, no quotes, no punctuation at the end. 
-Make it sound like a magazine cover or documentary title. Evocative, not generic.
-Examples: "The Infrastructure Gap Nobody Is Building", "Why Freelancers Are The New Enterprise", "Betting On The Loneliness Market"`,
-        messages:[{role:'user',content:`Topic: ${S.topic||'open business exploration'}. Tone: ${S.tone}. Generate the episode headline.`}],
-        maxTokens:40,
+        system:`Given a business debate topic, generate exactly 2-3 short abstract questions that sit underneath it — the deeper questions it implies. These are not the topic restated. They are the uncomfortable, interesting questions that make the conversation worth having.
+Output ONLY a JSON array of strings, nothing else. Example:
+["Is friction the product, or the barrier?", "Who gets left out when this scales?", "What has to be true about human behaviour for this to work?"]
+Rules: keep each question under 12 words. Make them feel like they belong in a TED talk or a good magazine. Abstract but pointed.`,
+        messages:[{role:'user',content:`Debate topic: "${S.topic||'open business exploration'}"
+
+Generate 2-3 implied questions.`}],
+        maxTokens:120,
       }),
     });
     if(!resp.ok) return;
     const data=await resp.json();
-    const headline=(data.text||'').trim().replace(/^["']|["']$/g,'').trim();
-    if(headline){
-      $('ep-headline').textContent=headline;
-      $('ep-headline-wrap').style.display='block';
+    const raw=(data.text||'').trim();
+    const match=raw.match(/\[[\s\S]*\]/);
+    if(!match) return;
+    const questions=JSON.parse(match[0]).slice(0,3);
+    if(!questions.length) return;
+
+    // Store for use in the opening prompt
+    S.impliedQuestions=questions;
+
+    // Show as subtitle — never touch ep-headline
+    const subEl=$('ep-subtitle');
+    if(subEl){
+      subEl.innerHTML=questions.map(q=>`<span class="implied-q">${q}</span>`).join('');
     }
-  }catch(e){ /* silent — headline is optional */ }
+  }catch(e){ /* silent */ }
 }
 
 async function loop(){
@@ -1752,11 +1776,11 @@ async function loop(){
     return Math.random() < 0.15 ? sp : (sp==='v'?'o':'v');
   }
 
-  // Generate headline in parallel with first turn
+  // Generate implied questions in parallel with first turn (headline is never touched)
   showTyping('v');
   const [firstTurn] = await Promise.all([
     generateTurn('v'),
-    generateHeadline(),
+    generateImpliedQuestions(),
   ]);
   if(!firstTurn){ S.running=false; $('play-btn').textContent='▶'; return; }
 
@@ -1865,6 +1889,7 @@ function initEpisode(topic,tone){
     gearChange:null,
     topicAnchor:false,
     currentNudge:'',
+    impliedQuestions:[],
   };
   $('setup').style.display='none';
   $('episode').classList.add('on');
