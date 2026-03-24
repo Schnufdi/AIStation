@@ -3,1135 +3,1130 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Unscripted</title>
+<title>UNSCRIPTED — Live AI Strategy Engine</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Editorial+New:ital@0;1&family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@300;400&display=swap" rel="stylesheet"/>
-<!-- fallback if Editorial New isn't available -->
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
 <style>
-/*────────────────────────────────────────────────────────
-  DESIGN TOKENS
-────────────────────────────────────────────────────────*/
-:root{
-  --ink:       #0f0f0f;
-  --ink2:      #1c1c1c;
-  --ink3:      #2e2e2e;
-  --mid:       #6b6b6b;
-  --pale:      #a8a8a8;
-  --rule:      #e2e2e2;
-  --rule2:     #f0f0f0;
-  --paper:     #fafaf8;
-  --paper2:    #f4f4f1;
-  --paper3:    #eeecea;
-
-  /* Accent — not gold. A sharp editorial red-orange */
-  --acc:       #c8410a;
-  --acc-lt:    #f5e6de;
-  --acc2:      #1a5c9e;   /* Operator — ink blue */
-  --acc2-lt:   #dde9f7;
-
-  /* Signal colours */
-  --sig-lo:    #c0392b;
-  --sig-mid:   #e67e22;
-  --sig-hi:    #27ae60;
-
-  --f-disp:   'Cormorant Garamond', 'Georgia', serif;
-  --f-body:   'Inter', system-ui, sans-serif;
-  --f-mono:   'JetBrains Mono', monospace;
-
-  --r:  6px;
-  --r2: 12px;
-  --r3: 20px;
+/* ╔══════════════════════════════════════════════════╗
+   ║  TOKENS                                          ║
+   ╚══════════════════════════════════════════════════╝ */
+:root {
+  --bg:        #080807;
+  --bg2:       #0f0f0d;
+  --bg3:       #171715;
+  --bg4:       #1e1e1c;
+  --bg5:       #262623;
+  --wire:      rgba(255,255,255,0.06);
+  --wire2:     rgba(255,255,255,0.11);
+  --wire3:     rgba(255,255,255,0.18);
+  --ink:       #f2efe8;
+  --ink2:      #a09d96;
+  --ink3:      #5a5753;
+  --ink4:      #3a3835;
+  --gold:      #e8a030;
+  --gold2:     #f0b848;
+  --gold-glow: rgba(232,160,48,0.12);
+  --vis:       #ff5533;
+  --vis-dim:   rgba(255,85,51,0.1);
+  --op:        #00d4aa;
+  --op-dim:    rgba(0,212,170,0.1);
+  --lo:        #ff3b3b;
+  --mid:       #ff8c00;
+  --hi:        #00e676;
+  --f-disp:    'Bebas Neue', sans-serif;
+  --f-ui:      'Syne', sans-serif;
+  --f-serif:   'Instrument Serif', Georgia, serif;
+  --f-mono:    'Space Mono', monospace;
 }
 
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:15px;scroll-behavior:smooth}
-body{
-  background:var(--paper);
-  color:var(--ink);
-  font-family:var(--f-body);
-  font-weight:300;
-  min-height:100vh;
-  -webkit-font-smoothing:antialiased;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-ui);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-/*────────────────────────────────────────────────────────
-  LAYOUT SHELL
-────────────────────────────────────────────────────────*/
-.shell{
-  display:grid;
-  grid-template-rows:auto 1fr;
-  min-height:100vh;
+/* Noise texture */
+body::after {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 9000;
+  opacity: .03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/*────────────────────────────────────────────────────────
-  MASTHEAD — newspaper-style top bar
-────────────────────────────────────────────────────────*/
-.masthead{
-  border-bottom:3px solid var(--ink);
-  padding:0 40px;
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
-  align-items:stretch;
+/* ╔══════════════════════════════════════════════════╗
+   ║  HEADER                                          ║
+   ╚══════════════════════════════════════════════════╝ */
+.hdr {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--wire2);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 28px;
+  height: 52px;
 }
-.mast-left{
-  display:flex;align-items:center;
-  border-right:1px solid var(--rule);
-  padding:14px 24px 14px 0;
-  gap:20px;
+.hdr-l { display: flex; align-items: center; gap: 20px; }
+.hdr-meta {
+  font-family: var(--f-mono);
+  font-size: .5rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  line-height: 1.6;
 }
-.mast-ep-num{
-  font-family:var(--f-mono);
-  font-size:.65rem;
-  color:var(--mid);
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  line-height:1.4;
-}
-.mast-ep-num span{display:block;color:var(--acc);font-weight:400}
-.mast-sep{width:1px;height:28px;background:var(--rule)}
+.hdr-meta b { display: block; color: var(--gold); font-weight: 400; }
+.hdr-sep { width: 1px; height: 18px; background: var(--wire2); }
 
-.mast-center{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:16px 32px;
-  border-right:1px solid var(--rule);
+.wordmark {
+  font-family: var(--f-disp);
+  font-size: 1.75rem;
+  letter-spacing: .08em;
+  color: var(--ink);
+  line-height: 1;
+  text-align: center;
 }
-.wordmark{
-  font-family:var(--f-disp);
-  font-size:2.4rem;
-  font-weight:300;
-  letter-spacing:-.04em;
-  line-height:1;
-  color:var(--ink);
-}
-.wordmark em{font-style:italic;color:var(--acc)}
-.mast-sub{
-  font-size:.6rem;
-  letter-spacing:.18em;
-  text-transform:uppercase;
-  color:var(--pale);
-  margin-top:4px;
+.wordmark span { color: var(--gold); }
+.hdr-sub {
+  font-family: var(--f-mono);
+  font-size: .44rem;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--ink4);
+  text-align: center;
+  margin-top: 3px;
 }
 
-.mast-right{
-  display:flex;align-items:center;justify-content:flex-end;
-  padding:14px 0 14px 24px;
-  gap:16px;
+.hdr-r { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
+.live-pill {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--f-mono); font-size: .5rem;
+  letter-spacing: .16em; text-transform: uppercase;
+  padding: 5px 12px;
+  border: 1px solid var(--wire2);
+  color: var(--ink3);
+  opacity: 0; transition: all .4s;
 }
-.live-badge{
-  display:flex;align-items:center;gap:7px;
-  background:var(--ink);color:#fff;
-  font-family:var(--f-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;
-  padding:5px 12px;border-radius:2px;
-  opacity:0;transition:opacity .4s;
+.live-pill.on { opacity: 1; color: var(--gold); border-color: rgba(232,160,48,.4); }
+.live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.2;transform:scale(.6)} }
+.clock-el { font-family: var(--f-mono); font-size: .72rem; color: var(--ink3); min-width: 38px; text-align: right; }
+
+/* ╔══════════════════════════════════════════════════╗
+   ║  STATUS BAR                                      ║
+   ╚══════════════════════════════════════════════════╝ */
+.sbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 28px;
+  border-bottom: 1px solid var(--wire);
+  background: var(--bg);
 }
-.live-badge.on{opacity:1}
-.live-dot{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:pulse .9s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
-.clock-display{
-  font-family:var(--f-mono);font-size:.75rem;color:var(--mid);
-  min-width:36px;text-align:right;
+.sbar-l { font-family: var(--f-mono); font-size: .52rem; letter-spacing: .1em; color: var(--ink3); }
+.sbar-r { display: flex; gap: 8px; }
+.stag {
+  font-family: var(--f-mono); font-size: .48rem; letter-spacing: .13em;
+  text-transform: uppercase; padding: 3px 10px;
+  border: 1px solid var(--wire2); color: var(--ink3);
+}
+.stag.on { border-color: rgba(232,160,48,.4); color: var(--gold); }
+
+/* ╔══════════════════════════════════════════════════╗
+   ║  CONTENT                                         ║
+   ╚══════════════════════════════════════════════════╝ */
+.wrap { padding: 0 28px 80px; }
+
+/* ╔══════════════════════════════════════════════════╗
+   ║  SETUP SCREEN                                    ║
+   ╚══════════════════════════════════════════════════╝ */
+#setup { max-width: 960px; margin: 0 auto; padding: 60px 0 80px; }
+
+.setup-kicker {
+  font-family: var(--f-mono);
+  font-size: .56rem; letter-spacing: .24em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+.setup-kicker::after { content: ''; flex: 1; height: 1px; background: var(--wire2); }
+
+.setup-hed {
+  font-family: var(--f-disp);
+  font-size: 7.5rem;
+  line-height: .9;
+  letter-spacing: .04em;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+.setup-hed .ghost {
+  -webkit-text-stroke: 1px var(--wire3);
+  color: transparent;
+}
+.setup-hed .accent { color: var(--gold); }
+
+.setup-sub {
+  font-family: var(--f-disp);
+  font-size: 2.8rem;
+  letter-spacing: .12em;
+  color: var(--ink3);
+  margin-bottom: 32px;
 }
 
-/*────────────────────────────────────────────────────────
-  BELOW MASTHEAD — thin rule row
-────────────────────────────────────────────────────────*/
-.dateline{
-  border-bottom:1px solid var(--rule);
-  padding:7px 40px;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.dateline-l{font-family:var(--f-mono);font-size:.6rem;color:var(--pale);letter-spacing:.08em}
-.dateline-r{display:flex;gap:16px}
-.dl-tag{
-  font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mid);
-  border:1px solid var(--rule);padding:2px 8px;border-radius:2px;
-}
-.dl-tag.active{border-color:var(--acc);color:var(--acc)}
-
-/*────────────────────────────────────────────────────────
-  MAIN CONTENT
-────────────────────────────────────────────────────────*/
-.content{padding:0 40px 80px}
-
-/*────────────────────────────────────────────────────────
-  SETUP SCREEN — editorial landing
-────────────────────────────────────────────────────────*/
-#setup{
-  max-width:860px;margin:0 auto;
-  padding:56px 0 64px;
-}
-.setup-overline{
-  font-family:var(--f-mono);font-size:.62rem;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--acc);margin-bottom:20px;
-  display:flex;align-items:center;gap:12px;
-}
-.setup-overline::after{content:'';flex:1;height:1px;background:var(--rule)}
-
-.setup-headline{
-  font-family:var(--f-disp);
-  font-size:4.2rem;font-weight:300;line-height:1.05;
-  letter-spacing:-.03em;
-  margin-bottom:24px;
-  max-width:720px;
-}
-.setup-headline em{font-style:italic;color:var(--acc)}
-
-.setup-lede{
-  font-size:.97rem;color:var(--mid);line-height:1.8;
-  max-width:500px;margin-bottom:48px;
-  border-left:3px solid var(--rule);padding-left:20px;
+.setup-lede {
+  font-family: var(--f-serif);
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--ink2);
+  line-height: 1.85;
+  max-width: 440px;
+  margin-bottom: 52px;
+  padding-left: 18px;
+  border-left: 2px solid var(--gold);
 }
 
-/* Host bylines — editorial style */
-.bylines{
-  display:grid;grid-template-columns:1fr 1fr;gap:0;
-  border:1px solid var(--rule);margin-bottom:48px;
-  max-width:640px;
+/* Host cards */
+.hosts {
+  display: grid; grid-template-columns: 1fr 1fr;
+  max-width: 660px; margin-bottom: 52px;
+  border: 1px solid var(--wire2);
 }
-.byline{padding:24px 28px;position:relative}
-.byline:first-child{border-right:1px solid var(--rule)}
-.byline-role{
-  font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;
-  text-transform:uppercase;margin-bottom:8px;
+.host { padding: 26px 28px; position: relative; overflow: hidden; }
+.host:first-child { border-right: 1px solid var(--wire2); }
+.host::before {
+  content: '';
+  position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
 }
-.byline.v .byline-role{color:var(--acc)}
-.byline.o .byline-role{color:var(--acc2)}
-.byline-name{
-  font-family:var(--f-disp);font-size:1.5rem;font-weight:300;
-  font-style:italic;margin-bottom:10px;
+.host.v::before { background: linear-gradient(180deg, var(--vis), transparent); }
+.host.o::before { background: linear-gradient(180deg, var(--op), transparent); }
+.host-num {
+  font-family: var(--f-disp);
+  font-size: 4rem; line-height: 1;
+  position: absolute; top: 16px; right: 20px;
+  opacity: .06; pointer-events: none;
 }
-.byline.v .byline-name{color:var(--acc)}
-.byline.o .byline-name{color:var(--acc2)}
-.byline-desc{font-size:.8rem;color:var(--mid);line-height:1.65;margin-bottom:12px}
-.byline-sig{
-  font-family:var(--f-disp);font-style:italic;font-size:.85rem;
-  color:var(--pale);padding-top:12px;border-top:1px solid var(--rule2);
+.host-role {
+  font-family: var(--f-mono);
+  font-size: .5rem; letter-spacing: .18em; text-transform: uppercase;
+  margin-bottom: 8px;
 }
-
-/* Input area */
-.input-section{max-width:640px}
-.input-label{
-  font-family:var(--f-mono);font-size:.6rem;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--mid);margin-bottom:10px;
+.host.v .host-role { color: var(--vis); }
+.host.o .host-role { color: var(--op); }
+.host-name {
+  font-family: var(--f-disp);
+  font-size: 1.9rem; letter-spacing: .04em;
+  margin-bottom: 10px; color: var(--ink);
 }
-.input-row{
-  display:flex;border:1px solid var(--ink2);
-  border-radius:var(--r);overflow:hidden;margin-bottom:14px;
-  transition:box-shadow .2s;
+.host-desc {
+  font-family: var(--f-serif);
+  font-size: .8rem; color: var(--ink2); line-height: 1.72;
+  margin-bottom: 12px;
 }
-.input-row:focus-within{box-shadow:0 0 0 3px var(--acc-lt)}
-.topic-inp{
-  flex:1;padding:14px 18px;border:none;background:transparent;
-  font-family:var(--f-body);font-size:.92rem;color:var(--ink);outline:none;
-}
-.topic-inp::placeholder{color:var(--pale)}
-.go-btn{
-  padding:14px 24px;background:var(--ink);color:#fff;border:none;
-  font-family:var(--f-body);font-size:.82rem;font-weight:500;
-  cursor:pointer;letter-spacing:.02em;transition:background .15s;white-space:nowrap;
-}
-.go-btn:hover{background:var(--acc)}
-.go-btn:disabled{opacity:.4;cursor:not-allowed}
-
-.suggest-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
-.sug{
-  padding:5px 12px;border:1px solid var(--rule);border-radius:2px;
-  background:transparent;font-family:var(--f-body);font-size:.74rem;
-  color:var(--mid);cursor:pointer;transition:all .15s;letter-spacing:.01em;
-}
-.sug:hover{border-color:var(--ink);color:var(--ink)}
-
-/* Tone selector */
-.tone-grid{
-  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
-  max-width:640px;margin-bottom:8px;
-}
-.tone-btn{
-  padding:14px 16px;border:1px solid var(--rule);background:transparent;
-  text-align:left;cursor:pointer;transition:all .15s;
-  display:flex;flex-direction:column;gap:4px;
-}
-.tone-btn:hover{border-color:var(--ink);background:var(--paper2)}
-.tone-btn.active{border-color:var(--acc);background:var(--acc-lt)}
-.tone-name{
-  font-family:var(--f-mono);font-size:.62rem;font-weight:500;
-  letter-spacing:.04em;color:var(--ink);display:block;
-}
-.tone-btn.active .tone-name{color:var(--acc)}
-.tone-desc{
-  font-size:.72rem;color:var(--mid);line-height:1.45;display:block;
+.host-sig {
+  font-family: var(--f-serif);
+  font-style: italic; font-size: .78rem; color: var(--ink3);
+  padding-top: 12px; border-top: 1px solid var(--wire);
 }
 
-  display:none;align-items:center;gap:8px;
-  font-family:var(--f-mono);font-size:.65rem;color:var(--pale);letter-spacing:.06em;
-  margin-top:12px;
+/* Form */
+.form-wrap { max-width: 660px; }
+.f-label {
+  font-family: var(--f-mono);
+  font-size: .54rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink3); margin-bottom: 10px;
 }
-.loading-hint.on{display:flex}
-.ld-dot{width:4px;height:4px;border-radius:50%;background:var(--pale);animation:ldblink 1.2s ease-in-out infinite}
-.ld-dot:nth-child(2){animation-delay:.2s}.ld-dot:nth-child(3){animation-delay:.4s}
-@keyframes ldblink{0%,80%,100%{opacity:.2}40%{opacity:1}}
-
-/*────────────────────────────────────────────────────────
-  EPISODE LAYOUT — 3-column broadsheet
-────────────────────────────────────────────────────────*/
-#episode{display:none}
-#episode.on{display:block}
-
-.broadsheet{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 3px minmax(0,1.6fr) 3px minmax(0,1fr);
-  gap:0;
-  padding-top:32px;
-  min-height:70vh;
+.f-row {
+  display: flex;
+  border: 1px solid var(--wire2);
+  background: var(--bg2); margin-bottom: 12px;
+  transition: border-color .2s;
 }
-/* column rule dividers */
-.col-rule{background:var(--rule);margin:0 0}
-
-/* Column headers — newspaper section labels */
-.col-head{
-  font-family:var(--f-mono);font-size:.58rem;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--pale);
-  border-bottom:1px solid var(--rule);
-  padding-bottom:8px;margin-bottom:20px;
+.f-row:focus-within { border-color: rgba(232,160,48,.5); }
+.f-inp {
+  flex: 1; padding: 14px 18px; border: none; background: transparent;
+  font-family: var(--f-ui); font-size: .88rem; font-weight: 400;
+  color: var(--ink); outline: none;
 }
-
-/*────────────────────────────────────────────────────────
-  LEFT COLUMN — Barometers + State
-────────────────────────────────────────────────────────*/
-.col-left{padding:0 28px 0 0}
-
-/* BAROMETERS */
-.baro-section{margin-bottom:32px}
-.baro-block{margin-bottom:24px}
-.baro-name{
-  font-family:var(--f-disp);font-style:italic;
-  font-size:1.05rem;font-weight:300;
-  color:var(--ink);margin-bottom:2px;
+.f-inp::placeholder { color: var(--ink4); }
+.f-btn {
+  padding: 14px 26px; background: var(--gold); color: var(--bg);
+  border: none; font-family: var(--f-mono); font-size: .58rem;
+  font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  cursor: pointer; transition: background .15s; white-space: nowrap;
 }
-.baro-reading{
-  font-family:var(--f-mono);font-size:1.8rem;font-weight:300;
-  line-height:1;margin-bottom:6px;transition:color .8s;
-  letter-spacing:-.04em;
-}
-.baro-label{font-size:.72rem;color:var(--mid);margin-bottom:10px;line-height:1.45;min-height:2.4em;transition:color .4s}
+.f-btn:hover { background: var(--gold2); }
+.f-btn:disabled { opacity: .3; cursor: not-allowed; }
 
-/* Arc gauge — two thin lines */
-.arc-gauge{position:relative;width:100%;height:48px;margin-bottom:6px}
-.arc-svg{width:100%;height:100%}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.chip {
+  padding: 5px 12px; border: 1px solid var(--wire);
+  background: transparent; font-family: var(--f-mono);
+  font-size: .54rem; letter-spacing: .06em;
+  color: var(--ink3); cursor: pointer; transition: all .15s;
+}
+.chip:hover { border-color: var(--gold); color: var(--gold); }
 
-/* Horizontal gauge bar */
-.gauge-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.gauge-track{flex:1;height:2px;background:var(--rule);position:relative}
-.gauge-fill{position:absolute;left:0;top:0;height:100%;transition:width 1.2s cubic-bezier(.4,0,.2,1),background 1.2s}
-.gauge-head{
-  position:absolute;right:0;top:50%;
-  width:8px;height:8px;border-radius:50%;
-  transform:translate(50%,-50%);
-  transition:left 1.2s cubic-bezier(.4,0,.2,1),background 1.2s,box-shadow 1.2s;
-  left:0;
+/* Tone grid */
+.tone-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 6px; max-width: 660px; margin-bottom: 8px;
 }
-.gauge-pct{font-family:var(--f-mono);font-size:.65rem;color:var(--pale);min-width:28px;text-align:right}
-.gauge-scale{display:flex;justify-content:space-between;padding:0 2px}
-.gauge-tick{font-size:.58rem;color:var(--rule);letter-spacing:.02em}
-
-/* Tension callout */
-.tension-box{
-  border-left:2px solid var(--acc);
-  padding:10px 14px;
-  background:var(--acc-lt);
-  font-size:.75rem;line-height:1.55;color:var(--ink2);
-  display:none;margin-top:16px;
+.tone-btn {
+  padding: 14px 16px; border: 1px solid var(--wire);
+  background: var(--bg2); text-align: left;
+  cursor: pointer; transition: all .15s; position: relative; overflow: hidden;
 }
-.tension-box.on{display:block}
-.tension-box strong{color:var(--acc);font-weight:500}
-
-/* STATE PANEL */
-.state-section{border-top:1px solid var(--rule);padding-top:20px}
-.state-block{margin-bottom:18px}
-.state-block-head{
-  font-family:var(--f-mono);font-size:.57rem;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--pale);
-  margin-bottom:8px;display:flex;align-items:center;gap:8px;
+.tone-btn::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: transparent; transition: background .2s;
 }
-.state-block-head::after{content:'';flex:1;height:1px;background:var(--rule2)}
-.state-entry{
-  font-size:.78rem;color:var(--mid);padding:4px 0;
-  border-bottom:1px solid var(--rule2);line-height:1.4;
+.tone-btn:hover { border-color: var(--wire2); background: var(--bg3); }
+.tone-btn.active { border-color: rgba(232,160,48,.4); background: var(--gold-glow); }
+.tone-btn.active::before { background: var(--gold); }
+.tone-name {
+  font-family: var(--f-mono); font-size: .58rem; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink2); display: block; margin-bottom: 5px;
+  transition: color .15s;
 }
-.state-entry:last-child{border-bottom:none}
-.state-entry.lead{color:var(--ink);font-weight:500}
-.state-entry.locked{color:var(--sig-hi)}
-.state-nil{font-size:.73rem;color:var(--rule);font-style:italic}
-
-.phase-strip{display:flex;gap:3px;margin-bottom:20px}
-.ph-seg{flex:1;height:3px;background:var(--rule);transition:background .5s}
-.ph-seg.past{background:var(--pale)}
-.ph-seg.now{background:var(--acc)}
-.ph-name{font-family:var(--f-mono);font-size:.6rem;color:var(--mid);letter-spacing:.08em;margin-top:5px}
-
-/*────────────────────────────────────────────────────────
-  CENTRE COLUMN — Player + Transcript
-────────────────────────────────────────────────────────*/
-.col-mid{padding:0 32px}
-
-/* NOW SPEAKING block */
-.now-speaking{
-  border:1px solid var(--rule);
-  border-radius:var(--r);
-  padding:20px;
-  margin-bottom:20px;
-  position:relative;
-  overflow:hidden;
-  min-height:90px;
-  transition:border-color .3s;
-}
-.now-speaking.v{border-color:var(--acc)}
-.now-speaking.o{border-color:var(--acc2)}
-.ns-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.ns-who{display:flex;align-items:center;gap:10px}
-.ns-avatar{
-  width:32px;height:32px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--f-disp);font-size:.85rem;font-style:italic;
-  font-weight:300;flex-shrink:0;transition:all .3s;
-}
-.ns-avatar.v{background:var(--acc-lt);color:var(--acc);border:1px solid var(--acc)}
-.ns-avatar.o{background:var(--acc2-lt);color:var(--acc2);border:1px solid var(--acc2)}
-.ns-avatar.idle{background:var(--rule2);color:var(--pale);border:1px solid var(--rule)}
-.ns-name-block{}
-.ns-name{font-size:.7rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase}
-.ns-name.v{color:var(--acc)}
-.ns-name.o{color:var(--acc2)}
-.ns-name.idle{color:var(--pale)}
-.ns-mood{font-size:.6rem;color:var(--pale);margin-top:1px;font-style:italic}
-
-/* waveform */
-.waveform{display:flex;align-items:center;gap:2px;height:20px}
-.wv{width:2px;border-radius:1px;background:var(--rule);transform-origin:center}
-.wv:nth-child(1){height:25%}.wv:nth-child(2){height:55%}.wv:nth-child(3){height:90%}
-.wv:nth-child(4){height:40%}.wv:nth-child(5){height:70%}.wv:nth-child(6){height:35%}.wv:nth-child(7){height:80%}
-.waveform.live .wv{animation:wvd .8s ease-in-out infinite}
-.waveform.live.v .wv{background:var(--acc)}
-.waveform.live.o .wv{background:var(--acc2)}
-.wv:nth-child(1){animation-delay:0s}.wv:nth-child(2){animation-delay:.06s}.wv:nth-child(3){animation-delay:.13s}
-.wv:nth-child(4){animation-delay:.2s}.wv:nth-child(5){animation-delay:.06s}.wv:nth-child(6){animation-delay:.17s}.wv:nth-child(7){animation-delay:.04s}
-@keyframes wvd{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.15)}}
-
-.ns-text{font-size:.9rem;line-height:1.6;color:var(--mid);font-style:italic}
-.ns-text.live{color:var(--ink);font-style:normal}
-
-/* Progress bar */
-.prog-wrap{margin-bottom:18px}
-.prog-track{height:1px;background:var(--rule);position:relative}
-.prog-fill{position:absolute;left:0;top:0;height:100%;background:var(--ink);width:0%;transition:width .6s ease}
-.prog-labels{display:flex;justify-content:space-between;margin-top:5px}
-.prog-l{font-family:var(--f-mono);font-size:.58rem;color:var(--pale)}
-
-/* Player controls */
-.player-ctrls{display:flex;align-items:center;gap:12px;margin-bottom:24px}
-.pc-btn{
-  width:38px;height:38px;border-radius:50%;border:1px solid var(--rule);
-  background:transparent;color:var(--mid);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;font-size:.85rem;
-  transition:all .15s;
-}
-.pc-btn:hover{border-color:var(--ink);color:var(--ink)}
-.pc-play{
-  width:44px;height:44px;background:var(--ink);color:#fff;
-  border-color:var(--ink);font-size:.9rem;
-}
-.pc-play:hover{background:var(--acc);border-color:var(--acc)}
-.pc-play:disabled{opacity:.35;cursor:not-allowed}
-.pc-spacer{flex:1}
-
-/* Steering */
-.steer-head{
-  font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--pale);
-  margin-bottom:10px;
-}
-.steer-btns{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:24px}
-.sb{
-  padding:5px 10px;border:1px solid var(--rule);border-radius:2px;
-  background:transparent;font-family:var(--f-body);font-size:.72rem;
-  color:var(--mid);cursor:pointer;transition:all .15s;white-space:nowrap;
-}
-.sb:hover{border-color:var(--ink);color:var(--ink);background:var(--paper2)}
-.sb.hit{background:var(--ink);color:#fff;border-color:var(--ink)}
-.sb[data-cmd="lock-that-in"]:hover{border-color:var(--sig-hi);color:var(--sig-hi);background:#f0faf4}
-.sb[data-cmd="kill-that"]:hover{border-color:var(--sig-lo);color:var(--sig-lo);background:#fdf0f0}
-.sb[data-cmd="wrap-it-up"]:hover{border-color:var(--acc2);color:var(--acc2);background:var(--acc2-lt)}
-
-/* TRANSCRIPT */
-.transcript-head{
-  font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--pale);
-  border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:20px;
-  display:flex;justify-content:space-between;
-}
-.tx-body{max-height:520px;overflow-y:auto;padding-right:4px}
-.tx-body::-webkit-scrollbar{width:2px}
-.tx-body::-webkit-scrollbar-thumb{background:var(--rule)}
-
-.tx-turn{
-  display:grid;grid-template-columns:24px 1fr;
-  gap:0 12px;margin-bottom:22px;
-  animation:fadein .35s ease;
-}
-@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.tx-initial{
-  width:24px;height:24px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--f-disp);font-size:.75rem;font-style:italic;font-weight:300;
-  flex-shrink:0;margin-top:1px;
-}
-.tx-initial.v{background:var(--acc-lt);color:var(--acc)}
-.tx-initial.o{background:var(--acc2-lt);color:var(--acc2)}
-.tx-right{}
-.tx-byline{
-  font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;
-  margin-bottom:4px;display:flex;align-items:center;gap:8px;
-}
-.tx-byline.v{color:var(--acc)}
-.tx-byline.o{color:var(--acc2)}
-.tx-mood{
-  font-size:.57rem;color:var(--pale);padding:1px 6px;
-  border:1px solid var(--rule);border-radius:1px;font-style:italic;
-  font-family:var(--f-disp);
-}
-.tx-text{font-size:.87rem;line-height:1.7;color:#555;font-weight:300}
-.tx-turn.fresh .tx-text{color:var(--ink);font-weight:400}
-
-.typing-row .tx-text{display:flex;gap:3px;padding:6px 0}
-.ty-d{width:4px;height:4px;border-radius:50%;background:var(--rule);animation:tyd 1s ease-in-out infinite}
-.ty-d:nth-child(2){animation-delay:.17s}.ty-d:nth-child(3){animation-delay:.34s}
-@keyframes tyd{0%,80%,100%{opacity:.2;transform:scale(.75)}40%{opacity:1;transform:scale(1)}}
-
-/*────────────────────────────────────────────────────────
-  RIGHT COLUMN — Business concept card
-────────────────────────────────────────────────────────*/
-.col-right{padding:0 0 0 28px}
-
-.concept-card{
-  border:1px solid var(--rule);
-  padding:24px;
-  position:relative;
-}
-.concept-label{
-  font-family:var(--f-mono);font-size:.58rem;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--pale);margin-bottom:16px;
-  display:flex;align-items:center;gap:8px;
-}
-.concept-label::after{content:'';flex:1;height:1px;background:var(--rule2)}
-
-.concept-name{
-  font-family:var(--f-disp);font-size:1.8rem;font-weight:300;
-  font-style:italic;line-height:1.1;margin-bottom:6px;
-  color:var(--ink);min-height:44px;
-  transition:all .4s;
-}
-.concept-pitch{
-  font-size:.82rem;color:var(--mid);line-height:1.65;
-  margin-bottom:20px;min-height:60px;border-left:2px solid var(--rule2);padding-left:12px;
+.tone-btn.active .tone-name { color: var(--gold); }
+.tone-desc {
+  font-family: var(--f-serif); font-style: italic;
+  font-size: .74rem; color: var(--ink3); line-height: 1.45; display: block;
 }
 
-.concept-facts{border-top:1px solid var(--rule);padding-top:16px;margin-bottom:16px}
-.cf-row{
-  display:grid;grid-template-columns:80px 1fr;
-  gap:6px;padding:8px 0;border-bottom:1px solid var(--rule2);
-  align-items:start;
+.load-hint {
+  display: none; align-items: center; gap: 10px;
+  font-family: var(--f-mono); font-size: .56rem;
+  color: var(--ink3); letter-spacing: .08em; margin-top: 14px;
 }
-.cf-row:last-child{border-bottom:none}
-.cf-key{font-family:var(--f-mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);padding-top:2px}
-.cf-val{font-size:.8rem;color:var(--ink2);line-height:1.5}
-.cf-val.nil{color:var(--pale);font-style:italic}
+.load-hint.on { display: flex; }
+.ld { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); animation: ldblink 1.2s ease-in-out infinite; }
+.ld:nth-child(2){animation-delay:.2s} .ld:nth-child(3){animation-delay:.4s}
+@keyframes ldblink { 0%,80%,100%{opacity:.15} 40%{opacity:1} }
 
-/* Model highlight badge */
-.model-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:4px 10px;border-radius:2px;font-size:.7rem;
-  font-weight:500;letter-spacing:.02em;margin-bottom:6px;
-}
-.model-badge.sub{background:#edf7f0;color:#1e7a42}
-.model-badge.mkt{background:#eef4fd;color:#1a5c9e}
-.model-badge.lic{background:#fef9ee;color:#9a6c00}
-.model-badge.b2b{background:#f9eef9;color:#7a1a7a}
-.model-badge.hw {background:#fef0ee;color:#c8410a}
+/* ╔══════════════════════════════════════════════════╗
+   ║  EPISODE — 3 COLUMNS                             ║
+   ╚══════════════════════════════════════════════════╝ */
+#episode { display: none; }
+#episode.on { display: block; }
 
-.verdict-strip{
-  border-top:1px solid var(--rule);
-  padding-top:14px;
-  display:flex;align-items:center;justify-content:space-between;
+.board {
+  display: grid;
+  grid-template-columns: 256px 1px 1fr 1px 272px;
+  gap: 0; padding-top: 22px; min-height: 80vh;
 }
-.verdict-word{
-  font-family:var(--f-disp);font-size:1.1rem;font-style:italic;font-weight:300;
+.c-rule { background: var(--wire); }
+.c-hed {
+  font-family: var(--f-mono);
+  font-size: .48rem; letter-spacing: .24em; text-transform: uppercase;
+  color: var(--ink4); border-bottom: 1px solid var(--wire);
+  padding-bottom: 10px; margin-bottom: 20px;
 }
-.verdict-word.pursue{color:var(--sig-hi)}
-.verdict-word.pivot{color:var(--sig-mid)}
-.verdict-word.kill{color:var(--sig-lo)}
-.verdict-why{font-size:.7rem;color:var(--pale);max-width:160px;text-align:right;line-height:1.45}
 
-/*────────────────────────────────────────────────────────
-  FINAL FULL-WIDTH SUMMARY
-────────────────────────────────────────────────────────*/
-.final-banner{
-  display:none;
-  border-top:3px solid var(--ink);
-  margin-top:40px;
-  padding-top:40px;
+/* ── LEFT PANEL ── */
+.col-l { padding-right: 22px; }
+
+.baro-blk { margin-bottom: 26px; }
+.baro-name {
+  font-family: var(--f-ui);
+  font-size: .65rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink2); margin-bottom: 1px;
 }
-.final-banner.on{display:block}
-.final-eyebrow{
-  font-family:var(--f-mono);font-size:.6rem;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--acc);margin-bottom:16px;
-  display:flex;align-items:center;gap:12px;
+.baro-big {
+  font-family: var(--f-disp);
+  font-size: 3rem; line-height: 1;
+  margin-bottom: 4px; letter-spacing: .02em;
+  transition: color .8s;
 }
-.final-eyebrow::after{content:'';flex:1;height:1px;background:var(--rule)}
-.final-name{
-  font-family:var(--f-disp);font-size:3.8rem;font-weight:300;
-  font-style:italic;letter-spacing:-.03em;line-height:1;
-  margin-bottom:12px;
+.baro-lbl {
+  font-family: var(--f-serif); font-style: italic;
+  font-size: .7rem; color: var(--ink3); line-height: 1.5;
+  margin-bottom: 10px; min-height: 2.1em;
 }
-.final-pitch{
-  font-size:1.1rem;color:var(--mid);line-height:1.7;
-  max-width:640px;margin-bottom:32px;
+.gauge { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.g-track { flex: 1; height: 2px; background: var(--bg5); position: relative; }
+.g-fill {
+  position: absolute; left: 0; top: 0; height: 100%;
+  transition: width 1.4s cubic-bezier(.4,0,.2,1), background 1.4s;
 }
-.final-grid{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
-  border:1px solid var(--rule);margin-bottom:24px;
+.g-head {
+  position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  transform: translate(50%,-50%); top: 50%; left: 0;
+  transition: left 1.4s cubic-bezier(.4,0,.2,1), background 1.4s, box-shadow 1.4s;
 }
-@media(max-width:800px){.final-grid{grid-template-columns:repeat(2,1fr)}}
-.fg-cell{padding:20px 22px;border-right:1px solid var(--rule)}
-.fg-cell:last-child{border-right:none}
-.fg-key{font-family:var(--f-mono);font-size:.57rem;letter-spacing:.12em;text-transform:uppercase;color:var(--pale);margin-bottom:6px}
-.fg-val{font-size:.82rem;color:var(--ink);line-height:1.55}
-.final-verdict-row{
-  display:flex;align-items:center;gap:20px;
-  border-top:1px solid var(--rule);padding-top:20px;
+.g-pct { font-family: var(--f-mono); font-size: .56rem; color: var(--ink3); min-width: 28px; text-align: right; }
+.g-scale { display: flex; justify-content: space-between; }
+.g-tick { font-family: var(--f-mono); font-size: .46rem; color: var(--ink4); opacity: .6; }
+
+.tension {
+  border-left: 2px solid var(--gold);
+  padding: 10px 14px; background: var(--gold-glow);
+  font-family: var(--f-serif); font-style: italic;
+  font-size: .72rem; line-height: 1.6; color: var(--ink2);
+  display: none; margin-top: 14px;
 }
-.fv-word{font-family:var(--f-disp);font-size:2rem;font-style:italic;font-weight:300}
-.fv-word.pursue{color:var(--sig-hi)}.fv-word.pivot{color:var(--sig-mid)}.fv-word.kill{color:var(--sig-lo)}
-.fv-desc{font-size:.8rem;color:var(--mid);line-height:1.6;max-width:440px}
-.final-baro-row{display:flex;gap:32px;margin-top:24px;padding-top:20px;border-top:1px solid var(--rule2)}
-.fbr-item{}
-.fbr-l{font-family:var(--f-mono);font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;color:var(--pale);margin-bottom:6px}
-.fbr-track{width:140px;height:2px;background:var(--rule);position:relative;margin-bottom:4px}
-.fbr-fill{position:absolute;left:0;top:0;height:100%;transition:width 1s,background 1s}
-.fbr-val{font-family:var(--f-mono);font-size:.65rem;color:var(--mid)}
-.tone-grid{
-  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
-  max-width:640px;margin-bottom:28px;
+.tension.on { display: block; }
+.tension strong { color: var(--gold); font-style: normal; }
+
+.state-sec { border-top: 1px solid var(--wire); padding-top: 20px; }
+.state-blk { margin-bottom: 16px; }
+.state-blk-hed {
+  font-family: var(--f-mono); font-size: .48rem;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
 }
-.tone-btn{
-  padding:14px 16px;text-align:left;
-  border:1px solid var(--rule);background:transparent;cursor:pointer;
-  transition:all .15s;border-radius:var(--r);
+.state-blk-hed::after { content: ''; flex: 1; height: 1px; background: var(--wire); }
+.state-item {
+  font-family: var(--f-serif);
+  font-size: .76rem; color: var(--ink2);
+  padding: 5px 0; border-bottom: 1px solid var(--wire); line-height: 1.45;
 }
-.tone-btn:hover{border-color:var(--ink2);background:var(--paper2)}
-.tone-btn.active{border-color:var(--acc);background:var(--acc-lt)}
-.tone-name{
-  font-family:var(--f-mono);font-size:.62rem;font-weight:500;
-  letter-spacing:.04em;color:var(--ink2);margin-bottom:5px;
+.state-item:last-child { border-bottom: none; }
+.state-item.lead { color: var(--ink); font-weight: 500; }
+.state-item.locked { color: var(--hi); }
+.state-nil { font-family: var(--f-serif); font-style: italic; font-size: .7rem; color: var(--ink4); }
+
+.phase-strip { display: flex; gap: 3px; margin-bottom: 14px; }
+.ph { flex: 1; height: 2px; background: var(--bg5); transition: background .5s; }
+.ph.past { background: var(--ink3); }
+.ph.now { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+.ph-lbl {
+  font-family: var(--f-mono); font-size: .52rem;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--gold); margin-top: 4px;
 }
-.tone-btn.active .tone-name{color:var(--acc)}
-.tone-desc{font-size:.72rem;color:var(--mid);line-height:1.5}
+
+/* ── CENTRE PANEL ── */
+.col-m { padding: 0 28px; }
+
+/* Now Speaking */
+.now-spk {
+  border: 1px solid var(--wire2);
+  background: var(--bg2);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  position: relative; overflow: hidden; min-height: 94px;
+  transition: border-color .3s;
+}
+.now-spk::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  transition: background .3s;
+}
+.now-spk.v { border-color: rgba(255,85,51,.3); }
+.now-spk.v::before { background: linear-gradient(90deg, var(--vis), transparent); }
+.now-spk.v::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 0% 50%, var(--vis-dim) 0%, transparent 65%);
+  pointer-events: none;
+}
+.now-spk.o { border-color: rgba(0,212,170,.3); }
+.now-spk.o::before { background: linear-gradient(90deg, var(--op), transparent); }
+.now-spk.o::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 0% 50%, var(--op-dim) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.ns-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; position: relative; z-index: 1; }
+.ns-who { display: flex; align-items: center; gap: 12px; }
+.ns-av {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-disp); font-size: .85rem; letter-spacing: .04em;
+  flex-shrink: 0; transition: all .3s;
+  clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+}
+.ns-av.v { background: var(--vis-dim); color: var(--vis); }
+.ns-av.o { background: var(--op-dim); color: var(--op); }
+.ns-av.idle { clip-path: none; border-radius: 50%; background: var(--bg5); color: var(--ink3); }
+.ns-name {
+  font-family: var(--f-mono); font-size: .6rem;
+  letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+}
+.ns-name.v { color: var(--vis); } .ns-name.o { color: var(--op); } .ns-name.idle { color: var(--ink3); }
+.ns-mood { font-family: var(--f-serif); font-style: italic; font-size: .6rem; color: var(--ink3); margin-top: 1px; }
+
+/* Waveform */
+.waveform { display: flex; align-items: center; gap: 2px; height: 20px; }
+.wv { width: 2px; border-radius: 1px; background: var(--bg5); transform-origin: center; }
+.wv:nth-child(1){height:18%}.wv:nth-child(2){height:55%}.wv:nth-child(3){height:88%}
+.wv:nth-child(4){height:32%}.wv:nth-child(5){height:68%}.wv:nth-child(6){height:28%}.wv:nth-child(7){height:78%}
+.waveform.live.v .wv { background: var(--vis); animation: wvd .9s ease-in-out infinite; }
+.waveform.live.o .wv { background: var(--op); animation: wvd .9s ease-in-out infinite; }
+.wv:nth-child(1){animation-delay:0s}.wv:nth-child(2){animation-delay:.07s}.wv:nth-child(3){animation-delay:.14s}
+.wv:nth-child(4){animation-delay:.21s}.wv:nth-child(5){animation-delay:.07s}.wv:nth-child(6){animation-delay:.18s}.wv:nth-child(7){animation-delay:.04s}
+@keyframes wvd { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(.1)} }
+
+.ns-txt {
+  font-family: var(--f-serif); font-style: italic;
+  font-size: .86rem; line-height: 1.65; color: var(--ink3);
+  position: relative; z-index: 1;
+}
+.ns-txt.live { color: var(--ink); font-style: normal; }
+
+/* Progress */
+.prog-wrap { margin-bottom: 16px; }
+.prog-track { height: 1px; background: var(--bg5); position: relative; }
+.prog-fill {
+  position: absolute; left: 0; top: 0; height: 100%;
+  background: var(--gold); width: 0%;
+  transition: width .6s ease; box-shadow: 0 0 8px var(--gold);
+}
+.prog-lbls { display: flex; justify-content: space-between; margin-top: 6px; }
+.prog-lbl { font-family: var(--f-mono); font-size: .52rem; color: var(--ink3); letter-spacing: .06em; }
+
+/* Controls */
+.ctrls { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.c-btn {
+  width: 38px; height: 38px; border: 1px solid var(--wire2);
+  background: var(--bg2); color: var(--ink2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem; transition: all .15s;
+}
+.c-btn:hover { border-color: var(--gold); color: var(--gold); }
+.c-play {
+  width: 46px; height: 46px; background: var(--gold);
+  color: var(--bg); border-color: var(--gold); font-size: .95rem;
+}
+.c-play:hover { background: var(--gold2); border-color: var(--gold2); color: var(--bg); }
+.c-play:disabled { opacity: .25; cursor: not-allowed; }
+.c-spacer { flex: 1; }
+
+/* Steer */
+.steer-hed {
+  font-family: var(--f-mono); font-size: .48rem;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.steer-hed::after { content: ''; flex: 1; height: 1px; background: var(--wire); }
+.steer-btns { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 24px; }
+.s-btn {
+  padding: 5px 12px; border: 1px solid var(--wire);
+  background: transparent; font-family: var(--f-mono);
+  font-size: .54rem; letter-spacing: .06em; color: var(--ink3);
+  cursor: pointer; transition: all .15s;
+}
+.s-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+.s-btn.hit { background: rgba(232,160,48,.14); border-color: var(--gold); color: var(--gold); }
+
+/* Transcript */
+.tx-hed {
+  display: flex; justify-content: space-between;
+  font-family: var(--f-mono); font-size: .5rem;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink4); border-bottom: 1px solid var(--wire);
+  padding-bottom: 10px; margin-bottom: 16px;
+}
+.tx-turn { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--wire); }
+.tx-turn.fresh { animation: txin .35s ease forwards; }
+@keyframes txin { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.tx-av {
+  width: 26px; height: 26px; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-disp); font-size: .78rem; letter-spacing: .04em;
+  clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+}
+.tx-av.v { background: var(--vis-dim); color: var(--vis); }
+.tx-av.o { background: var(--op-dim); color: var(--op); }
+.tx-r { flex: 1; }
+.tx-byline {
+  font-family: var(--f-mono); font-size: .5rem;
+  letter-spacing: .13em; text-transform: uppercase;
+  margin-bottom: 6px; display: flex; align-items: center; gap: 7px;
+}
+.tx-byline.v { color: var(--vis); } .tx-byline.o { color: var(--op); }
+.tx-mood { font-style: italic; text-transform: none; letter-spacing: 0; color: var(--ink3); font-size: .64em; font-family: var(--f-serif); }
+.tx-txt { font-family: var(--f-serif); font-size: .82rem; color: var(--ink2); line-height: 1.72; }
+
+.ty-d {
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--ink3); animation: tyd 1.2s ease-in-out infinite; margin-right: 3px;
+}
+.ty-d:nth-child(2){animation-delay:.2s} .ty-d:nth-child(3){animation-delay:.4s}
+@keyframes tyd { 0%,80%,100%{transform:scale(.5);opacity:.4} 40%{transform:scale(1);opacity:1} }
+
+/* ── RIGHT PANEL ── */
+.col-r { padding-left: 22px; }
+
+.cc-label {
+  font-family: var(--f-mono); font-size: .48rem;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--ink4); margin-bottom: 12px;
+}
+.cc-name {
+  font-family: var(--f-disp);
+  font-size: 2.1rem; letter-spacing: .04em; line-height: 1;
+  margin-bottom: 8px; color: var(--ink); min-height: 42px;
+  transition: all .4s;
+}
+.cc-pitch {
+  font-family: var(--f-serif); font-style: italic;
+  font-size: .8rem; color: var(--ink2); line-height: 1.72;
+  margin-bottom: 20px; min-height: 52px;
+  padding-left: 12px; border-left: 2px solid var(--wire2);
+}
+.cc-facts { border-top: 1px solid var(--wire); padding-top: 14px; margin-bottom: 14px; }
+.cf-row {
+  display: grid; grid-template-columns: 64px 1fr;
+  gap: 6px; padding: 9px 0; border-bottom: 1px solid var(--wire);
+  align-items: start;
+}
+.cf-row:last-child { border-bottom: none; }
+.cf-key {
+  font-family: var(--f-mono); font-size: .48rem;
+  letter-spacing: .13em; text-transform: uppercase; color: var(--ink4); padding-top: 2px;
+}
+.cf-val { font-family: var(--f-serif); font-size: .78rem; color: var(--ink); line-height: 1.5; }
+.cf-val.nil { color: var(--ink3); font-style: italic; }
+
+.mbadge {
+  display: inline-flex; align-items: center;
+  padding: 2px 9px; font-family: var(--f-mono);
+  font-size: .54rem; letter-spacing: .06em; font-weight: 700; margin-bottom: 3px;
+}
+.mbadge.sub{background:rgba(0,230,118,.08);color:var(--hi);border:1px solid rgba(0,230,118,.2)}
+.mbadge.mkt{background:rgba(0,212,170,.08);color:var(--op);border:1px solid rgba(0,212,170,.2)}
+.mbadge.lic{background:rgba(232,160,48,.08);color:var(--gold);border:1px solid rgba(232,160,48,.2)}
+.mbadge.b2b{background:rgba(168,100,255,.08);color:#a864ff;border:1px solid rgba(168,100,255,.2)}
+.mbadge.hw{background:rgba(255,85,51,.08);color:var(--vis);border:1px solid rgba(255,85,51,.2)}
+
+.verdict-strip { border-top: 1px solid var(--wire); padding-top: 14px; display: flex; align-items: center; justify-content: space-between; }
+.verdict-word { font-family: var(--f-disp); font-size: 1.3rem; letter-spacing: .08em; }
+.verdict-word.pursue{color:var(--hi)} .verdict-word.pivot{color:var(--mid)} .verdict-word.kill{color:var(--lo)}
+.verdict-why { font-family: var(--f-serif); font-style: italic; font-size: .68rem; color: var(--ink3); max-width: 140px; text-align: right; line-height: 1.5; }
+
+/* ╔══════════════════════════════════════════════════╗
+   ║  FINAL BANNER                                    ║
+   ╚══════════════════════════════════════════════════╝ */
+.final-banner { display: none; border-top: 1px solid var(--wire2); margin-top: 48px; padding: 48px 0 80px; }
+.final-banner.on { display: block; }
+.final-kicker {
+  font-family: var(--f-mono); font-size: .54rem;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 14px;
+}
+.final-kicker::after { content: ''; flex: 1; height: 1px; background: var(--wire2); }
+.final-name {
+  font-family: var(--f-disp); font-size: 5rem;
+  letter-spacing: .06em; line-height: .9;
+  margin-bottom: 14px; color: var(--ink);
+}
+.final-pitch { font-family: var(--f-serif); font-style: italic; font-size: 1rem; color: var(--ink2); line-height: 1.75; max-width: 580px; margin-bottom: 36px; }
+.final-grid { display: grid; grid-template-columns: repeat(4,1fr); border: 1px solid var(--wire2); margin-bottom: 24px; background: var(--bg2); }
+.fg-cell { padding: 18px 20px; border-right: 1px solid var(--wire); }
+.fg-cell:last-child { border-right: none; }
+.fg-key { font-family: var(--f-mono); font-size: .5rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink4); margin-bottom: 6px; }
+.fg-val { font-family: var(--f-serif); font-size: .82rem; color: var(--ink); line-height: 1.6; }
+.final-verdict-row { display: flex; align-items: center; gap: 24px; border-top: 1px solid var(--wire); padding-top: 24px; }
+.fv-word { font-family: var(--f-disp); font-size: 2.4rem; letter-spacing: .06em; }
+.fv-word.pursue{color:var(--hi)} .fv-word.pivot{color:var(--mid)} .fv-word.kill{color:var(--lo)}
+.fv-desc { font-family: var(--f-serif); font-style: italic; font-size: .82rem; color: var(--ink2); line-height: 1.65; max-width: 460px; }
+.final-baro-row { display: flex; gap: 40px; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--wire); }
+.fbr-l { font-family: var(--f-mono); font-size: .5rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink4); margin-bottom: 6px; }
+.fbr-track { width: 160px; height: 2px; background: var(--bg5); position: relative; margin-bottom: 5px; }
+.fbr-fill { position: absolute; left: 0; top: 0; height: 100%; transition: width 1s, background 1s; }
+.fbr-val { font-family: var(--f-mono); font-size: .6rem; color: var(--ink2); }
 </style>
 </head>
 <body>
-<div class="shell">
 
-  <!-- MASTHEAD -->
-  <header class="masthead">
-    <div class="mast-left">
-      <div class="mast-ep-num">
-        Episode<span id="ep-num">001</span>
-      </div>
-      <div class="mast-sep"></div>
-      <div class="mast-ep-num">
-        Mode<span>Business Idea</span>
-      </div>
-    </div>
-    <div class="mast-center">
-      <div class="wordmark">Un<em>scripted</em></div>
-      <div class="mast-sub">Live AI Conversation Engine</div>
-    </div>
-    <div class="mast-right">
-      <div class="live-badge" id="live-badge"><div class="live-dot"></div>On Air</div>
-      <div class="clock-display" id="clock">—</div>
-    </div>
-  </header>
+<!-- ╔══════════════════════════════════════════════════╗
+     ║  HEADER                                          ║
+     ╚══════════════════════════════════════════════════╝ -->
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-meta">Episode<b id="ep-num">001</b></div>
+    <div class="hdr-sep"></div>
+    <div class="hdr-meta">Mode<b>Business Idea</b></div>
+  </div>
+  <div>
+    <div class="wordmark">UN<span>SCRIPTED</span></div>
+    <div class="hdr-sub">Live AI Strategy Engine</div>
+  </div>
+  <div class="hdr-r">
+    <div class="live-pill" id="live-badge"><div class="live-dot"></div>On Air</div>
+    <div class="clock-el" id="clock">—</div>
+  </div>
+</header>
 
-  <!-- DATELINE -->
-  <div class="dateline">
-    <div class="dateline-l" id="dateline-l">Ready to begin</div>
-    <div class="dateline-r">
-      <div class="dl-tag" id="phase-tag">Pre-show</div>
-      <div class="dl-tag active">Business Idea Creation</div>
+<!-- STATUS BAR -->
+<div class="sbar">
+  <div class="sbar-l" id="dateline-l">Ready to begin</div>
+  <div class="sbar-r">
+    <div class="stag" id="phase-tag">Pre-show</div>
+    <div class="stag on">Business Idea Creation</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ╔══════════════════════════════════════════════════╗
+     ║  SETUP                                           ║
+     ╚══════════════════════════════════════════════════╝ -->
+<div id="setup">
+  <div class="setup-kicker">Season One · Episode One</div>
+  <div class="setup-hed">
+    TWO<br>
+    <span class="ghost">SHARP</span><br>
+    <span class="accent">MINDS.</span>
+  </div>
+  <div class="setup-sub">ZERO SCRIPT.</div>
+  <p class="setup-lede">A Visionary and an Operator debate a business idea live — building, challenging, and evolving it in real time. You can steer it.</p>
+
+  <div class="hosts">
+    <div class="host v">
+      <div class="host-num">01</div>
+      <div class="host-role">The Visionary</div>
+      <div class="host-name">IDEA ARCHITECT</div>
+      <div class="host-desc">Reads human desire before it becomes a market. Drawn to the emotional logic inside every business. Gets excited mid-thought and rarely apologises.</div>
+      <div class="host-sig">"Right, but what does it feel like to actually need this?"</div>
+    </div>
+    <div class="host o">
+      <div class="host-num">02</div>
+      <div class="host-role">The Operator</div>
+      <div class="host-name">COMMERCIAL REALIST</div>
+      <div class="host-desc">Knows the structural reasons ideas fail. Not cynical — just honest. Will find the flaw no one wants to name. Appreciates a strong counter-argument.</div>
+      <div class="host-sig">"Sure. And who pays for that, exactly?"</div>
     </div>
   </div>
 
-  <!-- CONTENT -->
-  <div class="content">
+  <div class="form-wrap">
+    <div class="f-label" style="margin-bottom:10px">Episode theme — or leave blank to explore freely</div>
+    <div class="f-row">
+      <input class="f-inp" id="topic-inp" type="text" placeholder="e.g. the loneliness economy, tools for independent tradespeople…"/>
+      <button class="f-btn" id="go-btn">Begin Episode →</button>
+    </div>
+    <div class="chips">
+      <button class="chip" data-ex="creator economy infrastructure">creator economy infra</button>
+      <button class="chip" data-ex="the loneliness economy">loneliness economy</button>
+      <button class="chip" data-ex="B2B tools for independent tradespeople">trades B2B</button>
+      <button class="chip" data-ex="behavioural health for high performers">high-performer health</button>
+      <button class="chip" data-ex="the attention recession">attention recession</button>
+      <button class="chip" data-ex="">surprise me</button>
+    </div>
 
-    <!-- ═══ SETUP ═══ -->
-    <div id="setup">
-      <div class="setup-overline">Season One · Episode One</div>
-      <h1 class="setup-headline">Two smart people.<br>No script.<br><em>One real idea.</em></h1>
-      <p class="setup-lede">A Visionary and an Operator explore a business idea from scratch — live, in conversation. The idea forms in real time. You can steer it.</p>
+    <div class="f-label" style="margin-top:30px;margin-bottom:12px">Conversation tone</div>
+    <div class="tone-grid" id="tone-grid">
+      <button class="tone-btn active" data-tone="sharp">
+        <span class="tone-name">Sharp & Adversarial</span>
+        <span class="tone-desc">High friction, real tension. Best ideas survive the argument.</span>
+      </button>
+      <button class="tone-btn" data-tone="pitch">
+        <span class="tone-name">Founder Pitch</span>
+        <span class="tone-desc">Visionary sells hard. Operator is the investor who's heard it all.</span>
+      </button>
+      <button class="tone-btn" data-tone="principles">
+        <span class="tone-name">First Principles</span>
+        <span class="tone-desc">Strip every assumption to zero. Rebuild from the ground up.</span>
+      </button>
+      <button class="tone-btn" data-tone="scout">
+        <span class="tone-name">Optimistic Scouting</span>
+        <span class="tone-desc">Both hosts hunt for what could work. Energy over scepticism.</span>
+      </button>
+      <button class="tone-btn" data-tone="latenight">
+        <span class="tone-name">Late Night</span>
+        <span class="tone-desc">Filter off. Bigger leaps, wilder angles. Stranger ideas.</span>
+      </button>
+      <button class="tone-btn" data-tone="boardroom">
+        <span class="tone-name">Board Room</span>
+        <span class="tone-desc">High stakes. Every claim needs evidence. Investor energy.</span>
+      </button>
+    </div>
 
-      <div class="bylines">
-        <div class="byline v">
-          <div class="byline-role">The Visionary</div>
-          <div class="byline-name">Idea Architect</div>
-          <div class="byline-desc">Reads human desire before it becomes a market. Drawn to the emotional logic inside every business. Gets excited mid-thought and rarely apologises.</div>
-          <div class="byline-sig">"Right, but what does it feel like to actually need this?"</div>
+    <div class="load-hint" id="load-hint">
+      <div class="ld"></div><div class="ld"></div><div class="ld"></div>
+      <span>Initialising conversation engine…</span>
+    </div>
+  </div>
+</div>
+
+<!-- ╔══════════════════════════════════════════════════╗
+     ║  EPISODE                                         ║
+     ╚══════════════════════════════════════════════════╝ -->
+<div id="episode">
+  <div class="board">
+
+    <!-- LEFT -->
+    <div class="col-l">
+      <div class="c-hed">Live Signal</div>
+
+      <div class="baro-blk">
+        <div class="baro-name">Originality</div>
+        <div class="baro-big" id="orig-reading">—</div>
+        <div class="baro-lbl" id="orig-label">Waiting for ideas to surface…</div>
+        <div class="gauge">
+          <div class="g-track"><div class="g-fill" id="orig-fill"></div><div class="g-head" id="orig-head"></div></div>
+          <div class="g-pct" id="orig-pct">—</div>
         </div>
-        <div class="byline o">
-          <div class="byline-role">The Operator</div>
-          <div class="byline-name">Commercial Realist</div>
-          <div class="byline-desc">Knows the structural reasons ideas fail. Not cynical — just honest. Will find the flaw no one wants to name. Appreciates a strong counter-argument.</div>
-          <div class="byline-sig">"Sure. And who pays for that, exactly?"</div>
-        </div>
+        <div class="g-scale"><span class="g-tick">Generic</span><span class="g-tick">Novel</span><span class="g-tick">Original</span></div>
       </div>
 
-      <div class="input-section">
+      <div class="baro-blk">
+        <div class="baro-name">Market Gap</div>
+        <div class="baro-big" id="gap-reading">—</div>
+        <div class="baro-lbl" id="gap-label">Waiting for direction…</div>
+        <div class="gauge">
+          <div class="g-track"><div class="g-fill" id="gap-fill"></div><div class="g-head" id="gap-head"></div></div>
+          <div class="g-pct" id="gap-pct">—</div>
+        </div>
+        <div class="g-scale"><span class="g-tick">Crowded</span><span class="g-tick">Niche</span><span class="g-tick">Open</span></div>
+      </div>
 
-        <div class="input-label">Episode theme — or leave blank to explore freely</div>
-        <div class="input-row">
-          <input class="topic-inp" id="topic-inp" type="text" placeholder="e.g. the loneliness economy, tools for creative freelancers…"/>
-          <button class="go-btn" id="go-btn">Begin episode →</button>
-        </div>
-        <div class="suggest-row">
-          <button class="sug" data-ex="creator economy infrastructure">creator economy infra</button>
-          <button class="sug" data-ex="the loneliness economy">loneliness economy</button>
-          <button class="sug" data-ex="B2B tools for independent tradespeople">trades B2B</button>
-          <button class="sug" data-ex="behavioural health for high performers">high-performer health</button>
-          <button class="sug" data-ex="the attention recession">attention recession</button>
-          <button class="sug" data-ex="">surprise me</button>
-        </div>
+      <div class="tension" id="tension"><strong>Signal tension —</strong> <span id="tension-msg"></span></div>
 
-        <div class="input-label" style="margin-bottom:10px;margin-top:4px">Conversation tone</div>
-        <div class="tone-grid" id="tone-grid">
-          <button class="tone-btn active" data-tone="sharp">
-            <div class="tone-name">Sharp &amp; Adversarial</div>
-            <div class="tone-desc">They genuinely disagree. High friction, real tension. The best ideas survive the argument.</div>
-          </button>
-          <button class="tone-btn" data-tone="pitch">
-            <div class="tone-name">Founder Pitch</div>
-            <div class="tone-desc">The Visionary is selling. The Operator is the investor who's heard it all before. Every claim gets tested.</div>
-          </button>
-          <button class="tone-btn" data-tone="principles">
-            <div class="tone-name">First Principles</div>
-            <div class="tone-desc">Nothing is taken for granted. Strip every assumption back to zero and rebuild from the ground up.</div>
-          </button>
-          <button class="tone-btn" data-tone="scout">
-            <div class="tone-name">Optimistic Scouting</div>
-            <div class="tone-desc">Both hosts are looking for what could work. More building than tearing down. Energy over scepticism.</div>
-          </button>
-          <button class="tone-btn" data-tone="latenight">
-            <div class="tone-name">Late Night</div>
-            <div class="tone-desc">Looser, more speculative. Bigger swings. The kind of conversation that happens after the meeting.</div>
-          </button>
-          <button class="tone-btn" data-tone="boardroom">
-            <div class="tone-name">Board Room</div>
-            <div class="tone-desc">Formal, high stakes. Every claim needs evidence. This is the version you'd present to a serious investor.</div>
-          </button>
+      <div class="state-sec">
+        <div class="c-hed">Concept State</div>
+        <div class="phase-strip">
+          <div class="ph" id="ph0"></div><div class="ph" id="ph1"></div>
+          <div class="ph" id="ph2"></div><div class="ph" id="ph3"></div><div class="ph" id="ph4"></div>
         </div>
-        <div class="input-label" style="margin-top:24px;margin-bottom:12px">Conversation tone</div>
-        <div class="tone-grid" id="tone-grid">
-          <button class="tone-btn active" data-tone="sharp">
-            <span class="tone-name">Sharp & Unfiltered</span>
-            <span class="tone-desc">Direct debate. No softening. Ideas get stress-tested hard.</span>
-          </button>
-          <button class="tone-btn" data-tone="socratic">
-            <span class="tone-name">Socratic</span>
-            <span class="tone-desc">Question-led. Each turn peels back a layer. Slower, deeper.</span>
-          </button>
-          <button class="tone-btn" data-tone="contrarian">
-            <span class="tone-name">Contrarian Pressure</span>
-            <span class="tone-desc">The Operator pushes back on everything. Ideas must earn their place.</span>
-          </button>
-          <button class="tone-btn" data-tone="expansive">
-            <span class="tone-name">Expansive</span>
-            <span class="tone-desc">Ideas build on each other. Wide thinking before narrowing.</span>
-          </button>
-          <button class="tone-btn" data-tone="boardroom">
-            <span class="tone-name">Boardroom Ready</span>
-            <span class="tone-desc">Crisp, structured. Every idea lands with a "so what".</span>
-          </button>
-          <button class="tone-btn" data-tone="late-night">
-            <span class="tone-name">Late-Night Riff</span>
-            <span class="tone-desc">Looser, stranger. Follows tangents. Unexpected connections.</span>
-          </button>
-        </div>
-        <div class="loading-hint" id="load-hint">
-          <div class="ld-dot"></div><div class="ld-dot"></div><div class="ld-dot"></div>
-          <span>Preparing the conversation engine…</span>
-        </div>
+        <div class="ph-lbl" id="ph-name">Opening</div>
+
+        <div class="state-blk"><div class="state-blk-hed">Front-runner</div><div id="sl-front"><div class="state-nil">Emerging…</div></div></div>
+        <div class="state-blk"><div class="state-blk-hed">In play</div><div id="sl-cands"><div class="state-nil">Exploring…</div></div></div>
+        <div class="state-blk"><div class="state-blk-hed">Locked</div><div id="sl-locked"><div class="state-nil">Nothing locked</div></div></div>
+        <div class="state-blk"><div class="state-blk-hed">Risks</div><div id="sl-risks"><div class="state-nil">Not yet flagged</div></div></div>
+        <div class="state-blk"><div class="state-blk-hed">Questions</div><div id="sl-qs"><div class="state-nil">Still exploring</div></div></div>
       </div>
     </div>
 
-    <!-- ═══ EPISODE ═══ -->
-    <div id="episode">
+    <div class="c-rule"></div>
 
-      <div class="broadsheet">
+    <!-- CENTRE -->
+    <div class="col-m">
+      <div class="c-hed">Live Conversation</div>
 
-        <!-- LEFT — barometers + state -->
-        <div class="col-left">
-          <div class="col-head">Live Signal</div>
-
-          <div class="baro-section">
-
-            <!-- ORIGINALITY GAUGE -->
-            <div class="baro-block">
-              <div class="baro-name">Originality</div>
-              <div class="baro-reading" id="orig-reading">—</div>
-              <div class="baro-label" id="orig-label">Waiting for ideas to surface…</div>
-              <div class="gauge-row">
-                <div class="gauge-track" style="flex:1;position:relative">
-                  <div class="gauge-fill" id="orig-fill"></div>
-                  <div class="gauge-head" id="orig-head"></div>
-                </div>
-                <div class="gauge-pct" id="orig-pct">—</div>
-              </div>
-              <div class="gauge-scale">
-                <span class="gauge-tick">Generic</span>
-                <span class="gauge-tick">Interesting</span>
-                <span class="gauge-tick">Original</span>
-              </div>
-            </div>
-
-            <!-- GAP GAUGE -->
-            <div class="baro-block">
-              <div class="baro-name">Market Gap</div>
-              <div class="baro-reading" id="gap-reading">—</div>
-              <div class="baro-label" id="gap-label">Waiting for a direction to emerge…</div>
-              <div class="gauge-row">
-                <div class="gauge-track" style="flex:1;position:relative">
-                  <div class="gauge-fill" id="gap-fill"></div>
-                  <div class="gauge-head" id="gap-head"></div>
-                </div>
-                <div class="gauge-pct" id="gap-pct">—</div>
-              </div>
-              <div class="gauge-scale">
-                <span class="gauge-tick">Crowded</span>
-                <span class="gauge-tick">Niche</span>
-                <span class="gauge-tick">Open</span>
-              </div>
-            </div>
-
-            <div class="tension-box" id="tension">
-              <strong>Signal tension —</strong> <span id="tension-msg"></span>
+      <div class="now-spk idle" id="now-spk">
+        <div class="ns-top">
+          <div class="ns-who">
+            <div class="ns-av idle" id="ns-av">—</div>
+            <div>
+              <div class="ns-name idle" id="ns-name">Ready</div>
+              <div class="ns-mood" id="ns-mood"></div>
             </div>
           </div>
-
-          <!-- STATE -->
-          <div class="state-section">
-            <div class="col-head">Concept State</div>
-
-            <div class="phase-strip">
-              <div class="ph-seg" id="ph0"></div><div class="ph-seg" id="ph1"></div>
-              <div class="ph-seg" id="ph2"></div><div class="ph-seg" id="ph3"></div><div class="ph-seg" id="ph4"></div>
-            </div>
-            <div class="ph-name" id="ph-name">Opening</div>
-
-            <div class="state-block">
-              <div class="state-block-head">Front-runner</div>
-              <div id="sl-front"><div class="state-nil">Emerging…</div></div>
-            </div>
-            <div class="state-block">
-              <div class="state-block-head">In play</div>
-              <div id="sl-cands"><div class="state-nil">Exploring…</div></div>
-            </div>
-            <div class="state-block">
-              <div class="state-block-head">Locked</div>
-              <div id="sl-locked"><div class="state-nil">Nothing locked</div></div>
-            </div>
-            <div class="state-block">
-              <div class="state-block-head">Risks</div>
-              <div id="sl-risks"><div class="state-nil">Not yet flagged</div></div>
-            </div>
-            <div class="state-block">
-              <div class="state-block-head">Open questions</div>
-              <div id="sl-qs"><div class="state-nil">Still exploring</div></div>
-            </div>
+          <div class="waveform" id="waveform">
+            <div class="wv"></div><div class="wv"></div><div class="wv"></div>
+            <div class="wv"></div><div class="wv"></div><div class="wv"></div><div class="wv"></div>
           </div>
         </div>
+        <div class="ns-txt" id="ns-text">Press play to begin the conversation.</div>
+      </div>
 
-        <div class="col-rule"></div>
-
-        <!-- CENTRE — player + transcript -->
-        <div class="col-mid">
-          <div class="col-head">Live Conversation</div>
-
-          <!-- NOW SPEAKING -->
-          <div class="now-speaking idle" id="now-spk">
-            <div class="ns-top">
-              <div class="ns-who">
-                <div class="ns-avatar idle" id="ns-av">—</div>
-                <div class="ns-name-block">
-                  <div class="ns-name idle" id="ns-name">Ready</div>
-                  <div class="ns-mood" id="ns-mood"></div>
-                </div>
-              </div>
-              <div class="waveform" id="waveform">
-                <div class="wv"></div><div class="wv"></div><div class="wv"></div>
-                <div class="wv"></div><div class="wv"></div><div class="wv"></div><div class="wv"></div>
-              </div>
-            </div>
-            <div class="ns-text" id="ns-text">Press play to begin the conversation.</div>
-          </div>
-
-          <!-- PROGRESS -->
-          <div class="prog-wrap">
-            <div class="prog-track"><div class="prog-fill" id="prog"></div></div>
-            <div class="prog-labels">
-              <span class="prog-l" id="prog-phase">Opening</span>
-              <span class="prog-l" id="prog-pct">0%</span>
-            </div>
-          </div>
-
-          <!-- CONTROLS -->
-          <div class="player-ctrls">
-            <button class="pc-btn pc-play" id="play-btn">▶</button>
-            <button class="pc-btn" id="restart-btn" title="Restart">↺</button>
-            <div class="pc-spacer"></div>
-          </div>
-
-          <!-- STEERING -->
-          <div class="steer-head" id="steer-section" style="display:none">Steer the conversation</div>
-          <div class="steer-btns" id="steer-btns" style="display:none">
-            <button class="sb" data-cmd="lock-that-in">Lock that in</button>
-            <button class="sb" data-cmd="go-deeper">Go deeper</button>
-            <button class="sb" data-cmd="off-track">Off track</button>
-            <button class="sb" data-cmd="challenge-that">Challenge that</button>
-            <button class="sb" data-cmd="compare-top-two">Compare top two</button>
-            <button class="sb" data-cmd="more-practical">More practical</button>
-            <button class="sb" data-cmd="more-original">More original</button>
-            <button class="sb" data-cmd="kill-that">Kill that</button>
-            <button class="sb" data-cmd="move-on">Move on</button>
-            <button class="sb" data-cmd="wrap-it-up">Wrap it up</button>
-          </div>
-
-          <!-- TRANSCRIPT -->
-          <div class="transcript-head">
-            <span>Transcript</span>
-            <span id="turn-count">0 exchanges</span>
-          </div>
-          <div class="tx-body" id="tx-body"></div>
-        </div>
-
-        <div class="col-rule"></div>
-
-        <!-- RIGHT — concept card -->
-        <div class="col-right">
-          <div class="col-head">Concept in Progress</div>
-
-          <div class="concept-card">
-            <div class="concept-label">Working concept</div>
-            <div class="concept-name" id="cc-name">—</div>
-            <div class="concept-pitch" id="cc-pitch">The idea is forming. Check back as the conversation develops.</div>
-
-            <div class="concept-facts">
-              <div class="cf-row">
-                <div class="cf-key">Customer</div>
-                <div class="cf-val nil" id="cc-cust">Emerging</div>
-              </div>
-              <div class="cf-row">
-                <div class="cf-key">Model</div>
-                <div class="cf-val nil" id="cc-model">
-                  <span class="model-badge sub" id="model-badge" style="display:none"></span>
-                  <span id="cc-model-text">To be shaped</span>
-                </div>
-              </div>
-              <div class="cf-row">
-                <div class="cf-key">Moat</div>
-                <div class="cf-val nil" id="cc-moat">Unclear</div>
-              </div>
-              <div class="cf-row">
-                <div class="cf-key">MVP</div>
-                <div class="cf-val nil" id="cc-mvp">Not yet defined</div>
-              </div>
-              <div class="cf-row">
-                <div class="cf-key">Risk</div>
-                <div class="cf-val nil" id="cc-risk">Not yet identified</div>
-              </div>
-            </div>
-
-            <div class="verdict-strip">
-              <div class="verdict-word" id="cc-verdict" style="color:var(--pale);font-family:var(--f-disp);font-style:italic">Pending…</div>
-              <div class="verdict-why" id="cc-verdict-why"></div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /broadsheet -->
-
-      <!-- FINAL BANNER -->
-      <div class="final-banner" id="final-banner">
-        <div class="final-eyebrow">Episode complete — final concept</div>
-        <div class="final-name" id="fn-name">—</div>
-        <div class="final-pitch" id="fn-pitch">—</div>
-        <div class="final-grid">
-          <div class="fg-cell"><div class="fg-key">Customer</div><div class="fg-val" id="fn-cust">—</div></div>
-          <div class="fg-cell"><div class="fg-key">Revenue model</div><div class="fg-val" id="fn-rev">—</div></div>
-          <div class="fg-cell"><div class="fg-key">Biggest risk</div><div class="fg-val" id="fn-risk">—</div></div>
-          <div class="fg-cell" style="border-right:none"><div class="fg-key">MVP</div><div class="fg-val" id="fn-mvp">—</div></div>
-        </div>
-        <div class="final-verdict-row">
-          <div class="fv-word pursue" id="fn-verdict">Pursue</div>
-          <div class="fv-desc" id="fn-why">—</div>
-        </div>
-        <div class="final-baro-row">
-          <div class="fbr-item">
-            <div class="fbr-l">Originality</div>
-            <div class="fbr-track"><div class="fbr-fill" id="fbr-o"></div></div>
-            <div class="fbr-val" id="fbr-ov">—</div>
-          </div>
-          <div class="fbr-item">
-            <div class="fbr-l">Market Gap</div>
-            <div class="fbr-track"><div class="fbr-fill" id="fbr-g"></div></div>
-            <div class="fbr-val" id="fbr-gv">—</div>
-          </div>
+      <div class="prog-wrap">
+        <div class="prog-track"><div class="prog-fill" id="prog"></div></div>
+        <div class="prog-lbls">
+          <span class="prog-lbl" id="prog-phase">Opening</span>
+          <span class="prog-lbl" id="prog-pct">0%</span>
         </div>
       </div>
 
-    </div><!-- /episode -->
+      <div class="ctrls">
+        <button class="c-btn c-play" id="play-btn">▶</button>
+        <button class="c-btn" id="restart-btn">↺</button>
+        <div class="c-spacer"></div>
+      </div>
 
-  </div><!-- /content -->
-</div><!-- /shell -->
+      <div class="steer-hed" id="steer-section" style="display:none">Steer the Conversation</div>
+      <div class="steer-btns" id="steer-btns" style="display:none">
+        <button class="s-btn" data-cmd="lock-that-in">Lock that in</button>
+        <button class="s-btn" data-cmd="go-deeper">Go deeper</button>
+        <button class="s-btn" data-cmd="off-track">Off track</button>
+        <button class="s-btn" data-cmd="challenge-that">Challenge that</button>
+        <button class="s-btn" data-cmd="compare-top-two">Compare top two</button>
+        <button class="s-btn" data-cmd="more-practical">More practical</button>
+        <button class="s-btn" data-cmd="more-original">More original</button>
+        <button class="s-btn" data-cmd="kill-that">Kill that</button>
+        <button class="s-btn" data-cmd="move-on">Move on</button>
+        <button class="s-btn" data-cmd="wrap-it-up">Wrap it up</button>
+      </div>
+
+      <div class="tx-hed"><span>Transcript</span><span id="turn-count">0 exchanges</span></div>
+      <div id="tx-body"></div>
+    </div>
+
+    <div class="c-rule"></div>
+
+    <!-- RIGHT -->
+    <div class="col-r">
+      <div class="c-hed">Concept in Progress</div>
+      <div class="cc-label">Working concept</div>
+      <div class="cc-name" id="cc-name">—</div>
+      <div class="cc-pitch" id="cc-pitch">The idea is forming. Check back as the conversation develops.</div>
+      <div class="cc-facts">
+        <div class="cf-row"><div class="cf-key">Customer</div><div class="cf-val nil" id="cc-cust">Emerging</div></div>
+        <div class="cf-row">
+          <div class="cf-key">Model</div>
+          <div class="cf-val nil" id="cc-model">
+            <span class="mbadge sub" id="model-badge" style="display:none"></span>
+            <span id="cc-model-text">To be shaped</span>
+          </div>
+        </div>
+        <div class="cf-row"><div class="cf-key">Moat</div><div class="cf-val nil" id="cc-moat">Unclear</div></div>
+        <div class="cf-row"><div class="cf-key">MVP</div><div class="cf-val nil" id="cc-mvp">Not defined</div></div>
+        <div class="cf-row"><div class="cf-key">Risk</div><div class="cf-val nil" id="cc-risk">Not identified</div></div>
+      </div>
+      <div class="verdict-strip">
+        <div class="verdict-word" id="cc-verdict" style="color:var(--ink4);font-family:var(--f-serif);font-style:italic;font-size:1rem;font-weight:400">Pending…</div>
+        <div class="verdict-why" id="cc-verdict-why"></div>
+      </div>
+    </div>
+
+  </div><!-- /board -->
+
+  <!-- FINAL -->
+  <div class="final-banner" id="final-banner">
+    <div class="final-kicker">Episode complete — final concept</div>
+    <div class="final-name" id="fn-name">—</div>
+    <div class="final-pitch" id="fn-pitch">—</div>
+    <div class="final-grid">
+      <div class="fg-cell"><div class="fg-key">Customer</div><div class="fg-val" id="fn-cust">—</div></div>
+      <div class="fg-cell"><div class="fg-key">Revenue model</div><div class="fg-val" id="fn-rev">—</div></div>
+      <div class="fg-cell"><div class="fg-key">Biggest risk</div><div class="fg-val" id="fn-risk">—</div></div>
+      <div class="fg-cell" style="border-right:none"><div class="fg-key">MVP</div><div class="fg-val" id="fn-mvp">—</div></div>
+    </div>
+    <div class="final-verdict-row">
+      <div class="fv-word pursue" id="fn-verdict">Pursue</div>
+      <div class="fv-desc" id="fn-why">—</div>
+    </div>
+    <div class="final-baro-row">
+      <div><div class="fbr-l">Originality</div><div class="fbr-track"><div class="fbr-fill" id="fbr-o"></div></div><div class="fbr-val" id="fbr-ov">—</div></div>
+      <div><div class="fbr-l">Market Gap</div><div class="fbr-track"><div class="fbr-fill" id="fbr-g"></div></div><div class="fbr-val" id="fbr-gv">—</div></div>
+    </div>
+  </div>
+
+</div><!-- /episode -->
+</div><!-- /wrap -->
 
 <script>
 'use strict';
 
+/* ═══ DATA ═══ */
+
 const OPENING_ANGLES = [
-  "where are people spending money in ways that make them feel vaguely ashamed, or vaguely tricked — like there should be something better by now?",
+  "where are people spending money in ways that make them feel ashamed, tricked, or like there should be something better by now?",
   "which human behaviour that everyone knows exists has almost no decent commercial infrastructure built around it yet?",
   "where is there a large growing group of people completely underserved because every product built for them was designed for someone else?",
-  "what's a market that looks too small until you realise the actual addressable population has been misdefined?",
-  "where are people paying repeatedly for something they don't actually want — just because the alternative has too much friction?",
+  "what's a market that looks too small until you realise the addressable population has been misdefined?",
+  "where are people paying repeatedly for something they don't want — just because the alternative has too much friction?",
   "which professional group has been ignored by every software company because they don't fit the enterprise mould — but there are millions of them?",
-  "where is there a transition — demographic, economic, technological — that most businesses are still pretending isn't real?",
-  "what do people do privately that they'd pay to do better, but no product exists because it's culturally awkward to admit the need?",
+  "where is a demographic, economic, or technological transition happening that most businesses are still pretending isn't real?",
+  "what do people do privately that they'd pay to do better, but no product exists because it's awkward to admit the need?",
 ];
 
 const PHASES = ['Opening','Exploring','Narrowing','Building','Wrapping'];
 const PHASE_AT = [3,8,13,18,22];
-const MODEL_TYPES = {sub:{label:'Subscription',cls:'sub'},mkt:{label:'Marketplace',cls:'mkt'},lic:{label:'Licensing',cls:'lic'},b2b:{label:'B2B / Enterprise',cls:'b2b'},hw:{label:'Hardware',cls:'hw'}};
+
+const MODEL_TYPES = {
+  sub:{label:'Subscription',cls:'sub'},
+  mkt:{label:'Marketplace',cls:'mkt'},
+  lic:{label:'Licensing',cls:'lic'},
+  b2b:{label:'B2B / Enterprise',cls:'b2b'},
+  hw:{label:'Hardware',cls:'hw'},
+};
 
 const TONES = {
   sharp:{
-    label:'Sharp & Adversarial',
-    v:`You are combative in the best way — you make bold claims and defend them. You don't soften your positions. When challenged, you push back harder with evidence. The friction is the point.`,
-    o:`You are a tough interrogator. You don't accept claims at face value. You find the specific flaw in every argument and name it directly. You're not mean — you're rigorous. Make them work for every point.`,
+    v:`You are combative in the best way — make bold claims and defend them hard. Don't soften positions. Push back with evidence when challenged. The friction is the point.`,
+    o:`You are a tough interrogator. Find the specific flaw in every argument and name it directly. Rigorous, not mean. Make them work for every point.`,
   },
   pitch:{
-    label:'Founder Pitch',
-    v:`You are pitching this idea like your life depends on it. Energetic, persuasive, always finding the angle that makes it sound inevitable. You anticipate objections and pre-empt them.`,
-    o:`You are a seasoned investor who has heard a thousand pitches. You probe the assumptions, ask for the numbers, and find the one question the founder hasn't answered. Politely devastating.`,
+    v:`You are pitching like your life depends on it. Energetic, persuasive, always finding the angle that makes it sound inevitable. Anticipate objections and pre-empt them.`,
+    o:`You are a seasoned investor who has heard a thousand pitches. Probe assumptions, ask for numbers, find the one question the founder hasn't answered. Politely devastating.`,
   },
   principles:{
-    label:'First Principles',
-    v:`You reason from first principles. You question why things exist, not just how they work. You're comfortable pulling apart market assumptions that everyone else takes for granted.`,
-    o:`You are a systems thinker. You break every idea down to its atomic components and ask whether each one actually holds. Nothing is assumed. Everything must be justified from the ground up.`,
+    v:`You reason from first principles. Question why things exist, not just how they work. Pull apart market assumptions everyone else takes for granted.`,
+    o:`You are a systems thinker. Break every idea to atomic components and ask whether each one holds. Nothing assumed. Everything justified from the ground up.`,
   },
   scout:{
-    label:'Optimistic Scouting',
-    v:`You are energised and constructive. You're looking for what could work, not what could fail. You build on ideas rather than tear them down. You find the signal in every direction.`,
-    o:`You are genuinely excited to find a good idea. You're still rigorous — but when something works, you say so clearly. You help shape and strengthen rather than just stress-test.`,
+    v:`You are energised and constructive. Looking for what could work, not what could fail. Build on ideas rather than tear them down. Find the signal in every direction.`,
+    o:`You are genuinely excited to find a good idea. Still rigorous — but when something works, you say so clearly. Shape and strengthen rather than just stress-test.`,
   },
   latenight:{
-    label:'Late Night',
-    v:`It's late and the filter is off. You're making bigger leaps, more speculative connections, wilder analogies. You say the things you wouldn't say in a formal meeting. The ideas are stranger and more interesting for it.`,
-    o:`You're relaxed and more willing to entertain the weird. You still bring commercial instinct but you're open to left-field thinking. The conversation can go somewhere unexpected.`,
+    v:`The filter is off. Make bigger leaps, more speculative connections, wilder analogies. The ideas are stranger and more interesting for it.`,
+    o:`You're relaxed and willing to entertain the weird. Still commercially sharp but open to left-field thinking. The conversation can go somewhere unexpected.`,
   },
   boardroom:{
-    label:'Board Room',
-    v:`You are presenting to a serious audience. Measured, precise, evidence-led. Every claim is grounded. You're building a case, not exploring freely. The language is professional and the logic is airtight.`,
-    o:`You are a non-executive director with fiduciary responsibility. You need specifics: market size, defensibility, regulatory exposure, capital requirements. No vague optimism. Only what can be defended.`,
+    v:`Measured, precise, evidence-led. Every claim grounded. Building a case, not exploring freely. Professional language, airtight logic.`,
+    o:`Non-executive director with fiduciary responsibility. Market size, defensibility, regulatory exposure, capital requirements. No vague optimism.`,
   },
 };
 
-let S = {running:false,paused:false,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0,topic:'',history:[],steerCmd:null,tone:'sharp'};
-let timerRef=null;
-const $=id=>document.getElementById(id);
+/* ═══ STATE ═══ */
 
-// Barometers
+let S = {
+  running:false, paused:false, phase:0, elapsed:0,
+  locked:[], frontRunners:[], candidates:[], risks:[], qs:[],
+  turnCount:0, topic:'', history:[], steerCmd:null, tone:'sharp',
+};
+let timerRef = null;
+const $ = id => document.getElementById(id);
+
+/* ═══ BAROMETERS ═══ */
+
 let _o=0,_g=0,_oT=0,_gT=0,_braf=null;
-function sigColor(p){return p<30?'#c0392b':p<60?'#e67e22':'#27ae60'}
-function setBaroTargets(oT,gT){_oT=oT;_gT=gT;if(!_braf)_braf=requestAnimationFrame(tickBaro)}
+
+function sigColor(p){return p<30?'#ff3b3b':p<60?'#ff8c00':'#00e676'}
+
+function setBaroTargets(oT,gT){
+  _oT=oT; _gT=gT;
+  if(!_braf) _braf=requestAnimationFrame(tickBaro);
+}
+
 function tickBaro(){
-  const spd=.04;_o+=(_oT-_o)*spd;_g+=(_gT-_g)*spd;
-  const oc=sigColor(_o),gc=sigColor(_g);
-  const setG=(fi,he,pc,re,v,c)=>{fi.style.cssText=`width:${v}%;background:linear-gradient(90deg,#c0392b,${c})`;he.style.cssText=`left:calc(${v}% - 4px);background:${c};box-shadow:0 0 8px ${c}88;width:8px;height:8px;border-radius:50%;position:absolute;top:50%;transform:translateY(-50%)`;pc.textContent=Math.round(v)+'%';pc.style.color=c;re.textContent=Math.round(v);re.style.color=c;};
+  const spd=.04; _o+=(_oT-_o)*spd; _g+=(_gT-_g)*spd;
+  const oc=sigColor(_o), gc=sigColor(_g);
+  const setG=(fi,he,pc,re,v,c)=>{
+    fi.style.cssText=`width:${v}%;background:linear-gradient(90deg,#ff3b3b,${c})`;
+    he.style.cssText=`left:calc(${v}% - 4px);background:${c};box-shadow:0 0 10px ${c}bb;width:8px;height:8px;border-radius:50%;position:absolute;top:50%;transform:translateY(-50%)`;
+    pc.textContent=Math.round(v)+'%'; pc.style.color=c;
+    re.textContent=Math.round(v); re.style.color=c;
+  };
   setG($('orig-fill'),$('orig-head'),$('orig-pct'),$('orig-reading'),_o,oc);
   setG($('gap-fill'),$('gap-head'),$('gap-pct'),$('gap-reading'),_g,gc);
-  const diff=Math.abs(_o-_g);const t=$('tension'),tm=$('tension-msg');
-  if(diff>18&&_o>40){t.classList.add('on');tm.textContent=_o>_g?"Originality running ahead of market evidence — The Operator will push back.":"Strong market signal but concept needs a more distinctive angle.";}else t.classList.remove('on');
+  const diff=Math.abs(_o-_g);
+  const t=$('tension'), tm=$('tension-msg');
+  if(diff>18&&_o>40){
+    t.classList.add('on');
+    tm.textContent=_o>_g
+      ?"Originality running ahead of market evidence — The Operator will push back."
+      :"Strong market signal but concept needs a more distinctive angle.";
+  } else { t.classList.remove('on'); }
   _braf=(Math.abs(_o-_oT)>.25||Math.abs(_g-_gT)>.25)?requestAnimationFrame(tickBaro):null;
 }
 
-// UI helpers
-function setPhaseUI(p){const n=PHASES[p];$('phase-tag').textContent=n;$('ph-name').textContent=n;$('prog-phase').textContent=n;for(let i=0;i<5;i++)$('ph'+i).className='ph-seg'+(i<p?' past':i===p?' now':'');}
+/* ═══ UI HELPERS ═══ */
+
+function setPhaseUI(p){
+  const n=PHASES[p];
+  $('phase-tag').textContent=n; $('ph-name').textContent=n; $('prog-phase').textContent=n;
+  for(let i=0;i<5;i++) $('ph'+i).className='ph'+(i<p?' past':i===p?' now':'');
+}
+
 function setSpeakerUI(t){
-  if(!t){$('now-spk').className='now-speaking idle';$('ns-av').className='ns-avatar idle';$('ns-av').textContent='—';$('ns-name').className='ns-name idle';$('ns-name').textContent='Ready';$('ns-mood').textContent='';$('ns-text').className='ns-text';$('ns-text').textContent='Press play to begin.';$('waveform').className='waveform';return;}
-  const s=t.sp,lbl=s==='v'?'Visionary':'Operator';
-  $('now-spk').className=`now-speaking ${s}`;$('ns-av').className=`ns-avatar ${s}`;$('ns-av').textContent=s==='v'?'V':'O';$('ns-name').className=`ns-name ${s}`;$('ns-name').textContent=lbl;$('ns-mood').textContent=t.mood||'';
-  const short=t.text.length>120?t.text.slice(0,117)+'…':t.text;$('ns-text').className='ns-text live';$('ns-text').textContent=short;$('waveform').className=`waveform live ${s}`;
+  if(!t){
+    $('now-spk').className='now-spk idle';
+    $('ns-av').className='ns-av idle'; $('ns-av').textContent='—';
+    $('ns-name').className='ns-name idle'; $('ns-name').textContent='Ready';
+    $('ns-mood').textContent='';
+    $('ns-text').className='ns-txt'; $('ns-text').textContent='Press play to begin.';
+    $('waveform').className='waveform';
+    return;
+  }
+  const s=t.sp, lbl=s==='v'?'Visionary':'Operator';
+  $('now-spk').className=`now-spk ${s}`;
+  $('ns-av').className=`ns-av ${s}`; $('ns-av').textContent=s==='v'?'V':'O';
+  $('ns-name').className=`ns-name ${s}`; $('ns-name').textContent=lbl;
+  $('ns-mood').textContent=t.mood||'';
+  const short=t.text.length>120?t.text.slice(0,117)+'…':t.text;
+  $('ns-text').className='ns-txt live'; $('ns-text').textContent=short;
+  $('waveform').className=`waveform live ${s}`;
 }
+
 function appendTx(t,fresh){
-  const body=$('tx-body');const ti=body.querySelector('.typing-row');if(ti)ti.remove();
-  const el=document.createElement('div');el.className=`tx-turn${fresh?' fresh':''} ${t.sp}`;
+  const body=$('tx-body');
+  const ti=body.querySelector('.typing-row'); if(ti)ti.remove();
+  const el=document.createElement('div');
+  el.className=`tx-turn${fresh?' fresh':''} ${t.sp}`;
   const lbl=t.sp==='v'?'Visionary':'Operator';
-  el.innerHTML=`<div class="tx-initial ${t.sp}">${t.sp==='v'?'V':'O'}</div><div class="tx-right"><div class="tx-byline ${t.sp}">${lbl}${t.mood?` <span class="tx-mood">${t.mood}</span>`:''}</div><div class="tx-text">${t.text}</div></div>`;
-  body.appendChild(el);el.scrollIntoView({behavior:'smooth',block:'nearest'});
-  S.turnCount++;$('turn-count').textContent=`${S.turnCount} exchange${S.turnCount!==1?'s':''}`;
+  el.innerHTML=`<div class="tx-av ${t.sp}">${t.sp==='v'?'V':'O'}</div>
+  <div class="tx-r">
+    <div class="tx-byline ${t.sp}">${lbl}${t.mood?` <span class="tx-mood">${t.mood}</span>`:''}</div>
+    <div class="tx-txt">${t.text}</div>
+  </div>`;
+  body.appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  S.turnCount++;
+  $('turn-count').textContent=`${S.turnCount} exchange${S.turnCount!==1?'s':''}`;
 }
+
 function showTyping(sp){
-  const body=$('tx-body');const ex=body.querySelector('.typing-row');if(ex)ex.remove();
-  const el=document.createElement('div');el.className=`tx-turn typing-row ${sp}`;
-  el.innerHTML=`<div class="tx-initial ${sp}">${sp==='v'?'V':'O'}</div><div class="tx-right"><div class="tx-byline ${sp}">${sp==='v'?'Visionary':'Operator'}</div><div class="tx-text"><div class="ty-d"></div><div class="ty-d"></div><div class="ty-d"></div></div></div>`;
-  body.appendChild(el);el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  const body=$('tx-body');
+  const ex=body.querySelector('.typing-row'); if(ex)ex.remove();
+  const el=document.createElement('div');
+  el.className=`tx-turn typing-row ${sp}`;
+  el.innerHTML=`<div class="tx-av ${sp}">${sp==='v'?'V':'O'}</div>
+  <div class="tx-r">
+    <div class="tx-byline ${sp}">${sp==='v'?'Visionary':'Operator'}</div>
+    <div class="tx-txt"><div class="ty-d"></div><div class="ty-d"></div><div class="ty-d"></div></div>
+  </div>`;
+  body.appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
+
 function updateConceptCard(m){
-  if(!m||!m.cn)return;
-  function sv(el,v){if(!el)return;el.textContent=v||'—';el.className=el.className.replace(' nil','')+(v?'':' nil')}
-  const cc=$('cc-name'),cp=$('cc-pitch'),cu=$('cc-cust'),cm=$('cc-model-text'),cb=$('model-badge'),cmo=$('cc-moat'),cv=$('cc-verdict'),cvw=$('cc-verdict-why'),cr=$('cc-risk'),cmvp=$('cc-mvp');
-  if(m.cn){cc.textContent=m.cn;cc.style.color='var(--ink)'}if(m.cp){cp.textContent=m.cp;cp.style.color='var(--mid)'}
-  sv(cu,m.cu);if(m.cmt&&cm)cm.textContent=m.cmt;
-  if(m.cmb&&cb){const mt=MODEL_TYPES[m.cmb]||{label:m.cmb,cls:'sub'};cb.textContent=mt.label;cb.className=`model-badge ${mt.cls}`;cb.style.display='inline-flex';}
-  sv(cmo,m.cmo);sv(cr,m.crisk);sv(cmvp,m.cmvp);
-  if(m.cv&&cv){const vmap={pursue:'Pursue →',pivot:'Pivot',kill:'Kill'};cv.textContent=vmap[m.cv]||m.cv;cv.className=`verdict-word ${m.cv}`;if(cvw)cvw.textContent=m.cvw||'';}
+  if(!m||!m.cn) return;
+  function sv(el,v){if(!el)return; el.textContent=v||'—'; el.className=el.className.replace(' nil','')+(v?'':' nil')}
+  const cc=$('cc-name'),cp=$('cc-pitch'),cu=$('cc-cust'),
+        cm=$('cc-model-text'),cb=$('model-badge'),cmo=$('cc-moat'),
+        cv=$('cc-verdict'),cvw=$('cc-verdict-why'),cr=$('cc-risk'),cmvp=$('cc-mvp');
+  if(m.cn){cc.textContent=m.cn; cc.style.color='var(--ink)'}
+  if(m.cp){cp.textContent=m.cp}
+  sv(cu,m.cu);
+  if(m.cmt&&cm) cm.textContent=m.cmt;
+  if(m.cmb&&cb){
+    const mt=MODEL_TYPES[m.cmb]||{label:m.cmb,cls:'sub'};
+    cb.textContent=mt.label; cb.className=`mbadge ${mt.cls}`; cb.style.display='inline-flex';
+  }
+  sv(cmo,m.cmo); sv(cr,m.crisk); sv(cmvp,m.cmvp);
+  if(m.cv&&cv){
+    const vmap={pursue:'Pursue →',pivot:'Pivot',kill:'Kill'};
+    cv.textContent=vmap[m.cv]||m.cv;
+    cv.className=`verdict-word ${m.cv}`;
+    if(cvw) cvw.textContent=m.cvw||'';
+  }
 }
+
 function updateStatePanel(m){
-  if(!m)return;
-  if(m.cn&&!S.candidates.includes(m.cn))S.candidates.push(m.cn);
-  if(S.phase>=1&&m.crisk&&!S.risks.includes(m.crisk))S.risks.push(m.crisk);
-  if(S.phase>=2&&m.cn)S.frontRunners=[m.cn+(m.cp?' — '+m.cp:'')];
-  function rl(id,arr,cls=''){const el=$(id);if(!el)return;el.innerHTML=arr.length?arr.map(x=>`<div class="state-entry ${cls}">${x}</div>`).join(''):'<div class="state-nil">None yet</div>';}
-  rl('sl-front',S.frontRunners,'lead');rl('sl-cands',S.candidates);rl('sl-locked',S.locked,'locked');rl('sl-risks',S.risks);rl('sl-qs',S.qs);
+  if(!m) return;
+  if(m.cn&&!S.candidates.includes(m.cn)) S.candidates.push(m.cn);
+  if(S.phase>=1&&m.crisk&&!S.risks.includes(m.crisk)) S.risks.push(m.crisk);
+  if(S.phase>=2&&m.cn) S.frontRunners=[m.cn+(m.cp?' — '+m.cp:'')];
+  function rl(id,arr,cls=''){
+    const el=$(id); if(!el) return;
+    el.innerHTML=arr.length?arr.map(x=>`<div class="state-item ${cls}">${x}</div>`).join(''):'<div class="state-nil">None yet</div>';
+  }
+  rl('sl-front',S.frontRunners,'lead');
+  rl('sl-cands',S.candidates);
+  rl('sl-locked',S.locked,'locked');
+  rl('sl-risks',S.risks);
+  rl('sl-qs',S.qs);
 }
+
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
-// AI generation
+/* ═══ AI GENERATION ═══ */
+
 function buildSystemPrompt(speaker){
   const phase=PHASES[S.phase];
-  const steer=S.steerCmd?`\n\nSTEERING SIGNAL: The listener pressed "${S.steerCmd}" — respond to this now.`:'';
-  const baro=S.turnCount>2?`\n\nLIVE SCORES — Originality:${Math.round(_o)}/100 Market Gap:${Math.round(_g)}/100.${_o<40?' Originality is low — push for a less obvious angle.':''}${_g<40?' Market gap score is low — anchor to a real specific demand signal.':''}${Math.abs(_o-_g)>20?' The scores are diverging — work to close the gap.':''}`:'';
-  const meta=`\n\nAfter your spoken lines output exactly this on a new line:\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
-  const toneConfig=TONES[S.tone]||TONES.sharp;
-  const toneInstr=`\n\nTONE — ${toneConfig.label}: ${speaker==='v'?toneConfig.v:toneConfig.o}`;
-  if(speaker==='v')return`You are The Visionary on a sharp unscripted business podcast. Warm, curious, culturally fluent. You read human desire before it becomes a market. You get excited mid-thought and make unexpected connections.\n\nStyle: start with "Right," or "Okay so —". Think out loud. 2-4 sentences. Spoken words only — no asterisks, no stage directions.\n\nRespond directly to what The Operator just said. Move the idea forward.\n\nPhase: ${phase} (turn ${S.turnCount})${toneInstr}${steer}${baro}\n\nPhase guide — Opening: cast wide. Exploring: surface 2-3 directions. Narrowing: name and define the strongest. Building: stress-test model/customer/moat. Wrapping: land with clear verdict.${meta}`;
-  return`You are The Operator on a sharp unscripted business podcast. Commercially precise, dry, honest. You find structural reasons ideas fail. Not cynical — just honest. You ask the question no one wants to ask.\n\nStyle: "Sure. And who pays for that?" / "Here's the unit economics question:" / "The real problem is —". Concise, pointed. 2-4 sentences. Spoken words only — no asterisks, no stage directions.\n\nRespond directly to what The Visionary just said. React — don't repeat.\n\nPhase: ${phase} (turn ${S.turnCount})${toneInstr}${steer}${baro}\n\nPhase guide — Opening: push back or sharpen. Exploring: unit economics test. Narrowing: lock in or challenge. Building: stress-test ruthlessly. Wrapping: clear commercial verdict.${meta}`;
+  const tone=(TONES[S.tone]||TONES.sharp)[speaker];
+  const steer=S.steerCmd?`\n\nSTEERING: The listener pressed "${S.steerCmd}" — address this now.`:'';
+  const baro=S.turnCount>2
+    ?`\n\nLIVE SCORES — Originality:${Math.round(_o)}/100, Market Gap:${Math.round(_g)}/100.`
+     +(_o<40?' Originality low — push for a less obvious angle.':'')
+     +(_g<40?' Market gap score low — anchor to a real demand signal.':'')
+     +(Math.abs(_o-_g)>20?' Scores diverging — work to close the gap.':'')
+    :'';
+  const meta=`\n\nAfter your spoken lines, on a NEW LINE output exactly:\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
+
+  if(speaker==='v') return `You are The Visionary on a sharp unscripted business strategy podcast. ${tone}\n\nStyle: 2-4 sentences. Spoken words only — no asterisks, no stage directions. Often start with "Right," or "Okay so —".\n\nRespond directly to what The Operator just said. Move the idea forward.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: cast wide. Exploring: surface 2-3 directions. Narrowing: name and define the strongest. Building: stress-test model/customer/moat. Wrapping: land with clear verdict.${meta}`;
+
+  return `You are The Operator on a sharp unscripted business strategy podcast. ${tone}\n\nStyle: 2-4 sentences. Spoken words only — no asterisks, no stage directions. Often start with "Sure. And who pays for that?" or "Here's the unit economics question:".\n\nRespond directly to what The Visionary just said. React — don't repeat.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: push back or sharpen. Exploring: unit economics test. Narrowing: lock in or challenge. Building: stress-test ruthlessly. Wrapping: clear commercial verdict.${meta}`;
 }
 
 function buildMessages(speaker){
   const msgs=[];
-  for(const h of S.history){msgs.push({role:h.sp===speaker?'assistant':'user',content:h.text});}
+  for(const h of S.history){
+    msgs.push({role:h.sp===speaker?'assistant':'user', content:h.text});
+  }
   if(msgs.length===0){
     const angle=OPENING_ANGLES[Math.floor(Math.random()*OPENING_ANGLES.length)];
-    msgs.push({role:'user',content:`Begin. Open with something sharp about: ${angle}`});
+    msgs.push({role:'user', content:`Begin. Open with something sharp about: ${angle}`});
   }
   return msgs;
 }
@@ -1141,126 +1136,124 @@ async function generateTurn(speaker){
   const resp=await fetch('/api/generate',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({system:buildSystemPrompt(speaker),messages:buildMessages(speaker)}),
+    body:JSON.stringify({system:buildSystemPrompt(speaker), messages:buildMessages(speaker)}),
   });
-  if(!resp.ok){const e=await resp.text();throw new Error(`Generate API ${resp.status}: ${e.slice(0,120)}`);}
+  if(!resp.ok){const e=await resp.text(); throw new Error(`Generate ${resp.status}: ${e.slice(0,120)}`);}
   const data=await resp.json();
   const raw=(data.text||'').trim();
   const mi=raw.lastIndexOf('\nMETADATA:');
-  let text=raw,meta={};
-  if(mi!==-1){text=raw.slice(0,mi).trim();try{meta=JSON.parse(raw.slice(mi+'\nMETADATA:'.length).trim());}catch(e){}}
-  S.history.push({sp:speaker,text});
-  return{sp:speaker,text,mood:meta.mood||'',meta};
+  let text=raw, meta={};
+  if(mi!==-1){
+    text=raw.slice(0,mi).trim();
+    try{meta=JSON.parse(raw.slice(mi+'\nMETADATA:'.length).trim());}catch(e){}
+  }
+  S.history.push({sp:speaker, text});
+  return {sp:speaker, text, mood:meta.mood||'', meta};
 }
 
-// TTS — ElevenLabs with browser synth fallback
-const EL_VOICES={v:'JBFqnCBsd6RMkjVDRZzb',o:'nPczCjzI2devNBz1zQrb'};
+/* ═══ TTS ═══ */
+
 const synth=window.speechSynthesis;
 let voices=[];
-if(synth){const lv=()=>{voices=synth.getVoices()};lv();synth.onvoiceschanged=lv}
+if(synth){const lv=()=>{voices=synth.getVoices()}; lv(); synth.onvoiceschanged=lv}
+
 function getVoice(sp){
   const pref=sp==='v'?['Samantha','Karen','Victoria','Moira']:['Daniel','Oliver','Arthur','Alex'];
-  for(const n of pref){const v=voices.find(v=>v.name.includes(n));if(v)return v}
+  for(const n of pref){const v=voices.find(v=>v.name.includes(n)); if(v) return v}
   const gb=voices.filter(v=>v.lang==='en-GB');
-  if(sp==='v'&&gb.length)return gb[0];if(sp==='o'&&gb.length>1)return gb[1];
+  if(sp==='v'&&gb.length) return gb[0];
+  if(sp==='o'&&gb.length>1) return gb[1];
   return voices.find(v=>v.lang.startsWith('en'))||voices[0]||null;
 }
+
 function synthFallback(text,sp){
   return new Promise(resolve=>{
-    if(!synth){setTimeout(resolve,Math.max(1400,text.split(' ').length*380));return}
+    if(!synth){setTimeout(resolve,Math.max(1400,text.split(' ').length*380)); return}
     synth.cancel();
     const u=new SpeechSynthesisUtterance(text);
-    const v=getVoice(sp);if(v)u.voice=v;
-    u.rate=sp==='v'?1.03:.93;u.pitch=sp==='v'?1.06:.87;u.volume=1;
-    u.onend=resolve;u.onerror=resolve;
+    const v=getVoice(sp); if(v) u.voice=v;
+    u.rate=sp==='v'?1.03:.93; u.pitch=sp==='v'?1.06:.87; u.volume=1;
+    u.onend=resolve; u.onerror=resolve;
     synth.speak(u);
   });
 }
+
 async function speakText(text,sp){
   try{
     const r=await fetch('/api/speak',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({text,speaker:sp}),
+      body:JSON.stringify({text, speaker:sp}),
     });
-    if(!r.ok)throw new Error('speak API '+r.status);
+    if(!r.ok) throw new Error('speak '+r.status);
     const blob=await r.blob();
     const url=URL.createObjectURL(blob);
     const audio=new Audio(url);
     return new Promise(resolve=>{
-      audio.onended=()=>{URL.revokeObjectURL(url);resolve()};
-      audio.onerror=()=>{URL.revokeObjectURL(url);resolve()};
+      audio.onended=()=>{URL.revokeObjectURL(url); resolve()};
+      audio.onerror=()=>{URL.revokeObjectURL(url); resolve()};
       audio.play().catch(()=>resolve());
     });
   }catch(e){
-    console.warn('speak API failed, using browser voice:',e.message);
     return synthFallback(text,sp);
   }
 }
 
-// Core loop — generate turn N+1 while turn N is playing
+/* ═══ CORE LOOP ═══ */
+
 async function loop(){
   let nextSp='v';
 
-  // Generate first turn, show typing while we wait
   showTyping('v');
-  let current=await generateTurn(nextSp).catch(err=>{throw err});
-  nextSp=nextSp==='v'?'o':'v';
-
-  // Start generating second turn immediately (runs in parallel with playback)
-  let nextPromise=generateTurn(nextSp).catch(err=>null);
-  nextSp=nextSp==='v'?'o':'v';
+  let current=await generateTurn('v');
+  nextSp='o';
+  let nextPromise=generateTurn('o').catch(()=>null);
+  nextSp='v';
 
   while(S.running){
-    while(S.paused&&S.running)await sleep(200);
-    if(!S.running)break;
+    while(S.paused&&S.running) await sleep(200);
+    if(!S.running) break;
 
     // Advance phase
     const np=PHASE_AT.findIndex(t=>S.turnCount<t);
     const phase=np===-1?4:np;
-    if(phase!==S.phase){S.phase=phase;setPhaseUI(phase)}
+    if(phase!==S.phase){S.phase=phase; setPhaseUI(phase)}
 
     // Show turn
-    const body=$('tx-body');const ti=body.querySelector('.typing-row');if(ti)ti.remove();
-    appendTx(current,true);setSpeakerUI(current);
+    const body=$('tx-body');
+    const ti=body.querySelector('.typing-row'); if(ti)ti.remove();
+    appendTx(current,true);
+    setSpeakerUI(current);
 
-    // Update all the things
+    // Update metadata UI
     const m=current.meta;
     if(m&&typeof m.o==='number'){
       setBaroTargets(m.o,m.g);
-      if(m.ol)$('orig-label').textContent=m.ol;
-      if(m.gl)$('gap-label').textContent=m.gl;
-      updateConceptCard(m);updateStatePanel(m);
+      if(m.ol) $('orig-label').textContent=m.ol;
+      if(m.gl) $('gap-label').textContent=m.gl;
+      updateConceptCard(m);
+      updateStatePanel(m);
     }
 
-    // Progress
+    // Progress bar
     const pct=Math.min(95,(S.turnCount/22)*100);
-    $('prog').style.width=pct+'%';$('prog-pct').textContent=Math.round(pct)+'%';
+    $('prog').style.width=pct+'%';
+    $('prog-pct').textContent=Math.round(pct)+'%';
     $('dateline-l').textContent=`Turn ${S.turnCount} — ${PHASES[S.phase]}`;
 
-    // Play audio AND pre-generate next turn simultaneously
+    // Play audio + generate next turn in parallel
     showTyping(nextSp);
     const [,nextTurn]=await Promise.all([
       speakText(current.text,current.sp),
       nextPromise,
     ]);
 
-    if(!S.running)break;
+    if(!S.running) break;
     body.querySelectorAll('.tx-turn.fresh').forEach(e=>e.classList.remove('fresh'));
 
-    // Wrap?
-    if(S.phase>=4&&S.turnCount>=22){wrapUp();return}
+    if(S.phase>=4&&S.turnCount>=22){wrapUp(); return}
 
-    if(!nextTurn){
-      // Generation failed — retry
-      nextPromise=generateTurn(nextSp).catch(()=>null);
-      current=await nextPromise;
-      if(!current){S.running=false;break}
-    } else {
-      current=nextTurn;
-    }
-
-    // Queue the one after
+    current=nextTurn||await generateTurn(nextSp).catch(err=>{throw err});
     nextSp=nextSp==='v'?'o':'v';
     nextPromise=generateTurn(nextSp).catch(()=>null);
     nextSp=nextSp==='v'?'o':'v';
@@ -1269,80 +1262,111 @@ async function loop(){
   }
 }
 
+/* ═══ WRAP UP ═══ */
+
 function wrapUp(){
   S.running=false;
-  $('play-btn').textContent='▶';$('play-btn').disabled=true;
-  setSpeakerUI(null);$('waveform').className='waveform';
-  $('prog').style.width='100%';$('prog-pct').textContent='100%';
-  $('phase-tag').textContent='Complete';$('dateline-l').textContent='Episode complete';
+  $('play-btn').textContent='▶'; $('play-btn').disabled=true;
+  setSpeakerUI(null); $('waveform').className='waveform';
+  $('prog').style.width='100%'; $('prog-pct').textContent='100%';
+  $('phase-tag').textContent='Complete'; $('dateline-l').textContent='Episode complete';
   $('live-badge').classList.remove('on');
-
   $('fn-name').textContent=$('cc-name').textContent||'—';
   $('fn-pitch').textContent=$('cc-pitch').textContent||'—';
   $('fn-cust').textContent=$('cc-cust').textContent||'—';
   $('fn-rev').textContent=$('cc-model-text').textContent||'—';
   $('fn-risk').textContent=$('cc-risk').textContent||'—';
   $('fn-mvp').textContent=$('cc-mvp').textContent||'—';
-  const vw=$('cc-verdict');const vt=(vw.textContent||'').replace(' →','').toLowerCase();
-  $('fn-verdict').className=`fv-word ${vt||'pursue'}`;$('fn-verdict').textContent=vw.textContent||'—';
+  const vw=$('cc-verdict');
+  const vt=(vw.textContent||'').replace(' →','').toLowerCase();
+  $('fn-verdict').className=`fv-word ${vt||'pursue'}`;
+  $('fn-verdict').textContent=vw.textContent||'—';
   $('fn-why').textContent=$('cc-verdict-why').textContent||'';
-  const oc=sigColor(_oT),gc=sigColor(_gT);
-  $('fbr-o').style.cssText=`width:${_oT}%;background:${oc}`;$('fbr-g').style.cssText=`width:${_gT}%;background:${gc}`;
-  $('fbr-ov').textContent=Math.round(_oT)+' / 100';$('fbr-ov').style.color=oc;
-  $('fbr-gv').textContent=Math.round(_gT)+' / 100';$('fbr-gv').style.color=gc;
+  const oc=sigColor(_oT), gc=sigColor(_gT);
+  $('fbr-o').style.cssText=`width:${_oT}%;background:${oc}`;
+  $('fbr-g').style.cssText=`width:${_gT}%;background:${gc}`;
+  $('fbr-ov').textContent=Math.round(_oT)+' / 100'; $('fbr-ov').style.color=oc;
+  $('fbr-gv').textContent=Math.round(_gT)+' / 100'; $('fbr-gv').style.color=gc;
   $('final-banner').classList.add('on');
   setTimeout(()=>$('final-banner').scrollIntoView({behavior:'smooth',block:'start'}),400);
 }
 
-// Controls
+/* ═══ INIT EPISODE ═══ */
+
+function initEpisode(topic,tone){
+  S={
+    running:false, paused:false, phase:0, elapsed:0,
+    locked:[], frontRunners:[], candidates:[], risks:[], qs:[],
+    turnCount:0, topic:topic||'', history:[], steerCmd:null, tone:tone||'sharp',
+  };
+  $('setup').style.display='none';
+  $('episode').classList.add('on');
+  $('steer-section').style.display='block';
+  $('steer-btns').style.display='flex';
+  $('live-badge').classList.add('on');
+  $('dateline-l').textContent='Episode in progress';
+  setPhaseUI(0);
+  ['sl-front','sl-cands','sl-locked','sl-risks','sl-qs'].forEach(id=>{
+    $(id).innerHTML='<div class="state-nil">Loading…</div>';
+  });
+  S.elapsed=0;
+  timerRef=setInterval(()=>{
+    if(!S.paused){
+      S.elapsed++;
+      const m=Math.floor(S.elapsed/60), sc=S.elapsed%60;
+      $('clock').textContent=`${m}:${sc.toString().padStart(2,'0')}`;
+    }
+  },1000);
+}
+
+/* ═══ EVENT LISTENERS ═══ */
+
 $('play-btn').addEventListener('click',()=>{
   if(!S.running&&!S.paused){
-    S.running=true;S.paused=false;$('play-btn').textContent='⏸';
+    S.running=true; S.paused=false; $('play-btn').textContent='⏸';
     loop().catch(err=>{
       console.error('Loop error:',err);
-      alert('Error: '+err.message+'\n\nCheck Vercel environment variables ANTHROPIC_API_KEY and ELEVENLABS_API_KEY are set.');
-      S.running=false;$('play-btn').textContent='▶';
+      alert('Error: '+err.message);
+      S.running=false; $('play-btn').textContent='▶';
     });
-  }else if(S.running&&!S.paused){S.paused=true;$('play-btn').textContent='▶';if(synth)synth.pause();}
-  else if(S.paused){S.paused=false;$('play-btn').textContent='⏸';if(synth)synth.resume();}
+  } else if(S.running&&!S.paused){
+    S.paused=true; $('play-btn').textContent='▶';
+    if(synth) synth.pause();
+  } else if(S.paused){
+    S.paused=false; $('play-btn').textContent='⏸';
+    if(synth) synth.resume();
+  }
 });
 
 $('restart-btn').addEventListener('click',()=>{
-  if(!confirm('Restart this episode?'))return;
-  S.running=false;if(synth)synth.cancel();clearInterval(timerRef);
-  $('tx-body').innerHTML='';$('play-btn').textContent='▶';$('play-btn').disabled=false;
+  if(!confirm('Restart this episode?')) return;
+  S.running=false; if(synth) synth.cancel(); clearInterval(timerRef);
+  $('tx-body').innerHTML='';
+  $('play-btn').textContent='▶'; $('play-btn').disabled=false;
   $('final-banner').classList.remove('on');
-  _o=0;_g=0;_oT=0;_gT=0;
-  $('orig-fill').style.width='0';$('gap-fill').style.width='0';
-  $('orig-reading').textContent='—';$('gap-reading').textContent='—';
+  _o=0; _g=0; _oT=0; _gT=0;
+  $('orig-fill').style.width='0'; $('gap-fill').style.width='0';
+  $('orig-reading').textContent='—'; $('gap-reading').textContent='—';
   setTimeout(()=>initEpisode(S.topic,S.tone),150);
 });
 
-document.querySelectorAll('.sb').forEach(btn=>{
+document.querySelectorAll('.s-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
-    if(!S.running)return;
+    if(!S.running) return;
     const cmd=btn.dataset.cmd;
     S.steerCmd=cmd;
-    if(cmd==='lock-that-in'&&S.frontRunners.length){const idea=S.frontRunners[0];if(!S.locked.includes(idea))S.locked.push(idea);$('sl-locked').innerHTML=S.locked.map(x=>`<div class="state-entry locked">${x}</div>`).join('');}
-    if(cmd==='kill-that'){S.frontRunners=[];$('sl-front').innerHTML='<div class="state-nil">Searching…</div>';}
-    if(cmd==='wrap-it-up'){S.phase=4;setPhaseUI(4);}
-    if(cmd==='move-on'&&S.phase<4){S.phase++;setPhaseUI(S.phase);}
-    btn.classList.add('hit');setTimeout(()=>btn.classList.remove('hit'),500);
+    if(cmd==='lock-that-in'&&S.frontRunners.length){
+      const idea=S.frontRunners[0];
+      if(!S.locked.includes(idea)) S.locked.push(idea);
+      $('sl-locked').innerHTML=S.locked.map(x=>`<div class="state-item locked">${x}</div>`).join('');
+    }
+    if(cmd==='kill-that'){S.frontRunners=[]; $('sl-front').innerHTML='<div class="state-nil">Searching…</div>';}
+    if(cmd==='wrap-it-up'){S.phase=4; setPhaseUI(4);}
+    if(cmd==='move-on'&&S.phase<4){S.phase++; setPhaseUI(S.phase);}
+    btn.classList.add('hit'); setTimeout(()=>btn.classList.remove('hit'),500);
   });
 });
 
-function initEpisode(topic,tone){
-  S={running:false,paused:false,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0,topic:topic||'',history:[],steerCmd:null,tone:tone||'sharp'};
-  $('setup').style.display='none';$('episode').classList.add('on');
-  $('steer-section').style.display='block';$('steer-btns').style.display='flex';
-  $('live-badge').classList.add('on');$('dateline-l').textContent='Episode in progress';
-  setPhaseUI(0);
-  ['sl-front','sl-cands','sl-locked','sl-risks','sl-qs'].forEach(id=>$(id).innerHTML='<div class="state-nil">Loading…</div>');
-  S.elapsed=0;
-  timerRef=setInterval(()=>{if(!S.paused){S.elapsed++;const m=Math.floor(S.elapsed/60),sc=S.elapsed%60;$('clock').textContent=`${m}:${sc.toString().padStart(2,'0')}`;};},1000);
-}
-
-// Tone selection
 document.querySelectorAll('.tone-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     document.querySelectorAll('.tone-btn').forEach(b=>b.classList.remove('active'));
@@ -1353,21 +1377,18 @@ document.querySelectorAll('.tone-btn').forEach(btn=>{
 $('go-btn').addEventListener('click',async()=>{
   const topic=$('topic-inp').value.trim();
   const tone=document.querySelector('.tone-btn.active')?.dataset?.tone||'sharp';
-  $('go-btn').disabled=true;$('load-hint').classList.add('on');
+  $('go-btn').disabled=true;
+  $('load-hint').classList.add('on');
   await sleep(600);
-  $('load-hint').classList.remove('on');$('go-btn').disabled=false;
-  initEpisode(topic,tone);
-});
-  const topic=$('topic-inp').value.trim();
-  const tone=document.querySelector('.tone-btn.active')?.dataset.tone||'sharp';
-  $('go-btn').disabled=true;$('load-hint').classList.add('on');
-  await sleep(600);
-  $('load-hint').classList.remove('on');$('go-btn').disabled=false;
+  $('load-hint').classList.remove('on');
+  $('go-btn').disabled=false;
   initEpisode(topic,tone);
 });
 
-$('topic-inp').addEventListener('keydown',e=>{if(e.key==='Enter')$('go-btn').click()});
-document.querySelectorAll('.sug').forEach(s=>{s.addEventListener('click',()=>{$('topic-inp').value=s.dataset.ex})});
+$('topic-inp').addEventListener('keydown',e=>{if(e.key==='Enter') $('go-btn').click()});
+document.querySelectorAll('.chip').forEach(s=>{
+  s.addEventListener('click',()=>{$('topic-inp').value=s.dataset.ex});
+});
 </script>
 </body>
 </html>
