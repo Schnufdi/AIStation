@@ -7,8 +7,8 @@ export default async function handler(req, res) {
   const { text, speaker } = req.body || {};
   if (!text) return res.status(400).json({ error: 'text required' });
 
-  // Visionary = JBFqnCBsd6RMkjVDRZzb, Operator = nPczCjzI2devNBz1zQrb
-  const voiceId = speaker === 'v' ? 'JBFqnCBsd6RMkjVDRZzb' : 'nPczCjzI2devNBz1zQrb';
+  // Visionary = JBFqnCBsd6RMkjVDRZzb, Realist = iP95p4xoKVk53GoZ742B
+  const voiceId = speaker === 'v' ? 'JBFqnCBsd6RMkjVDRZzb' : 'iP95p4xoKVk53GoZ742B';
 
   const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
     method: 'POST',
