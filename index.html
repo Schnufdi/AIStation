@@ -1215,20 +1215,41 @@ async function generateTurn(speaker) {
 
   const messages = buildMessages(speaker);
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system,
-      messages,
-    })
-  });
-
-  if (!response.ok) throw new Error(`API error ${response.status}`);
-  const data = await response.json();
-  const raw = data.content[0]?.text || '';
+  // Call via /api/generate serverless function to keep API key server-side
+  // Falls back to direct call if that endpoint doesn't exist yet
+  let raw = '';
+  try {
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system, messages })
+    });
+    if (!response.ok) throw new Error(`API proxy error ${response.status}`);
+    const data = await response.json();
+    raw = data.text || '';
+  } catch(proxyErr) {
+    // Direct browser call fallback (works if ANTHROPIC_API_KEY is set as window var)
+    const apiKey = window.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error('No API key — add api/generate.js to your Vercel project. See console for details.');
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        system,
+        messages,
+      })
+    });
+    if (!response.ok) throw new Error(`API error ${response.status}`);
+    const data = await response.json();
+    raw = data.content[0]?.text || '';
+  }
 
   // Split spoken text from metadata
   const metaIdx = raw.lastIndexOf('\nMETADATA:');
@@ -1337,9 +1358,10 @@ async function loop() {
     while (S.paused && S.running) await sleep(200);
     if (!S.running) break;
 
-    // Pull next item from buffer
+    // Pull next item from buffer (may be a Promise or a resolved object)
     if (_buffer.length === 0) break;
-    const item = await _buffer.shift();
+    const item = await Promise.resolve(_buffer.shift());
+    if (!item) { console.warn('Buffer item was null, stopping'); break; }
     const { turn } = item;
 
     // Update phase
