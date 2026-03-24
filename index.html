@@ -870,7 +870,7 @@ body::after {
         <div class="c-hed">Concept State</div>
         <div class="phase-strip">
           <div class="ph" id="ph0"></div><div class="ph" id="ph1"></div>
-          <div class="ph" id="ph2"></div><div class="ph" id="ph3"></div><div class="ph" id="ph4"></div>
+          <div class="ph" id="ph2"></div><div class="ph" id="ph3"></div>
         </div>
         <div class="ph-lbl" id="ph-name">Opening</div>
 
@@ -1018,8 +1018,14 @@ const OPENING_ANGLES = [
   "what do people do privately that they'd pay to do better, but no product exists because it's awkward to admit the need?",
 ];
 
-const PHASES = ['Opening','Exploring','Narrowing','Building','Wrapping'];
-const PHASE_AT = [3,8,13,18,22];
+// 4 phases, 22 turns total
+// Opening: 0-3 (4 turns)  — cast wide, find the frame
+// Pressure: 4-11 (8 turns) — throw directions, challenge hard, kill the weak
+// Construction: 12-17 (6 turns) — lock the strongest, build it out
+// Verdict: 18-21 (4 turns, hard 3-turn close) — final stress test, clear position
+const PHASES = ['Opening','Pressure','Construction','Verdict'];
+const PHASE_AT = [4,12,18,22]; // turn counts where phase advances
+const TOTAL_TURNS = 22;
 
 const MODEL_TYPES = {
   sub:{label:'Subscription',cls:'sub'},
@@ -1103,11 +1109,11 @@ function tickBaro(){
 /* ═══ UI HELPERS ═══ */
 
 function setPhaseUI(p){
-  const n=PHASES[p];
+  const n=PHASES[p]||PHASES[PHASES.length-1];
   $('phase-tag').textContent=n; $('ph-name').textContent=n; $('prog-phase').textContent=n;
-  for(let i=0;i<5;i++) $('ph'+i).className='ph'+(i<p?' past':i===p?' now':'');
+  for(let i=0;i<4;i++) $('ph'+i).className='ph'+(i<p?' past':i===p?' now':'');
   const pill=$('prog-stage-pill');
-  if(pill){ pill.textContent=n; pill.className='prog-stage-pill'+(p>=4?' wrapping':''); }
+  if(pill){ pill.textContent=n; pill.className='prog-stage-pill'+(p>=3?' wrapping':''); }
 }
 
 function setSpeakerUI(t){
@@ -1220,32 +1226,62 @@ function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 function buildSystemPrompt(speaker){
   const phase=PHASES[S.phase];
   const tone=(TONES[S.tone]||TONES.sharp)[speaker];
-  const steer=S.steerCmd?`\n\nSTEERING: The listener pressed "${S.steerCmd}" — address this now.`:'';
-  const baro=S.turnCount>2
-    ?`\n\nLIVE SCORES — Originality:${Math.round(_o)}/100, Market Gap:${Math.round(_g)}/100.`
-     +(_o<40?' Originality low — push for a less obvious angle.':'')
-     +(_g<40?' Market gap score low — anchor to a real demand signal.':'')
+  const steer=S.steerCmd?`\n\nSTEERING: "${S.steerCmd}" — let this reshape your response.`:'';
+  const baro=S.turnCount>3
+    ?`\n\nSIGNALS — Originality:${Math.round(_o)}/100, Market Gap:${Math.round(_g)}/100.`
+     +(_o<40?' Originality low — push for less obvious angle.':'')
+     +(_g<40?' Market gap low — anchor to a real demand.':'')
      +(Math.abs(_o-_g)>20?' Scores diverging — work to close the gap.':'')
     :'';
 
-  // Mood arc — feed last mood back and ask model to evolve it
+  // Mood arc
   const myMoods=S.moodHistory[speaker]||[];
   const lastMood=myMoods.length>0?myMoods[myMoods.length-1]:null;
   const moodInstruction=lastMood
-    ?`\n\nYOUR EMOTIONAL ARC: Your mood has evolved through [${myMoods.slice(-4).join(' → ')}]. You're currently feeling "${lastMood}". Let your emotional state evolve naturally from here — don't reset, build on it.`
-    :`\n\nYOUR EMOTIONAL ARC: This is your first turn. Pick a starting mood that fits your character and the opening. It will evolve from here.`;
+    ?`\n\nYOUR ARC: You've been [${myMoods.slice(-4).join(' → ')}]. Currently "${lastMood}". Evolve from here — don't reset.`
+    :`\n\nYOUR ARC: First turn. Pick a mood that fits your character. It evolves from here.`;
 
-  const meta=`\n\n---\nSIGNAL BLOCK (never spoken aloud, system use only):\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"1-3 word emotional state","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
+  // Gear change signal — fired once on phase transition
+  const gearSignal=S.gearChange
+    ?`\n\nGEAR CHANGE: The conversation just shifted to ${S.gearChange} phase. Acknowledge the shift naturally in your response — don't announce it, just change gear.`
+    :'';
+
+  // Topic anchor every 4 turns
+  const anchor=S.topicAnchor&&S.topic
+    ?`\n\nTOPIC ANCHOR: Original topic is "${S.topic}". If the conversation has drifted, bring it back — naturally, not abruptly.`
+    :'';
+
+  const meta=`\n\n---\nSIGNAL BLOCK (never spoken aloud):\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"1-3 word state","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
 
   const lenRule=S.turnCount===0
-    ? `LENGTH: Opening — 2-3 sentences max. Set the scene, don't resolve it.`
-    : `LENGTH: 1-2 sentences only. Punchy. Conversational. Like you're talking, not presenting.`;
+    ? `LENGTH: Opening — 2-3 sentences. Set the scene, don't resolve it.`
+    : S.phase===3
+    ? `LENGTH: Verdict phase — 1 sentence max. Clear, final, no hedging.`
+    : `LENGTH: 1-2 sentences. Punchy. Conversational. Talking, not presenting.`;
 
-  const voiceRule=`VOICE: Speak like a sharp human, not a consultant. No jargon, no bullet-point thinking, no *asterisks*. If you catch yourself being technical, pull back to the human reality — who actually feels this problem, what does it cost them, why hasn't anyone fixed it. Keep the thread. Don't let the conversation drift from its core.`;
+  const voiceRule=`VOICE: Sharp human, not a consultant. No jargon, no asterisks, no bullet-point thinking. Pull back to the human reality — who feels this, what does it cost them. Keep the thread.`;
 
-  if(speaker==='v') return `You are The Visionary on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\nOften start with "Right," or "Okay so —". Spoken words only.\n\nRespond directly to what The Operator just said. Move the idea forward.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}${moodInstruction}\n\nPhase guide — Opening: cast wide. Exploring: 2-3 directions. Narrowing: name the strongest. Building: stress-test it. Wrapping: land the verdict.${meta}`;
+  // Per-phase persona instructions
+  const PHASE_PERSONA={
+    v:{
+      'Opening':    `Your job: cast wide. Explore the territory — where does the problem live, who feels it, why now? Don't land on an idea yet. You're curious and slightly restless.`,
+      'Pressure':   `Your job: throw ideas fast and defend them hard. You're energised. When challenged, you escalate — find a stronger version of the idea, not a softer one. Build fast.`,
+      'Construction':`Your job: you've found something worth building. Get precise. Name it, describe the customer exactly, say how money flows. You're focused and increasingly excited.`,
+      'Verdict':    `Your job: make the case. 1 sentence — why this idea is worth pursuing. Committed, not qualified.`,
+    },
+    o:{
+      'Opening':    `Your job: don't attack yet. Sharpen the frame — find the most interesting version of the question. You're clarifying, not challenging.`,
+      'Pressure':   `Your job: be forensic. Find the flaw in each direction and name it. Not mean — surgical. Force the Visionary to find a stronger idea, not defend a weak one.`,
+      'Construction':`Your job: become a builder. The adversarial phase is over. Help construct — push for specificity on customer, revenue, moat. You're still rigorous but now you're contributing.`,
+      'Verdict':    `Your job: give a real verdict. 1 sentence — pursue, pivot, or kill, and exactly why. No hedge.`,
+    },
+  };
 
-  return `You are The Operator on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\nOften start with "Sure. And who actually pays for that?" or "Here's what I keep coming back to:". Spoken words only.\n\nRespond directly to what The Visionary just said. React — don't repeat.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}${moodInstruction}\n\nPhase guide — Opening: push back or sharpen. Exploring: unit economics. Narrowing: lock in or challenge. Building: stress-test ruthlessly. Wrapping: clear verdict.${meta}`;
+  const persona=PHASE_PERSONA[speaker][phase]||'';
+
+  if(speaker==='v') return `You are The Visionary on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nOften start with "Right," or "Okay so —". Spoken words only.\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase} (turn ${S.turnCount})${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
+
+  return `You are The Operator on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nOften start with "Sure. And who actually pays for that?" or "Here's what I keep coming back to:". Spoken words only.\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase} (turn ${S.turnCount})${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
 }
 
 function buildMessages(speaker){
@@ -1264,6 +1300,9 @@ function buildMessages(speaker){
 
 async function generateTurn(speaker){
   S.steerCmd=null;
+  // Consume one-shot signals
+  const hadGearChange=S.gearChange; S.gearChange=null;
+  const hadAnchor=S.topicAnchor; S.topicAnchor=false;
   const resp=await fetch('/api/generate',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -1407,10 +1446,20 @@ async function loop(){
     while(S.paused&&S.running) await sleep(200);
     if(!S.running) break;
 
-    // Advance phase
+    // Advance phase — inject gear-change signal on transition
     const np=PHASE_AT.findIndex(t=>S.turnCount<t);
-    const phase=np===-1?4:np;
-    if(phase!==S.phase){S.phase=phase; setPhaseUI(phase)}
+    const phase=np===-1?PHASES.length-1:np;
+    if(phase!==S.phase){
+      S.phase=phase;
+      setPhaseUI(phase);
+      // Gear-change signal — next prompt will see this
+      S.gearChange=PHASES[phase];
+    }
+
+    // Topic anchor every 4 turns
+    if(S.turnCount>0&&S.turnCount%4===0&&S.topic){
+      S.topicAnchor=true;
+    }
 
     // Show current turn
     const body=$('tx-body');
@@ -1429,7 +1478,6 @@ async function loop(){
     }
 
     // Progress + countdown
-    const TOTAL_TURNS=22;
     $('prog').style.width=Math.min(95,(S.turnCount/TOTAL_TURNS)*100)+'%';
     const remaining=Math.max(0,TOTAL_TURNS-S.turnCount);
     const cd=$('prog-countdown');
@@ -1448,7 +1496,7 @@ async function loop(){
 
     if(!S.running) break;
     body.querySelectorAll('.tx-turn.fresh').forEach(e=>e.classList.remove('fresh'));
-    if(S.phase>=4&&S.turnCount>=22){ wrapUp(); return; }
+    if(S.phase>=3&&S.turnCount>=TOTAL_TURNS){ wrapUp(); return; }
 
     // Resolve next turn — retry once if null
     let resolved=nextTurn;
@@ -1501,6 +1549,8 @@ function initEpisode(topic,tone){
     locked:[], frontRunners:[], candidates:[], risks:[], qs:[],
     turnCount:0, topic:topic||'', history:[], steerCmd:null, tone:tone||'sharp',
     moodHistory:{ v:[], o:[] },
+    gearChange:null,
+    topicAnchor:false,
   };
   $('setup').style.display='none';
   $('episode').classList.add('on');
@@ -1594,8 +1644,8 @@ document.querySelectorAll('.s-btn').forEach(btn=>{
       $('sl-locked').innerHTML=S.locked.map(x=>`<div class="state-item locked">${x}</div>`).join('');
     }
     if(cmd==='kill-that'){S.frontRunners=[]; $('sl-front').innerHTML='<div class="state-nil">Searching…</div>';}
-    if(cmd==='wrap-it-up'){S.phase=4; setPhaseUI(4);}
-    if(cmd==='move-on'&&S.phase<4){S.phase++; setPhaseUI(S.phase);}
+    if(cmd==='wrap-it-up'){S.phase=3; setPhaseUI(3);}
+    if(cmd==='move-on'&&S.phase<3){S.phase++; setPhaseUI(S.phase);}
 
     btn.classList.add('hit');
     setTimeout(()=>btn.classList.remove('hit'),800);
