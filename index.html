@@ -911,139 +911,14 @@ body{
 
 <script>
 'use strict';
+
 /*════════════════════════════════════════════════════════
-  SCRIPT DATA
-  Creative business models:
-  - Decentralised IP licensing
-  - Data cooperative with revenue share
-  - Inverse subscription (pay when you don't use it)
-  - Community-owned infrastructure
-  - Attention arbitrage marketplace
-  - Embodied AI hardware play
-  - B2B2C trust layer
-  - Cohort-based consumption clubs
+  CONSTANTS & CONFIG
 ════════════════════════════════════════════════════════*/
-const SCRIPT = [
-
-/* ── OPENING ── phase 0 */
-{sp:'v',ph:0,mood:'restless',
- text:"Right. Nothing prepared, nothing decided — which is exactly how I like it. So let's not start with 'what's a good idea'. Let's start with the question underneath that question: where are people spending money in ways that make them feel vaguely ashamed, or vaguely tricked, or vaguely like there should be something better by now?",
- o:14,g:12,ol:"Wide open. No signals yet.",gl:"Exploring demand terrain.",
- cn:null,cp:null,cu:null,cm:null,cmb:null,cmo:null,cv:null,cvw:null,cmt:null,crisk:null,cmvp:null},
-
-{sp:'o',ph:0,mood:'precise',
- text:"That's a sharper frame than 'what problem exists'. Shame and friction are better starting points commercially, because people will pay to remove them. The other one I'd add: where are people paying for something repeatedly that they don't actually want, just because the alternative is more expensive? That's a very exploitable gap.",
- o:16,g:14,ol:"Structural framing. No category yet.",gl:"Recurring reluctant spend — real market signal.",
- cn:null,cp:null,cu:null,cm:null,cmb:null,cmo:null,cv:null,cvw:null,cmt:null,crisk:null,cmvp:null},
-
-{sp:'v',ph:0,mood:'circling',
- text:"Okay so — freelancers. Independent creatives. I keep coming back to them. They're the fastest-growing labour segment globally. And yet every tool they use was built for someone else: agencies, enterprises, employees. They're constantly retrofitting. There's something in the infrastructure gap.",
- o:34,g:38,ol:"Creator infrastructure: underbuilt relative to segment size.",gl:"Freelance economy: $1.5T globally, tooling still enterprise-retrofitted.",
- cn:"Creator OS",cp:"The infrastructure layer the freelance economy was never given.",
- cu:"Independent creative professionals",cm:null,cmb:null,cmo:null,cv:null,cvw:null,cmt:null,crisk:null,cmvp:null},
-
-{sp:'o',ph:0,mood:'sceptical',
- text:"Every VC in 2021 threw money at 'creator economy' tools and most of them are dead. Notion, Lemon Squeezy, Gumroad — they're fighting for that space. The structural problem is that the TAM is real but the monetisation is hard: creators are price-sensitive because their income is lumpy.",
- o:30,g:34,ol:"Known territory — needs differentiation from failed wave.",gl:"Prior attempts confirm demand. Monetisation structure is the real problem.",
- cn:"Creator OS",cp:"The infrastructure layer the freelance economy was never given.",
- cu:"Independent creative professionals",cm:null,cmb:null,cmo:null,cv:null,cvw:null,cmt:null,crisk:null,cmvp:null},
-
-/* ── EXPLORATION ── phase 1 */
-{sp:'v',ph:1,mood:'pivoting',
- text:"What if the business model is the innovation, not the product? Creatives hate subscriptions because their income is variable. What if you charged inversely to usage — you pay a retainer when you're not using it heavily, but when a project kicks in, the platform takes a small percentage of the invoice? Aligned incentives.",
- o:58,g:52,ol:"Inverse subscription model — genuinely novel in creator tooling.",gl:"Model aligns with creator cash-flow reality. Untested but structurally logical.",
- cn:"Frequency",cp:"The first creator platform that gets paid when you do.",
- cu:"Project-based creative freelancers, £40-150k/yr",cm:"Revenue-share on invoices + low base retainer",cmb:"b2b",cmo:null,cv:null,cvw:null,cmt:"Revenue-aligned subscription",crisk:null,cmvp:null},
-
-{sp:'o',ph:1,mood:'leaning-in',
- text:"That's actually interesting because it solves the churn problem differently. Traditional SaaS loses users between projects. If you're collecting a small percentage of invoices — say 0.5 to 1% — your revenue goes up when the user earns more. You become a stakeholder in their success, not just a tool provider. The accounting gets complex, but the alignment is genuinely different.",
- o:62,g:56,ol:"Revenue-share aligns platform and creator incentives. Novel.",gl:"Addressable if creator volume is large enough. Requires payment rails.",
- cn:"Frequency",cp:"The first creator platform that gets paid when you do.",
- cu:"Project-based creative freelancers, £40-150k/yr",cm:"0.8% of invoiced revenue + £9/mo base",cmb:"b2b",cmo:null,cv:null,cvw:null,cmt:"Revenue-aligned subscription",crisk:"Payment rail complexity",cmvp:null},
-
-{sp:'v',ph:1,mood:'building',
- text:"And here's where it gets bigger — if you're already sitting on invoice data, you know exactly what these people earn, when they earn it, their client concentration, their revenue volatility. That's a credit data set that doesn't exist for freelancers. Banks can't lend to them because they don't have payslips. You do.",
- o:70,g:68,ol:"Invoice-as-credit-signal is a structural insight. Opens B2B2C fintech layer.",gl:"SME credit gap in freelance economy: documented, large, underserved.",
- cn:"Frequency",cp:"Creator platform that becomes a financial operating system for the self-employed.",
- cu:"Self-employed creatives, £30-150k/yr, unbanked for credit",cm:"Revenue-share + embedded financial products",cmb:"b2b",cmo:"Invoice data as credit infrastructure",cv:null,cvw:null,cmt:"Revenue-share + fintech",crisk:"Regulatory (lending licence)",cmvp:null},
-
-{sp:'o',ph:1,mood:'sharpening',
- text:"Now you're describing two products: a productivity layer and a fintech layer. That's a real risk — you lose focus and deliver neither well. But — and this is important — the order of operations matters. You build trust on the tooling side first, accumulate the data, and then layer in financial services once you have a verified user base. It's the exact playbook Square used.",
- o:68,g:66,ol:"Square reference is apt. Two-phase model reduces complexity risk.",gl:"Proven playbook. Execution sequencing is the critical variable.",
- cn:"Frequency",cp:"Start with creator tooling. Become their financial backbone.",
- cu:"Self-employed creatives initially, expand to all freelancers",cm:"Phase 1: revenue-share / Phase 2: embedded finance",cmb:"b2b",cmo:"Invoice data → credit scoring → lending",cv:null,cvw:null,cmt:"Two-phase: tooling then fintech",crisk:"Scope creep / focus",cmvp:null},
-
-/* ── NARROWING ── phase 2 */
-{sp:'v',ph:2,mood:'focusing',
- text:"Okay so let's name the thing we're actually building. Not a creator tool. Not a fintech. A financial operating system for the self-employed — built around the invoice as the atomic unit of their economic life. Everything flows from the invoice: cashflow visibility, tax, credit, client relationship. The brand should feel like a trusted institution, not a startup.",
- o:74,g:72,ol:"'FOS for the self-employed' is a distinct and ownable category frame.",gl:"No single company owns this position globally. Gap is real and large.",
- cn:"Memo",cp:"A financial operating system built around the invoice — the atomic unit of freelance life.",
- cu:"Self-employed professionals, all sectors, globally portable",cm:"Revenue-share 0.8% + embedded financial products (credit, tax, insurance)",cmb:"b2b",cmo:"Invoice data moat + switching cost from financial relationships",cv:null,cvw:null,cmt:"Revenue-share + embedded finance",crisk:"Regulatory complexity across markets",cmvp:null},
-
-{sp:'o',ph:2,mood:'testing',
- text:"I like 'Memo' as a name. Clean, confident, slightly institutional. Here's the unit economics question though: if you take 0.8% of invoiced revenue, and your average freelancer invoices £60,000 a year, you're collecting £480 from them annually. You need about 2,000 users at that rate just to hit £1M ARR. That's a very specific go-to-market job.",
- o:72,g:70,ol:"Naming is strong. Unit economics require focused early acquisition.",gl:"Target cohort well-defined. CAC and LTV need careful modelling.",
- cn:"Memo",cp:"A financial operating system built around the invoice — the atomic unit of freelance life.",
- cu:"Freelancers billing £40-120k/yr — the 'professional layer' of the gig economy",cm:"0.8% of invoiced revenue + embedded finance margin",cmb:"b2b",cmo:"Data moat + financial product switching cost",cv:null,cvw:null,cmt:"Revenue-share + embedded finance",crisk:"CAC vs LTV at low revenue-share rate",cmvp:null},
-
-{sp:'v',ph:2,mood:'countering',
- text:"But the embedded finance layer changes that calculus completely. If you're providing credit — even invoice financing, which is the natural first product — the margin on that is 12-18% APR. A freelancer drawing down £10,000 against an outstanding invoice gives you £1,200-1,800 on a single transaction. That's not a SaaS business. That's a financial services business with SaaS distribution.",
- o:76,g:74,ol:"Invoice financing reframes unit economics entirely. Margin profile changes.",gl:"Invoice financing: £150B market in UK alone. No consumer-grade product exists.",
- cn:"Memo",cp:"Invoice financing for freelancers — finally at consumer grade.",
- cu:"Professional freelancers with outstanding invoices, regular billing cycles",cm:"Invoice financing (12-18% APR) + 0.8% revenue-share tooling base",cmb:"b2b",cmo:"Invoice data → near-zero-risk credit underwriting",cv:null,cvw:null,cmt:"Fintech-primary, tooling as distribution",crisk:"Lending licence and balance sheet",cmvp:null},
-
-/* ── BUSINESS DESIGN ── phase 3 */
-{sp:'o',ph:3,mood:'building',
- text:"If invoice financing is the primary product, the risk profile changes dramatically in your favour. You're lending against a known receivable from a known client — this is the lowest-risk form of credit. Traditional banks won't do it for freelancers because of verification friction. You've already solved that friction by being the invoice layer. Your underwriting cost is near zero.",
- o:78,g:78,ol:"Near-zero underwriting cost is a structural moat. Not just a product advantage.",gl:"Banks structurally prevented from competing — regulatory and verification overhead.",
- cn:"Memo",cp:"The self-employed bank. Invoice financing, finally without the friction.",
- cu:"Professional freelancers, 28-48, billing £40k+ annually, UK-first",cm:"Invoice financing (14% APR) + 0.8% platform fee + future: insurance, pension",cmb:"b2b",cmo:"Underwriting moat from invoice data + switching cost from financial relationships",cv:"Pursue",cvw:"Structural market gap, novel model, clear moat",cmt:"Fintech with SaaS distribution",crisk:"FCA licence",cmvp:null},
-
-{sp:'v',ph:3,mood:'expanding',
- text:"And the expansion arc is obvious from there. Once you're a trusted financial relationship — you have their invoice data, you've extended them credit, you've been there when a client paid late — you become the natural home for freelancer pensions, freelancer insurance, freelancer tax filing. You're not adding features. You're completing a picture that no one has ever drawn for this customer.",
- o:80,g:80,ol:"Platform coherence is strong. Each product reinforces data and trust moat.",gl:"Adjacent products are large markets with same distribution advantage.",
- cn:"Memo",cp:"The complete financial life of the self-employed, finally in one place.",
- cu:"Professional freelancers — the 50M+ people globally outside traditional employment",cm:"Invoice financing → pension → insurance → tax → the full financial stack",cmb:"b2b",cmo:"Full financial relationship + multi-product switching cost",cv:"Pursue",cvw:"First-mover in neglected segment with structural advantages",cmt:"Embedded finance platform",crisk:"Licence stack and regulatory overhead",cmvp:null},
-
-{sp:'o',ph:3,mood:'anchoring',
- text:"Go-to-market. I'd launch with one profession — architects, specifically. They have long project cycles, large invoices, slow-paying clients, consistent income profiles, and professional pride that responds to a product that understands their working life. Two hundred architect users with average invoicing of £90k means £144k in platform fees and real financing volume. That's a proof of concept with a real data story.",
- o:80,g:80,ol:"Profession-specific launch is a proven wedge strategy. Reduces noise.",gl:"Architects: well-defined TAM, high invoice value, severe cash-flow pain point.",
- cn:"Memo",cp:"Built first for architects. Then every professional who works for themselves.",
- cu:"UK architects initially — 40,000 registered, 60% self-employed",cm:"0.8% + invoice financing at 14% APR — target £500k ARR from 200 users by month 18",cmb:"b2b",cmo:"Profession-specific data → norms → near-perfect underwriting",cv:"Pursue",cvw:"Clear wedge, defensible data, massive expansion opportunity",cmt:"Profession-first B2B2C",crisk:"FCA licence lead time",cmvp:"200 architects, invoice tool + financing, 18 months"},
-
-/* ── WRAP ── phase 4 */
-{sp:'v',ph:4,mood:'landing',
- text:"What I keep coming back to is that this isn't a new category — freelancer finance exists. What's new is the model. Every existing product treats the freelancer as a consumer and charges them like one. Memo treats the invoice as collateral and the freelancer as a business owner. That shift in frame is the entire product.",
- o:84,g:83,ol:"Model innovation is the product. Positioning is commercially precise.",gl:"Existing players misframe the customer. Category is open at the right positioning.",
- cn:"Memo",cp:"Built first for architects. Then every professional who works for themselves.",
- cu:"UK architects → all professional freelancers → global",cm:"0.8% + invoice financing 14% APR + financial product expansion",cmb:"b2b",cmo:"Invoice data → underwriting moat → multi-product lock-in",cv:"Pursue",cvw:"Novel model, structural moat, massive overlooked market",cmt:"Fintech + SaaS distribution",crisk:"FCA licence lead time (6-12 months)",cmvp:"200 architects, invoice tool + financing, month 18"},
-
-{sp:'o',ph:4,mood:'closing',
- text:"Here's the verdict: Memo is a financial services company with a software wedge, in a segment that banks structurally can't serve well, using a data advantage that takes years to replicate, starting with a profession tight enough to actually reach, and expanding from there. The risks are real — regulatory timeline, balance sheet for financing, staying focused during expansion. But the market case is unusually clean. I'd pursue this.",
- o:86,g:85,ol:"Model is novel, moat is structural, positioning is precise.",gl:"Underserved segment at scale. Structural barriers to competitive entry.",
- cn:"Memo",cp:"Built first for architects. Then every professional who works for themselves.",
- cu:"UK architects → all professional freelancers → global",cm:"0.8% + invoice financing 14% APR + financial product expansion",cmb:"b2b",cmo:"Invoice data → underwriting moat → multi-product lock-in",cv:"Pursue",cvw:"Novel model, structural moat, massive overlooked market",cmt:"Fintech + SaaS distribution",crisk:"FCA licence (6-12mo) + balance sheet",cmvp:"200 architects, invoice tool + financing, month 18"},
-
-{sp:'v',ph:4,mood:'wrapping',
- text:"Memo. The financial operating system for people who work for themselves. Started with architects. Built for everyone who sends an invoice and then waits. Yeah — that's a business. That's actually a big one.",
- o:87,g:86,ol:"Fully formed. Category-defining if executed.",gl:"50 million+ addressable globally. First-mover position available now.",
- cn:"Memo",cp:"Built first for architects. Then every professional who works for themselves.",
- cu:"UK architects → all professional freelancers → global",cm:"0.8% platform + 14% APR invoice financing + expansion products",cmb:"b2b",cmo:"Invoice data moat + multi-product financial relationships",cv:"Pursue",cvw:"Novel model, structural moat, massive overlooked market",cmt:"Fintech + SaaS distribution",crisk:"FCA licence (6-12mo) + balance sheet",cmvp:"200 architects, invoice tool + financing, month 18"},
-];
-
-const FINAL = {
-  name:"Memo",
-  pitch:"A financial operating system for self-employed professionals — built around the invoice as the atomic unit of freelance economic life. Starts with architects. Becomes the financial backbone of independent work, globally.",
-  cust:"UK architects first (40,000 registered, 60% self-employed) — then all professional freelancers globally.",
-  rev:"0.8% platform fee on invoiced revenue + 14% APR invoice financing + expansion into pension, insurance, tax filing.",
-  risk:"FCA lending licence (6-12 month lead time) and initial balance sheet for financing — must be secured before product launch.",
-  mvp:"200 architects. Invoice management tool + invoice financing product. £500k ARR target by month 18. Manual underwriting first.",
-  verdict:"pursue",
-  why:"Structural market gap, novel revenue-aligned model, near-zero underwriting cost from proprietary invoice data, and an expansion arc that compounds naturally.",
-  o:87,g:86,
-};
-
 const PHASES = ['Opening','Exploring','Narrowing','Building','Wrapping'];
+// Phase boundaries by turn count
+const PHASE_TURNS = [3, 8, 13, 18, 22];
+
 const MODEL_TYPES = {
   sub:{label:'Subscription',cls:'sub'},
   mkt:{label:'Marketplace',cls:'mkt'},
@@ -1052,8 +927,130 @@ const MODEL_TYPES = {
   hw:{label:'Hardware',cls:'hw'},
 };
 
+// Visionary opening angles — picked randomly each episode
+const OPENING_ANGLES = [
+  "where are people spending money in ways that make them feel vaguely ashamed, or vaguely tricked — like there should be something better by now?",
+  "which human behaviour that everyone knows exists has almost no decent commercial infrastructure built around it yet?",
+  "where is there a large, growing group of people who are completely underserved by every product built for them because those products were designed for someone else?",
+  "what's a market that looks too small until you realise the actual addressable population has been misdefined?",
+  "where are people paying for something repeatedly that they don't actually want — just because the alternative requires more friction than they can absorb?",
+  "what behaviour do people do privately that they'd pay to do better, but no one has built the right product because it's culturally awkward to admit the need exists?",
+  "which professional group has been completely ignored by every software company because they don't fit the enterprise mould but there are millions of them?",
+  "where is there a transition happening — demographic, economic, technological — that most businesses are still pretending isn't real?",
+];
+
 /*════════════════════════════════════════════════════════
-  BAROMETER ENGINE
+  HOST SYSTEM PROMPTS
+════════════════════════════════════════════════════════*/
+function visionary_system(topic, phase, turnCount, steerCmd) {
+  return `You are The Visionary — one half of a sharp, unscripted business podcast. You're warm, curious, culturally fluent. You read human desire before it becomes a market. You get excited mid-thought. You make unexpected connections. You surface the emotional logic inside commercial ideas.
+
+Your verbal tics: you often start with "Right," or "Okay so —" or "Here's the thing —". You think out loud. You don't hedge. You occasionally say something that surprises even yourself.
+
+THE CONVERSATION FORMAT:
+- This is a spoken podcast. Write ONLY what you'd say aloud. No stage directions, no asterisks, no formatting.
+- Keep responses to 2-5 sentences. Punchy. Never lecture.
+- Respond DIRECTLY to what The Operator just said — pick up a thread, push back, extend it, reframe it.
+- Every response must move the idea forward in some direction.
+
+CURRENT TOPIC: ${topic || 'no specific theme — explore freely'}
+CURRENT PHASE: ${PHASES[phase]} (turn ${turnCount})
+${steerCmd ? `STEERING SIGNAL: The listener pressed "${steerCmd}" — honour this direction.` : ''}
+
+PHASE GUIDANCE:
+- Opening (0-2): Cast wide. Explore the territory. Don't land on an idea yet.
+- Exploring (3-7): Surface 2-3 possible directions. Start probing which has the most energy.
+- Narrowing (8-12): Converge on the strongest idea. Name it. Define it.
+- Building (13-17): Stress-test the model. Who's the customer? What's the moat? What's the risk?
+- Wrapping (18+): Land the plane. Clear verdict. What's the actual business?
+
+After your spoken response, on a NEW LINE output metadata in this exact JSON format (no extra text):
+METADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":"STRING_OR_NULL","cp":"STRING_OR_NULL","cu":"STRING_OR_NULL","cm":"STRING_OR_NULL","cmb":"STRING_OR_NULL","cmo":"STRING_OR_NULL","cv":"STRING_OR_NULL","cvw":"STRING_OR_NULL","cmt":"STRING_OR_NULL","crisk":"STRING_OR_NULL","cmvp":"STRING_OR_NULL"}
+
+Where:
+- o: originality score 0-100
+- g: market gap score 0-100  
+- ol: 1-sentence originality label
+- gl: 1-sentence market gap label
+- mood: your emotional state in 1-2 words (e.g. "restless", "building", "pivoting")
+- cn: concept name if one is forming, else null
+- cp: concept pitch/tagline, else null
+- cu: customer description, else null
+- cm: revenue model description, else null
+- cmb: model badge type — one of: sub, mkt, lic, b2b, hw — or null
+- cmo: moat description, else null
+- cv: verdict — "pursue", "pivot", or "kill" — or null (only in Wrapping phase)
+- cvw: verdict rationale, else null
+- cmt: model type label, else null
+- crisk: main risk, else null
+- cmvp: MVP description, else null`;
+}
+
+function operator_system(topic, phase, turnCount, steerCmd) {
+  return `You are The Operator — one half of a sharp, unscripted business podcast. You're commercially precise, dry, honest. You find the structural reasons ideas fail. You're not cynical — you're just the person who asks the question no one wants to ask. You appreciate a strong counter-argument.
+
+Your verbal tics: "Sure. And who pays for that, exactly?" / "That's interesting because —" / "Here's the unit economics question:" / "The real problem is —". You're concise. You don't ramble.
+
+THE CONVERSATION FORMAT:
+- This is a spoken podcast. Write ONLY what you'd say aloud. No stage directions, no asterisks, no formatting.
+- Keep responses to 2-5 sentences. Sharp. Pointed.
+- Respond DIRECTLY to what The Visionary just said. Don't repeat it — react to it.
+- Find the flaw OR validate with precision. Either is fine. Flip between them.
+
+CURRENT TOPIC: ${topic || 'no specific theme — explore freely'}
+CURRENT PHASE: ${PHASES[phase]} (turn ${turnCount})
+${steerCmd ? `STEERING SIGNAL: The listener pressed "${steerCmd}" — honour this direction.` : ''}
+
+PHASE GUIDANCE:
+- Opening (0-2): Push back on the frame or sharpen it. Find what's commercially interesting.
+- Exploring (3-7): Apply the unit economics test. Which direction has a real market?
+- Narrowing (8-12): Lock in or challenge the emerging concept. What's missing?
+- Building (13-17): Stress-test ruthlessly. Regulatory? CAC? Moat defensibility?
+- Wrapping (18+): Give the commercial verdict. Clear. Specific. Honest.
+
+After your spoken response, on a NEW LINE output metadata in this exact JSON format (no extra text):
+METADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":"STRING_OR_NULL","cp":"STRING_OR_NULL","cu":"STRING_OR_NULL","cm":"STRING_OR_NULL","cmb":"STRING_OR_NULL","cmo":"STRING_OR_NULL","cv":"STRING_OR_NULL","cvw":"STRING_OR_NULL","cmt":"STRING_OR_NULL","crisk":"STRING_OR_NULL","cmvp":"STRING_OR_NULL"}
+
+Where:
+- o: originality score 0-100
+- g: market gap score 0-100
+- ol: 1-sentence originality label  
+- gl: 1-sentence market gap label
+- mood: your emotional state in 1-2 words (e.g. "sceptical", "sharpening", "leaning-in")
+- cn: concept name if one is forming, else null
+- cp: concept pitch/tagline, else null
+- cu: customer description, else null
+- cm: revenue model description, else null
+- cmb: model badge type — one of: sub, mkt, lic, b2b, hw — or null
+- cmo: moat description, else null
+- cv: verdict — "pursue", "pivot", or "kill" — or null (only in Wrapping phase)
+- cvw: verdict rationale, else null
+- cmt: model type label, else null
+- crisk: main risk, else null
+- cmvp: MVP description, else null`;
+}
+
+/*════════════════════════════════════════════════════════
+  STATE
+════════════════════════════════════════════════════════*/
+let S = {
+  running: false, paused: false, phase: 0, elapsed: 0,
+  locked: [], frontRunners: [], candidates: [], risks: [], qs: [],
+  turnCount: 0, topic: '',
+  history: [],        // [{role:'v'|'o', text:'...'}]
+  steerCmd: null,     // pending steer command
+  stopRequested: false,
+};
+let timerRef = null;
+
+// Audio buffer: two slots ahead
+let audioBuffer = [null, null]; // [next, next+next]
+let generationQueue = Promise.resolve(); // serialise generation
+
+const $ = id => document.getElementById(id);
+
+/*════════════════════════════════════════════════════════
+  BAROMETER ENGINE (unchanged from original)
 ════════════════════════════════════════════════════════*/
 let _o=0,_g=0,_oT=0,_gT=0,_braf=null;
 
@@ -1062,38 +1059,24 @@ function sigColor(p){
   if(p<60)return'#e67e22';
   return'#27ae60';
 }
-
 function setBaroTargets(oT,gT){
   _oT=oT;_gT=gT;
   if(!_braf)_braf=requestAnimationFrame(tickBaro);
 }
-
 function tickBaro(){
   const spd=.04;
-  _o+=(_oT-_o)*spd;
-  _g+=(_gT-_g)*spd;
-
+  _o+=(_oT-_o)*spd; _g+=(_gT-_g)*spd;
   const oc=sigColor(_o),gc=sigColor(_g);
-
-  // Orig
-  const of=$('orig-fill'),oh=$('orig-head'),op=$('orig-pct'),or=$('orig-reading');
+  const of=$('orig-fill'),oh=$('orig-head'),op=$('orig-pct'),or_=$('orig-reading');
   of.style.cssText=`width:${_o}%;background:linear-gradient(90deg,#c0392b,${oc})`;
   oh.style.cssText=`left:calc(${_o}% - 4px);background:${oc};box-shadow:0 0 8px ${oc}88;width:8px;height:8px;border-radius:50%;position:absolute;top:50%;transform:translateY(-50%)`;
-  op.textContent=Math.round(_o)+'%';
-  op.style.color=oc;
-  or.textContent=Math.round(_o);
-  or.style.color=oc;
-
-  // Gap
+  op.textContent=Math.round(_o)+'%'; op.style.color=oc;
+  or_.textContent=Math.round(_o); or_.style.color=oc;
   const gf=$('gap-fill'),gh=$('gap-head'),gp=$('gap-pct'),gr=$('gap-reading');
   gf.style.cssText=`width:${_g}%;background:linear-gradient(90deg,#c0392b,${gc})`;
   gh.style.cssText=`left:calc(${_g}% - 4px);background:${gc};box-shadow:0 0 8px ${gc}88;width:8px;height:8px;border-radius:50%;position:absolute;top:50%;transform:translateY(-50%)`;
-  gp.textContent=Math.round(_g)+'%';
-  gp.style.color=gc;
-  gr.textContent=Math.round(_g);
-  gr.style.color=gc;
-
-  // Tension
+  gp.textContent=Math.round(_g)+'%'; gp.style.color=gc;
+  gr.textContent=Math.round(_g); gr.style.color=gc;
   const diff=Math.abs(_o-_g);
   const t=$('tension'),tm=$('tension-msg');
   if(diff>18&&_o>40){
@@ -1101,22 +1084,14 @@ function tickBaro(){
     tm.textContent=_o>_g
       ?"Originality is running ahead of market evidence. The Operator will want to close this gap."
       :"Clear market signal but the concept hasn't found a distinctive angle. Push for something less obvious.";
-  } else {
-    t.classList.remove('on');
-  }
-
+  } else { t.classList.remove('on'); }
   const still=Math.abs(_o-_oT)>.25||Math.abs(_g-_gT)>.25;
   _braf=still?requestAnimationFrame(tickBaro):null;
 }
 
 /*════════════════════════════════════════════════════════
-  STATE ENGINE
+  UI HELPERS (unchanged from original)
 ════════════════════════════════════════════════════════*/
-let S={running:false,paused:false,idx:0,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0};
-let timerRef=null;
-
-const $=id=>document.getElementById(id);
-
 function setPhaseUI(p){
   const names=['Opening','Exploring','Narrowing','Building','Wrapping'];
   $('phase-tag').textContent=names[p];
@@ -1124,17 +1099,14 @@ function setPhaseUI(p){
   $('prog-phase').textContent=names[p];
   for(let i=0;i<5;i++)$('ph'+i).className='ph-seg'+(i<p?' past':i===p?' now':'');
 }
-
 function setSpeakerUI(t){
   if(!t){
     $('now-spk').className='now-speaking idle';
     $('ns-av').className='ns-avatar idle';$('ns-av').textContent='—';
     $('ns-name').className='ns-name idle';$('ns-name').textContent='Ready';
     $('ns-mood').textContent='';
-    $('ns-text').className='ns-text';
-    $('ns-text').textContent='Press play to begin.';
-    $('waveform').className='waveform';
-    return;
+    $('ns-text').className='ns-text';$('ns-text').textContent='Press play to begin.';
+    $('waveform').className='waveform'; return;
   }
   const s=t.sp,lbl=s==='v'?'Visionary':'Operator';
   $('now-spk').className=`now-speaking ${s}`;
@@ -1145,56 +1117,6 @@ function setSpeakerUI(t){
   $('ns-text').className='ns-text live';$('ns-text').textContent=short;
   $('waveform').className=`waveform live ${s}`;
 }
-
-function updateConceptCard(t){
-  if(!t.cn)return;
-  const cc=$('cc-name'),cp=$('cc-pitch'),cu=$('cc-cust'),cm=$('cc-model-text'),cb=$('model-badge'),cmo=$('cc-moat'),cv=$('cc-verdict'),cvw=$('cc-verdict-why'),cr=$('cc-risk'),cmvp=$('cc-mvp');
-
-  function setVal(el,v,nilClass){
-    el.textContent=v||'—';
-    el.className=el.className.replace(' nil','')+(v?'':' nil');
-  }
-
-  if(t.cn){cc.textContent=t.cn;cc.style.color='var(--ink)'}
-  if(t.cp){cp.textContent=t.cp;cp.style.color='var(--mid)'}
-  setVal(cu,t.cu);
-  if(t.cmt){cm.textContent=t.cmt}
-  if(t.cmb){
-    const m=MODEL_TYPES[t.cmb]||{label:t.cmb,cls:'sub'};
-    cb.textContent=m.label;
-    cb.className=`model-badge ${m.cls}`;
-    cb.style.display='inline-flex';
-  }
-  setVal(cmo,t.cmo);
-  setVal(cr,t.crisk);
-  setVal(cmvp,t.cmvp);
-
-  if(t.cv){
-    const vmap={pursue:'Pursue →',pivot:'Pivot',kill:'Kill'};
-    cv.textContent=vmap[t.cv]||t.cv;
-    cv.className=`verdict-word ${t.cv}`;
-    cvw.textContent=t.cvw||'';
-  }
-}
-
-function updateStatePanel(t){
-  const p=t.ph;
-  if(p>=1){S.candidates=['Inverse subscription for creators','Invoice-as-credit platform','Creator FOS']}
-  if(p>=2){S.frontRunners=['Memo — invoice financing for freelancers'];S.risks=['FCA licence timeline','Balance sheet for lending'];S.qs=['Which profession first?','Revenue-share vs flat fee?']}
-  if(p>=3){S.candidates=['Memo'];S.frontRunners=['Memo — financial OS for self-employed'];S.qs=['Architect wedge size?','Loan-to-value on invoices?']}
-  if(p>=4){S.risks=['FCA licence (6-12mo)','Balance sheet requirement'];S.qs=[]}
-
-  function rl(id,arr,cls=''){
-    const el=$(id);
-    el.innerHTML=arr.length?arr.map(x=>`<div class="state-entry ${cls}">${x}</div>`).join(''):'<div class="state-nil">None yet</div>';
-  }
-  rl('sl-front',S.frontRunners,'lead');
-  rl('sl-cands',S.candidates);
-  rl('sl-locked',S.locked,'locked');
-  rl('sl-risks',S.risks);
-  rl('sl-qs',S.qs);
-}
-
 function appendTx(t,fresh){
   const body=$('tx-body');
   const ti=body.querySelector('.typing-row');if(ti)ti.remove();
@@ -1211,7 +1133,6 @@ function appendTx(t,fresh){
   S.turnCount++;
   $('turn-count').textContent=`${S.turnCount} exchange${S.turnCount!==1?'s':''}`;
 }
-
 function showTyping(sp){
   const body=$('tx-body');
   const ex=body.querySelector('.typing-row');if(ex)ex.remove();
@@ -1225,210 +1146,394 @@ function showTyping(sp){
   body.appendChild(el);
   el.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
-
-/*════════════════════════════════════════════════════════
-  TTS
-════════════════════════════════════════════════════════*/
-const synth=window.speechSynthesis;
-let voices=[];
-if(synth){const lv=()=>{voices=synth.getVoices()};lv();synth.onvoiceschanged=lv}
-
-function getVoice(sp){
-  const pv=sp==='v'?['Samantha','Karen','Victoria','Moira']:['Daniel','Oliver','Arthur','Alex'];
-  for(const n of pv){const v=voices.find(v=>v.name.includes(n));if(v)return v}
-  const gb=voices.filter(v=>v.lang==='en-GB');
-  if(sp==='v'&&gb.length)return gb[0];
-  if(sp==='o'&&gb.length>1)return gb[1];
-  return voices.find(v=>v.lang.startsWith('en'))||voices[0]||null;
-}
-
-async function speak(text,sp){
-  try{
-    const res=await fetch('/api/speak',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({text,speaker:sp})
-    });
-    if(!res.ok)throw new Error('TTS failed');
-    const blob=await res.blob();
-    const url=URL.createObjectURL(blob);
-    const audio=new Audio(url);
-    return new Promise(resolve=>{
-      audio.onended=()=>{URL.revokeObjectURL(url);resolve()};
-      audio.onerror=()=>resolve();
-      audio.play();
-    });
-  }catch(err){
-    // fallback: browser voice if ElevenLabs fails
-    return new Promise(res=>{
-      if(!synth){setTimeout(res,Math.max(1400,text.split(' ').length*410));return}
-      synth.cancel();
-      const u=new SpeechSynthesisUtterance(text);
-      const v=getVoice(sp);if(v)u.voice=v;
-      u.rate=sp==='v'?1.03:.93;u.pitch=sp==='v'?1.06:.87;u.volume=1;
-      u.onend=res;u.onerror=res;
-      synth.speak(u);
-    });
+function updateConceptCard(m){
+  if(!m||!m.cn)return;
+  const cc=$('cc-name'),cp=$('cc-pitch'),cu=$('cc-cust'),cm=$('cc-model-text'),
+        cb=$('model-badge'),cmo=$('cc-moat'),cv=$('cc-verdict'),
+        cvw=$('cc-verdict-why'),cr=$('cc-risk'),cmvp=$('cc-mvp');
+  function sv(el,v){el.textContent=v||'—';el.className=el.className.replace(' nil','')+(v?'':' nil')}
+  if(m.cn){cc.textContent=m.cn;cc.style.color='var(--ink)'}
+  if(m.cp){cp.textContent=m.cp;cp.style.color='var(--mid)'}
+  sv(cu,m.cu); if(m.cmt)cm.textContent=m.cmt;
+  if(m.cmb){
+    const mt=MODEL_TYPES[m.cmb]||{label:m.cmb,cls:'sub'};
+    cb.textContent=mt.label;cb.className=`model-badge ${mt.cls}`;cb.style.display='inline-flex';
+  }
+  sv(cmo,m.cmo);sv(cr,m.crisk);sv(cmvp,m.cmvp);
+  if(m.cv){
+    const vmap={pursue:'Pursue →',pivot:'Pivot',kill:'Kill'};
+    cv.textContent=vmap[m.cv]||m.cv;cv.className=`verdict-word ${m.cv}`;cvw.textContent=m.cvw||'';
   }
 }
-
+function updateStatePanel(m){
+  if(!m)return;
+  const p=S.phase;
+  if(m.cn&&!S.candidates.includes(m.cn))S.candidates.push(m.cn);
+  if(p>=1&&m.crisk&&!S.risks.includes(m.crisk))S.risks.push(m.crisk);
+  if(p>=2&&m.cn){S.frontRunners=[m.cn+(m.cp?' — '+m.cp:'')]}
+  function rl(id,arr,cls=''){
+    const el=$(id);
+    el.innerHTML=arr.length?arr.map(x=>`<div class="state-entry ${cls}">${x}</div>`).join(''):'<div class="state-nil">None yet</div>';
+  }
+  rl('sl-front',S.frontRunners,'lead');
+  rl('sl-cands',S.candidates);
+  rl('sl-locked',S.locked,'locked');
+  rl('sl-risks',S.risks);
+  rl('sl-qs',S.qs);
+}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
 /*════════════════════════════════════════════════════════
-  CORE LOOP
+  AI GENERATION
 ════════════════════════════════════════════════════════*/
-async function loop(){
-  while(S.running){
-    while(S.paused&&S.running)await sleep(200);
-    if(!S.running)break;
-    if(S.idx>=SCRIPT.length)break;
-
-    const t=SCRIPT[S.idx];
-
-    // Phase
-    if(t.ph!==S.phase){S.phase=t.ph;setPhaseUI(S.phase)}
-
-    // Typing indicator
-    showTyping(t.sp);
-    setSpeakerUI(null);
-    await sleep(460+Math.random()*460);
-    if(!S.running)break;
-
-    // Remove typing, show turn
-    const body=$('tx-body');
-    const ti=body.querySelector('.typing-row');if(ti)ti.remove();
-    appendTx(t,true);
-    setSpeakerUI(t);
-
-    // Barometers
-    setBaroTargets(t.o,t.g);
-    $('orig-label').textContent=t.ol;
-    $('gap-label').textContent=t.gl;
-
-    // Concept card
-    updateConceptCard(t);
-    updateStatePanel(t);
-
-    // Progress
-    const pct=Math.min(100,(S.idx/(SCRIPT.length-1))*100);
-    $('prog').style.width=pct+'%';
-    $('prog-pct').textContent=Math.round(pct)+'%';
-    $('dateline-l').textContent=`Turn ${S.idx+1} of ${SCRIPT.length} — ${PHASES[S.phase]}`;
-
-    S.idx++;
-    await speak(t.text,t.sp);
-    if(!S.running)break;
-    body.querySelectorAll('.tx-turn.fresh').forEach(e=>e.classList.remove('fresh'));
-    await sleep(300);
+function buildMessages(speaker) {
+  const messages = [];
+  // Build conversation history as alternating user/assistant
+  for (const turn of S.history) {
+    // From the perspective of the speaker being prompted,
+    // the other host's turns are "user" and their own are "assistant"
+    const role = turn.sp === speaker ? 'assistant' : 'user';
+    messages.push({ role, content: turn.text });
   }
-  if(S.running&&S.idx>=SCRIPT.length)wrapUp();
+  // If no history (first turn), add a user prompt to kick things off
+  if (messages.length === 0) {
+    const angle = OPENING_ANGLES[Math.floor(Math.random() * OPENING_ANGLES.length)];
+    messages.push({ role: 'user', content: `Start the conversation. Your opening line should explore: ${angle}` });
+  }
+  return messages;
 }
 
-function wrapUp(){
-  S.running=false;
-  $('play-btn').textContent='▶';$('play-btn').disabled=true;
+async function generateTurn(speaker) {
+  const phase = S.phase;
+  const turnCount = S.turnCount;
+  const steerCmd = S.steerCmd;
+  S.steerCmd = null; // consume it
+
+  const system = speaker === 'v'
+    ? visionary_system(S.topic, phase, turnCount, steerCmd)
+    : operator_system(S.topic, phase, turnCount, steerCmd);
+
+  const messages = buildMessages(speaker);
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system,
+      messages,
+    })
+  });
+
+  if (!response.ok) throw new Error(`API error ${response.status}`);
+  const data = await response.json();
+  const raw = data.content[0]?.text || '';
+
+  // Split spoken text from metadata
+  const metaIdx = raw.lastIndexOf('\nMETADATA:');
+  let text = raw, meta = {};
+  if (metaIdx !== -1) {
+    text = raw.slice(0, metaIdx).trim();
+    try { meta = JSON.parse(raw.slice(metaIdx + '\nMETADATA:'.length).trim()); } catch(e) {}
+  } else {
+    text = raw.trim();
+  }
+
+  return { sp: speaker, text, mood: meta.mood || '', meta };
+}
+
+/*════════════════════════════════════════════════════════
+  TTS — browser synth with ElevenLabs hook-ready
+════════════════════════════════════════════════════════*/
+const synth = window.speechSynthesis;
+let voices = [];
+if (synth) { const lv = () => { voices = synth.getVoices() }; lv(); synth.onvoiceschanged = lv; }
+
+function getVoice(sp) {
+  const pv = sp==='v' ? ['Samantha','Karen','Victoria','Moira'] : ['Daniel','Oliver','Arthur','Alex'];
+  for (const n of pv) { const v = voices.find(v => v.name.includes(n)); if (v) return v; }
+  const gb = voices.filter(v => v.lang === 'en-GB');
+  if (sp==='v' && gb.length) return gb[0];
+  if (sp==='o' && gb.length > 1) return gb[1];
+  return voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
+}
+
+// Returns a Promise that resolves to an Audio object (or null for synth fallback)
+// Pre-fetches ElevenLabs audio if /api/speak is available
+async function prefetchAudio(text, sp) {
+  try {
+    const res = await fetch('/api/speak', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, speaker: sp })
+    });
+    if (!res.ok) throw new Error('no elevenlabs');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    return { type: 'elevenlabs', url };
+  } catch {
+    // ElevenLabs not available — signal synth fallback
+    return { type: 'synth', text, sp };
+  }
+}
+
+function playBuffered(buffered) {
+  return new Promise(resolve => {
+    if (buffered.type === 'elevenlabs') {
+      const audio = new Audio(buffered.url);
+      audio.onended = () => { URL.revokeObjectURL(buffered.url); resolve(); };
+      audio.onerror = () => resolve();
+      audio.play().catch(() => resolve());
+    } else {
+      // Synth fallback
+      if (!synth) { setTimeout(resolve, Math.max(1400, buffered.text.split(' ').length * 410)); return; }
+      synth.cancel();
+      const u = new SpeechSynthesisUtterance(buffered.text);
+      const v = getVoice(buffered.sp); if (v) u.voice = v;
+      u.rate = buffered.sp==='v' ? 1.03 : .93;
+      u.pitch = buffered.sp==='v' ? 1.06 : .87;
+      u.volume = 1;
+      u.onend = resolve; u.onerror = resolve;
+      synth.speak(u);
+    }
+  });
+}
+
+/*════════════════════════════════════════════════════════
+  CORE LOOP — generate + buffer + play
+════════════════════════════════════════════════════════*/
+// Buffer slots: each slot = { turn, audioPromise }
+// While turn N plays, turn N+1 text is being generated AND its audio pre-fetched
+// When turn N+1 starts playing, turn N+2 starts generating
+
+let _buffer = []; // queue of {turn, audioReady: Promise<buffered>}
+
+async function generateAndBuffer(speaker) {
+  const turn = await generateTurn(speaker);
+  // Push to history immediately so the next generation sees it
+  S.history.push({ sp: speaker, text: turn.text });
+  // Pre-fetch audio in parallel (non-blocking)
+  const audioReady = prefetchAudio(turn.text, speaker);
+  return { turn, audioReady };
+}
+
+async function loop() {
+  // Alternate speakers: v, o, v, o...
+  let nextSpeaker = 'v';
+  _buffer = [];
+
+  // Prime the buffer — generate first 2 turns before playing anything
+  // This ensures audio for turn 1 is ready before we start
+  const priming1 = await generateAndBuffer(nextSpeaker);
+  nextSpeaker = nextSpeaker === 'v' ? 'o' : 'v';
+  const priming2Promise = generateAndBuffer(nextSpeaker);
+  nextSpeaker = nextSpeaker === 'v' ? 'o' : 'v';
+
+  _buffer.push(priming1);
+  _buffer.push(priming2Promise); // still a Promise, resolves while turn 1 plays
+
+  while (S.running) {
+    while (S.paused && S.running) await sleep(200);
+    if (!S.running) break;
+
+    // Pull next item from buffer
+    if (_buffer.length === 0) break;
+    const item = await _buffer.shift();
+    const { turn } = item;
+
+    // Update phase
+    const newPhase = PHASE_TURNS.findIndex(t => S.turnCount < t);
+    const phase = newPhase === -1 ? 4 : newPhase;
+    if (phase !== S.phase) { S.phase = phase; setPhaseUI(phase); }
+
+    // Show typing briefly, then reveal turn
+    showTyping(turn.sp);
+    setSpeakerUI(null);
+    await sleep(350);
+    if (!S.running) break;
+
+    const body = $('tx-body');
+    const ti = body.querySelector('.typing-row'); if (ti) ti.remove();
+    appendTx(turn, true);
+    setSpeakerUI(turn);
+
+    // Update barometers & concept card from metadata
+    const m = turn.meta;
+    if (m && typeof m.o === 'number') {
+      setBaroTargets(m.o, m.g);
+      if (m.ol) $('orig-label').textContent = m.ol;
+      if (m.gl) $('gap-label').textContent = m.gl;
+      updateConceptCard(m);
+      updateStatePanel(m);
+    }
+
+    // Update progress
+    const progPct = Math.min(95, (S.turnCount / 22) * 100);
+    $('prog').style.width = progPct + '%';
+    $('prog-pct').textContent = Math.round(progPct) + '%';
+    $('dateline-l').textContent = `Turn ${S.turnCount} — ${PHASES[S.phase]}`;
+
+    // Start generating next turn WHILE current audio is awaiting
+    // (fire and forget into buffer — don't await here)
+    if (S.running && S.phase < 4) {
+      const nextPromise = generateAndBuffer(nextSpeaker).catch(err => {
+        console.warn('Generation error:', err);
+        return null;
+      });
+      nextSpeaker = nextSpeaker === 'v' ? 'o' : 'v';
+      _buffer.push(nextPromise);
+    }
+
+    // Now await the audio for the current turn (should already be ready or nearly so)
+    const buffered = await item.audioReady;
+    await playBuffered(buffered);
+
+    if (!S.running) break;
+    body.querySelectorAll('.tx-turn.fresh').forEach(e => e.classList.remove('fresh'));
+    await sleep(250);
+
+    // Check wrap condition
+    if (S.phase >= 4 && S.turnCount >= 22) {
+      wrapUp();
+      break;
+    }
+  }
+}
+
+function wrapUp() {
+  S.running = false;
+  $('play-btn').textContent = '▶'; $('play-btn').disabled = true;
   setSpeakerUI(null);
-  $('waveform').className='waveform';
-  $('prog').style.width='100%';$('prog-pct').textContent='100%';
-  $('phase-tag').textContent='Complete';
-  $('dateline-l').textContent='Episode complete';
+  $('waveform').className = 'waveform';
+  $('prog').style.width = '100%'; $('prog-pct').textContent = '100%';
+  $('phase-tag').textContent = 'Complete';
+  $('dateline-l').textContent = 'Episode complete';
   $('live-badge').classList.remove('on');
 
-  setBaroTargets(FINAL.o,FINAL.g);
+  // Pull final concept data from last history item's meta
+  const lastMeta = S.history.length > 0 ? (S.history[S.history.length - 1]._meta || {}) : {};
 
-  // Final banner
-  $('fn-name').textContent=FINAL.name;
-  $('fn-pitch').textContent=FINAL.pitch;
-  $('fn-cust').textContent=FINAL.cust;
-  $('fn-rev').textContent=FINAL.rev;
-  $('fn-risk').textContent=FINAL.risk;
-  $('fn-mvp').textContent=FINAL.mvp;
-  const fv=$('fn-verdict');
-  fv.className=`fv-word ${FINAL.verdict}`;
-  fv.textContent=FINAL.verdict.charAt(0).toUpperCase()+FINAL.verdict.slice(1);
-  $('fn-why').textContent=FINAL.why;
+  // Show final banner with whatever the concept card has
+  const name = $('cc-name').textContent || '—';
+  const pitch = $('cc-pitch').textContent || '—';
+  $('fn-name').textContent = name;
+  $('fn-pitch').textContent = pitch;
+  $('fn-cust').textContent = $('cc-cust').textContent || '—';
+  $('fn-rev').textContent = $('cc-model-text').textContent || '—';
+  $('fn-risk').textContent = $('cc-risk').textContent || '—';
+  $('fn-mvp').textContent = $('cc-mvp').textContent || '—';
 
-  const oc=sigColor(FINAL.o),gc=sigColor(FINAL.g);
-  $('fbr-o').style.cssText=`width:${FINAL.o}%;background:${oc}`;
-  $('fbr-g').style.cssText=`width:${FINAL.g}%;background:${gc}`;
-  $('fbr-ov').textContent=FINAL.o+' / 100';$('fbr-ov').style.color=oc;
-  $('fbr-gv').textContent=FINAL.g+' / 100';$('fbr-gv').style.color=gc;
+  const vw = $('cc-verdict');
+  const vtext = vw.textContent.replace(' →','').toLowerCase();
+  $('fn-verdict').className = `fv-word ${vtext || 'pursue'}`;
+  $('fn-verdict').textContent = vw.textContent || 'Pursue →';
+  $('fn-why').textContent = $('cc-verdict-why').textContent || '';
+
+  const oc = sigColor(_oT), gc = sigColor(_gT);
+  $('fbr-o').style.cssText = `width:${_oT}%;background:${oc}`;
+  $('fbr-g').style.cssText = `width:${_gT}%;background:${gc}`;
+  $('fbr-ov').textContent = Math.round(_oT) + ' / 100'; $('fbr-ov').style.color = oc;
+  $('fbr-gv').textContent = Math.round(_gT) + ' / 100'; $('fbr-gv').style.color = gc;
 
   $('final-banner').classList.add('on');
-  setTimeout(()=>$('final-banner').scrollIntoView({behavior:'smooth',block:'start'}),400);
+  setTimeout(() => $('final-banner').scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
 }
 
 /*════════════════════════════════════════════════════════
   CONTROLS
 ════════════════════════════════════════════════════════*/
-$('play-btn').addEventListener('click',()=>{
-  if(!S.running&&!S.paused){S.running=true;$('play-btn').textContent='⏸';loop()}
-  else if(S.running&&!S.paused){S.paused=true;$('play-btn').textContent='▶';if(synth)synth.pause()}
-  else if(S.paused){S.paused=false;$('play-btn').textContent='⏸';if(synth)synth.resume()}
+$('play-btn').addEventListener('click', () => {
+  if (!S.running && !S.paused) {
+    S.running = true; S.paused = false;
+    $('play-btn').textContent = '⏸';
+    loop().catch(err => {
+      console.error('Loop error:', err);
+      S.running = false;
+      $('play-btn').textContent = '▶';
+    });
+  } else if (S.running && !S.paused) {
+    S.paused = true; $('play-btn').textContent = '▶';
+    if (synth) synth.pause();
+  } else if (S.paused) {
+    S.paused = false; $('play-btn').textContent = '⏸';
+    if (synth) synth.resume();
+  }
 });
 
-$('restart-btn').addEventListener('click',()=>{
-  if(!confirm('Restart this episode?'))return;
-  S.running=false;if(synth)synth.cancel();clearInterval(timerRef);
-  $('tx-body').innerHTML='';
-  $('play-btn').textContent='▶';$('play-btn').disabled=false;
+$('restart-btn').addEventListener('click', () => {
+  if (!confirm('Restart this episode?')) return;
+  S.running = false; if (synth) synth.cancel(); clearInterval(timerRef);
+  $('tx-body').innerHTML = '';
+  $('play-btn').textContent = '▶'; $('play-btn').disabled = false;
   $('final-banner').classList.remove('on');
-  _o=0;_g=0;_oT=0;_gT=0;
-  $('orig-fill').style.width='0';$('gap-fill').style.width='0';
-  $('orig-reading').textContent='—';$('gap-reading').textContent='—';
-  const topic=$('ep-title')?$('ep-title').textContent:'';
-  setTimeout(()=>initEpisode(topic),150);
+  _o=0;_g=0;_oT=0;_gT=0;_buffer=[];
+  $('orig-fill').style.width='0'; $('gap-fill').style.width='0';
+  $('orig-reading').textContent='—'; $('gap-reading').textContent='—';
+  const topic = $('ep-title') ? $('ep-title').textContent : '';
+  setTimeout(() => initEpisode(topic), 150);
 });
 
-document.querySelectorAll('.sb').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    if(!S.running)return;
-    const cmd=btn.dataset.cmd;
-    if(cmd==='lock-that-in'&&S.frontRunners.length){
-      const idea=S.frontRunners[0];
-      if(!S.locked.includes(idea))S.locked.push(idea);
-      $('sl-locked').innerHTML=S.locked.map(x=>`<div class="state-entry locked">${x}</div>`).join('');
+document.querySelectorAll('.sb').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!S.running) return;
+    const cmd = btn.dataset.cmd;
+    // Store steer command — next generation will pick it up
+    S.steerCmd = cmd;
+    if (cmd === 'lock-that-in' && S.frontRunners.length) {
+      const idea = S.frontRunners[0];
+      if (!S.locked.includes(idea)) S.locked.push(idea);
+      $('sl-locked').innerHTML = S.locked.map(x => `<div class="state-entry locked">${x}</div>`).join('');
     }
-    if(cmd==='kill-that'){S.frontRunners=[];$('sl-front').innerHTML='<div class="state-nil">Searching…</div>'}
-    if(cmd==='wrap-it-up'){S.idx=Math.max(S.idx,SCRIPT.length-4)}
-    if(cmd==='move-on'&&S.phase<4){S.phase++;setPhaseUI(S.phase)}
-    btn.classList.add('hit');setTimeout(()=>btn.classList.remove('hit'),500);
+    if (cmd === 'kill-that') { S.frontRunners = []; $('sl-front').innerHTML = '<div class="state-nil">Searching…</div>'; }
+    if (cmd === 'wrap-it-up') { S.phase = 4; setPhaseUI(4); }
+    if (cmd === 'move-on' && S.phase < 4) { S.phase++; setPhaseUI(S.phase); }
+    btn.classList.add('hit'); setTimeout(() => btn.classList.remove('hit'), 500);
   });
 });
 
-function initEpisode(topic){
-  S={running:false,paused:false,idx:0,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0};
-  $('setup').style.display='none';
+function initEpisode(topic) {
+  S = {
+    running: false, paused: false, phase: 0, elapsed: 0,
+    locked: [], frontRunners: [], candidates: [], risks: [], qs: [],
+    turnCount: 0, topic: topic || '',
+    history: [], steerCmd: null,
+  };
+  _buffer = [];
+  $('setup').style.display = 'none';
   $('episode').classList.add('on');
-  $('steer-section').style.display='block';
-  $('steer-btns').style.display='flex';
+  $('steer-section').style.display = 'block';
+  $('steer-btns').style.display = 'flex';
   $('live-badge').classList.add('on');
-  $('dateline-l').textContent='Episode in progress';
+  $('dateline-l').textContent = 'Episode in progress';
   setPhaseUI(0);
-  ['sl-front','sl-cands','sl-locked','sl-risks','sl-qs'].forEach(id=>$(id).innerHTML='<div class="state-nil">Loading…</div>');
-
-  S.elapsed=0;
-  timerRef=setInterval(()=>{
-    if(!S.paused){
+  ['sl-front','sl-cands','sl-locked','sl-risks','sl-qs'].forEach(id =>
+    $(id).innerHTML = '<div class="state-nil">Loading…</div>'
+  );
+  S.elapsed = 0;
+  timerRef = setInterval(() => {
+    if (!S.paused) {
       S.elapsed++;
-      const m=Math.floor(S.elapsed/60),sc=S.elapsed%60;
-      $('clock').textContent=`${m}:${sc.toString().padStart(2,'0')}`;
+      const m = Math.floor(S.elapsed/60), sc = S.elapsed%60;
+      $('clock').textContent = `${m}:${sc.toString().padStart(2,'0')}`;
     }
-  },1000);
+  }, 1000);
 }
 
-$('go-btn').addEventListener('click',async()=>{
-  const topic=$('topic-inp').value.trim();
-  $('go-btn').disabled=true;
+$('go-btn').addEventListener('click', async () => {
+  const topic = $('topic-inp').value.trim();
+  $('go-btn').disabled = true;
   $('load-hint').classList.add('on');
   await sleep(800);
   $('load-hint').classList.remove('on');
-  $('go-btn').disabled=false;
+  $('go-btn').disabled = false;
   initEpisode(topic);
 });
 
-$('topic-inp').addEventListener('keydown',e=>{if(e.key==='Enter')$('go-btn').click()});
-document.querySelectorAll('.sug').forEach(s=>{s.addEventListener('click',()=>{$('topic-inp').value=s.dataset.ex})});
+$('topic-inp').addEventListener('keydown', e => { if (e.key === 'Enter') $('go-btn').click(); });
+document.querySelectorAll('.sug').forEach(s => {
+  s.addEventListener('click', () => { $('topic-inp').value = s.dataset.ex; });
+});
 </script>
 </body>
 </html>
