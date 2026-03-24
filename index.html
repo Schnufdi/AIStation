@@ -1114,9 +1114,13 @@ function buildSystemPrompt(speaker){
     :'';
   const meta=`\n\nAfter your spoken lines, on a NEW LINE output exactly:\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
 
-  if(speaker==='v') return `You are The Visionary on a sharp unscripted business strategy podcast. ${tone}\n\nStyle: 2-4 sentences. Spoken words only — no asterisks, no stage directions. Often start with "Right," or "Okay so —".\n\nRespond directly to what The Operator just said. Move the idea forward.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: cast wide. Exploring: surface 2-3 directions. Narrowing: name and define the strongest. Building: stress-test model/customer/moat. Wrapping: land with clear verdict.${meta}`;
+  const lenRule=S.turnCount===0
+    ? `LENGTH: This is the opening — 3 sentences max. Set the frame, don't resolve it.`
+    : `LENGTH: 1-2 sentences only. This is a live conversation, not a monologue. Be punchy.`;
 
-  return `You are The Operator on a sharp unscripted business strategy podcast. ${tone}\n\nStyle: 2-4 sentences. Spoken words only — no asterisks, no stage directions. Often start with "Sure. And who pays for that?" or "Here's the unit economics question:".\n\nRespond directly to what The Visionary just said. React — don't repeat.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: push back or sharpen. Exploring: unit economics test. Narrowing: lock in or challenge. Building: stress-test ruthlessly. Wrapping: clear commercial verdict.${meta}`;
+  if(speaker==='v') return `You are The Visionary on a sharp unscripted business strategy podcast. ${tone}\n\n${lenRule} Spoken words only — no asterisks, no stage directions. Often start with "Right," or "Okay so —".\n\nRespond directly to what The Operator just said. Move the idea forward, don't recap.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: cast wide. Exploring: surface 2-3 directions. Narrowing: name the strongest. Building: stress-test model/customer/moat. Wrapping: land the verdict.${meta}`;
+
+  return `You are The Operator on a sharp unscripted business strategy podcast. ${tone}\n\n${lenRule} Spoken words only — no asterisks, no stage directions. Often start with "Sure. And who pays for that?" or "Here's the real problem:".\n\nRespond directly to what The Visionary just said. React — don't repeat or summarise.\n\nTopic: ${S.topic||'open exploration'}\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: push back or sharpen. Exploring: unit economics test. Narrowing: lock in or challenge. Building: stress-test ruthlessly. Wrapping: clear verdict.${meta}`;
 }
 
 function buildMessages(speaker){
@@ -1136,7 +1140,11 @@ async function generateTurn(speaker){
   const resp=await fetch('/api/generate',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({system:buildSystemPrompt(speaker), messages:buildMessages(speaker)}),
+    body:JSON.stringify({
+      system:buildSystemPrompt(speaker),
+      messages:buildMessages(speaker),
+      maxTokens: S.turnCount === 0 ? 300 : 180,
+    }),
   });
   if(!resp.ok){const e=await resp.text(); throw new Error(`Generate ${resp.status}: ${e.slice(0,120)}`);}
   const data=await resp.json();
