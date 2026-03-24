@@ -1684,7 +1684,30 @@ function initEpisode(topic,tone){
 
 /* ═══ EVENT LISTENERS ═══ */
 
+// Unlock audio on first user gesture — required by browser autoplay policy
+// Without this, audio.play() is silently blocked when called from async code
+let _audioUnlocked = false;
+function unlockAudio(){
+  if(_audioUnlocked) return;
+  _audioUnlocked = true;
+  // Play a silent buffer to register user intent with the browser
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const buf = ctx.createBuffer(1,1,22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.connect(ctx.destination); src.start(0);
+    ctx.resume();
+  }catch(e){}
+  // Also create and immediately pause a silent Audio element
+  try{
+    const a = new Audio();
+    a.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+    a.play().catch(()=>{});
+  }catch(e){}
+}
+
 $('play-btn').addEventListener('click',()=>{
+  unlockAudio(); // must fire synchronously inside the click handler
   if(!S.running&&!S.paused){
     S.running=true; S.paused=false; $('play-btn').textContent='⏸';
     loop().catch(err=>{
@@ -1773,6 +1796,7 @@ document.querySelectorAll('.tone-btn').forEach(btn=>{
 });
 
 $('go-btn').addEventListener('click',async()=>{
+  unlockAudio();
   const topic=$('topic-inp').value.trim();
   const tone=document.querySelector('.tone-btn.active')?.dataset?.tone||'sharp';
   $('go-btn').disabled=true;
