@@ -337,6 +337,68 @@ body::after {
   font-size: .74rem; color: var(--ink3); line-height: 1.45; display: block;
 }
 
+.ideas-generating {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--f-mono); font-size: .58rem;
+  color: var(--ink3); letter-spacing: .08em;
+  padding: 20px 0;
+}
+.ideas-gen-dots { display: flex; gap: 4px; }
+
+.ideas-grid {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-top: 20px;
+}
+.idea-card {
+  border: 1px solid var(--wire2);
+  background: var(--bg2);
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: all .15s;
+  position: relative;
+}
+.idea-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; bottom: 0; width: 2px;
+  background: transparent; transition: background .15s;
+}
+.idea-card:hover { border-color: var(--gold); background: var(--bg3); }
+.idea-card:hover::before { background: var(--gold); }
+.idea-card.selected { border-color: var(--gold); background: rgba(232,160,48,.06); }
+.idea-card.selected::before { background: var(--gold); }
+.idea-num {
+  font-family: var(--f-mono); font-size: .5rem;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 6px;
+}
+.idea-card.selected .idea-num { color: var(--gold); }
+.idea-headline {
+  font-family: var(--f-disp); font-size: 1.3rem;
+  letter-spacing: .02em; color: var(--ink);
+  margin-bottom: 6px; line-height: 1.1;
+}
+.idea-desc {
+  font-family: var(--f-serif); font-style: italic;
+  font-size: .78rem; color: var(--ink3); line-height: 1.5;
+}
+.idea-card.selected .idea-desc { color: var(--ink2); }
+.idea-select-hint {
+  font-family: var(--f-mono); font-size: .5rem;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--gold); margin-top: 8px; display: none;
+}
+.idea-card.selected .idea-select-hint { display: block; }
+
+.selected-idea-label {
+  font-family: var(--f-mono); font-size: .52rem;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 8px;
+}
+.selected-idea-text {
+  font-family: var(--f-disp); font-size: 1.4rem;
+  letter-spacing: .02em; color: var(--ink); line-height: 1.1;
+}
+
 .load-hint {
   display: none; align-items: center; gap: 10px;
   font-family: var(--f-mono); font-size: .56rem;
@@ -853,16 +915,32 @@ body::after {
   <div class="form-wrap">
     <div class="f-label" style="margin-bottom:10px">Episode theme — or leave blank to explore freely</div>
     <div class="f-row">
-      <input class="f-inp" id="topic-inp" type="text" placeholder="e.g. the loneliness economy, tools for independent tradespeople…"/>
-      <button class="f-btn" id="go-btn">Begin Episode →</button>
+      <input class="f-inp" id="topic-inp" type="text" placeholder="e.g. the loneliness economy, tools for tradespeople, attention recession…"/>
+      <button class="f-btn" id="gen-btn">Generate Ideas →</button>
     </div>
     <div class="chips">
-      <button class="chip" data-ex="creator economy infrastructure">creator economy infra</button>
+      <button class="chip" data-ex="creator economy infrastructure">creator economy</button>
       <button class="chip" data-ex="the loneliness economy">loneliness economy</button>
       <button class="chip" data-ex="B2B tools for independent tradespeople">trades B2B</button>
       <button class="chip" data-ex="behavioural health for high performers">high-performer health</button>
       <button class="chip" data-ex="the attention recession">attention recession</button>
       <button class="chip" data-ex="">surprise me</button>
+    </div>
+
+    <!-- Generated ideas — shown after theme is entered -->
+    <div id="ideas-section" style="display:none">
+      <div class="ideas-generating" id="ideas-generating" style="display:none">
+        <div class="ideas-gen-dots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+        <span>Generating debate angles…</span>
+      </div>
+      <div class="ideas-grid" id="ideas-grid"></div>
+    </div>
+
+    <!-- Begin button — shown after idea selected -->
+    <div id="begin-section" style="display:none">
+      <div class="selected-idea-label">Debate topic selected</div>
+      <div class="selected-idea-text" id="selected-idea-text"></div>
+      <button class="f-btn" id="go-btn" style="margin-top:16px">Begin Episode →</button>
     </div>
 
     <div class="f-label" style="margin-top:30px;margin-bottom:12px">Conversation tone</div>
@@ -1957,6 +2035,77 @@ document.querySelectorAll('.tone-btn').forEach(btn=>{
   });
 });
 
+$('topic-inp').addEventListener('keydown',e=>{if(e.key==='Enter') $('gen-btn').click()});
+document.querySelectorAll('.chip').forEach(s=>{
+  s.addEventListener('click',()=>{ $('topic-inp').value=s.dataset.ex; });
+});
+
+// STEP 1 — generate 3 debate angles from the theme
+$('gen-btn').addEventListener('click',async()=>{
+  const theme=$('topic-inp').value.trim()||'open business exploration';
+  $('gen-btn').disabled=true;
+  $('ideas-section').style.display='block';
+  $('ideas-generating').style.display='flex';
+  $('ideas-grid').innerHTML='';
+  $('begin-section').style.display='none';
+
+  try{
+    const resp=await fetch('/api/generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        system:`You generate exactly 3 sharp, specific business debate angles from a broad theme.
+Each angle must be a concrete, arguable commercial opportunity — not a vague trend.
+Output ONLY valid JSON, nothing else:
+{"ideas":[
+  {"headline":"4-7 word punchy title","desc":"One sentence — the specific opportunity, who it serves, why now."},
+  {"headline":"...","desc":"..."},
+  {"headline":"...","desc":"..."}
+]}
+Rules: make each angle genuinely different (different customer, model, or insight). Be specific and commercial. Think like a founder.`,
+        messages:[{role:'user',content:`Theme: "${theme}"\nGenerate 3 sharp business debate angles.`}],
+        maxTokens:400,
+      }),
+    });
+    const data=await resp.json();
+    const raw=(data.text||'').trim();
+    const jsonMatch=raw.match(/\{[\s\S]*\}/);
+    if(!jsonMatch) throw new Error('no JSON');
+    const ideas=(JSON.parse(jsonMatch[0]).ideas||[]).slice(0,3);
+
+    $('ideas-generating').style.display='none';
+    $('ideas-grid').innerHTML='';
+
+    ideas.forEach((idea,i)=>{
+      const card=document.createElement('div');
+      card.className='idea-card';
+      card.innerHTML=`
+        <div class="idea-num">Angle ${String(i+1).padStart(2,'0')}</div>
+        <div class="idea-headline">${idea.headline}</div>
+        <div class="idea-desc">${idea.desc}</div>
+        <div class="idea-select-hint">↓ Selected — click Begin Episode below</div>`;
+      card.addEventListener('click',()=>{
+        document.querySelectorAll('.idea-card').forEach(c=>c.classList.remove('selected'));
+        card.classList.add('selected');
+        $('topic-inp').value=idea.headline+' — '+idea.desc;
+        $('selected-idea-text').textContent=idea.headline;
+        $('begin-section').style.display='block';
+        $('begin-section').scrollIntoView({behavior:'smooth',block:'nearest'});
+      });
+      $('ideas-grid').appendChild(card);
+    });
+
+  }catch(e){
+    $('ideas-generating').style.display='none';
+    $('ideas-grid').innerHTML=`<div style="font-family:var(--f-serif);font-style:italic;color:var(--ink3);padding:12px 0;font-size:.82rem">Couldn't generate — type a topic and begin directly.</div>`;
+    $('selected-idea-text').textContent=theme;
+    $('topic-inp').value=theme;
+    $('begin-section').style.display='block';
+  }
+  $('gen-btn').disabled=false;
+});
+
+// STEP 2 — begin episode with the selected idea
 $('go-btn').addEventListener('click',async()=>{
   unlockAudio();
   const topic=$('topic-inp').value.trim();
@@ -1969,10 +2118,6 @@ $('go-btn').addEventListener('click',async()=>{
   initEpisode(topic,tone);
 });
 
-$('topic-inp').addEventListener('keydown',e=>{if(e.key==='Enter') $('go-btn').click()});
-document.querySelectorAll('.chip').forEach(s=>{
-  s.addEventListener('click',()=>{$('topic-inp').value=s.dataset.ex});
-});
 </script>
 </body>
 </html>
