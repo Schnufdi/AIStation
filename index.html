@@ -1296,7 +1296,11 @@ Examples: "The Infrastructure Gap Nobody Is Building", "Why Freelancers Are The 
 }
 
 async function loop(){
-  let nextSp='v';
+  // Always start with Visionary, then strictly alternate (with small chance of same speaker twice)
+  function nextSpeaker(sp){
+    // 15% chance same speaker continues — feels natural, like someone finishing a thought
+    return Math.random() < 0.15 ? sp : (sp==='v'?'o':'v');
+  }
 
   // Generate headline in parallel with first turn
   showTyping('v');
@@ -1305,10 +1309,11 @@ async function loop(){
     generateHeadline(),
   ]);
   if(!firstTurn){ S.running=false; $('play-btn').textContent='▶'; return; }
-  let current=firstTurn;
-  nextSp='o';
-  let nextPromise=generateTurn('o').catch(()=>null);
-  nextSp='v';
+
+  let current = firstTurn;
+  // Pre-generate the second turn while first is playing
+  let upNext = nextSpeaker('v');
+  let nextPromise = generateTurn(upNext).catch(()=>null);
 
   while(S.running){
     while(S.paused&&S.running) await sleep(200);
@@ -1319,7 +1324,7 @@ async function loop(){
     const phase=np===-1?4:np;
     if(phase!==S.phase){S.phase=phase; setPhaseUI(phase)}
 
-    // Show turn
+    // Show current turn
     const body=$('tx-body');
     const ti=body.querySelector('.typing-row'); if(ti)ti.remove();
     appendTx(current,true);
@@ -1335,11 +1340,10 @@ async function loop(){
       updateStatePanel(m);
     }
 
-    // Progress bar + countdown
-    const TOTAL_TURNS = 22;
-    const pct=Math.min(95,(S.turnCount/TOTAL_TURNS)*100);
-    $('prog').style.width=pct+'%';
-    const remaining=Math.max(0, TOTAL_TURNS - S.turnCount);
+    // Progress + countdown
+    const TOTAL_TURNS=22;
+    $('prog').style.width=Math.min(95,(S.turnCount/TOTAL_TURNS)*100)+'%';
+    const remaining=Math.max(0,TOTAL_TURNS-S.turnCount);
     const cd=$('prog-countdown');
     if(cd){
       cd.textContent=remaining===0?'Final turn':`${remaining} turn${remaining!==1?'s':''} left`;
@@ -1347,29 +1351,26 @@ async function loop(){
     }
     $('dateline-l').textContent=`Turn ${S.turnCount} — ${PHASES[S.phase]}`;
 
-    // Play audio + generate next turn in parallel
-    showTyping(nextSp);
-    const [,nextTurn]=await Promise.all([
-      speakText(current.text,current.sp),
+    // Show typing for who's coming next, then play current audio + await next turn in parallel
+    showTyping(upNext);
+    const [, nextTurn]=await Promise.all([
+      speakText(current.text, current.sp),
       nextPromise,
     ]);
 
     if(!S.running) break;
     body.querySelectorAll('.tx-turn.fresh').forEach(e=>e.classList.remove('fresh'));
+    if(S.phase>=4&&S.turnCount>=22){ wrapUp(); return; }
 
-    if(S.phase>=4&&S.turnCount>=22){wrapUp(); return}
+    // Resolve next turn — retry once if null
+    let resolved=nextTurn;
+    if(!resolved) resolved=await generateTurn(upNext).catch(()=>null);
+    if(!resolved){ S.running=false; break; }
 
-    // nextTurn may be null if text was empty — retry once before giving up
-    let resolved = nextTurn;
-    if(!resolved){
-      resolved = await generateTurn(nextSp).catch(()=>null);
-    }
-    if(!resolved){ S.running=false; break; } // give up cleanly
-
+    // Advance: resolved turn becomes current, pre-generate the one after
     current=resolved;
-    nextSp=nextSp==='v'?'o':'v';
-    nextPromise=generateTurn(nextSp).catch(()=>null);
-    nextSp=nextSp==='v'?'o':'v';
+    upNext=nextSpeaker(current.sp);
+    nextPromise=generateTurn(upNext).catch(()=>null);
 
     await sleep(200);
   }
