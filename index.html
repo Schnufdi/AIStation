@@ -668,6 +668,13 @@ body::after {
   font-family: var(--f-disp); font-size: 2rem;
   letter-spacing: .04em; line-height: 1.05;
   color: var(--ink); text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ep-subtitle {
+  font-family: var(--f-serif); font-style: italic;
+  font-size: .95rem; color: var(--gold); line-height: 1.5;
+  border-left: 2px solid var(--gold); padding-left: 12px;
+  margin-top: 10px;
 }
 
 /* Stage pill + countdown */
@@ -1104,8 +1111,9 @@ body::after {
 
       <!-- Episode headline — shown once episode starts -->
       <div class="ep-headline-wrap" id="ep-headline-wrap" style="display:none">
-        <div class="ep-headline-label">Episode</div>
+        <div class="ep-headline-label">Today's Debate</div>
         <div class="ep-headline" id="ep-headline">—</div>
+        <div class="ep-subtitle" id="ep-subtitle"></div>
       </div>
 
       <div class="now-spk idle" id="now-spk">
@@ -1558,23 +1566,44 @@ function buildSystemPrompt(speaker){
   const persona=`${phaseJob.job}\n${phaseJob[speaker]||''}`;
 
   const topicLine=S.topic?`DEBATE TOPIC: "${S.topic}"`:'DEBATE TOPIC: open business exploration';
+
+  // Visionary always opens — sets the scene, paints the world, establishes WHY this matters
+  // Realist follows — asks the HOW questions that build the business
+  const visionaryCharacter=`CHARACTER — THE VISIONARY:
+You paint the picture. You set the scene. Your job is to make people feel the problem — the human reality of it, the scale of it, why it matters right now.
+You are NOT here to debate. You are here to frame: who is suffering, what the world looks like when this is unsolved, and what becomes possible when it is.
+In Opening: establish the world — who is affected, how badly, why now.
+In Pressure: articulate what the solution FEELS like from the customer's perspective.
+In Construction: describe the vision — what success looks like, why people will love it.
+In Verdict: make the emotional case. Why does this deserve to exist?`;
+
+  const realistCharacter=`CHARACTER — THE REALIST:
+You build the business. Your job is to ask HOW — not to kill ideas, but to construct them.
+The questions you ask are the questions a founder needs to answer: Who is the actual first customer? How does money flow? What does the first version look like? What's the one thing that has to be true for this to work?
+You are a builder who needs specifics. You're excited about good ideas — you just need them to be real.
+In Opening: ask the ONE question that gets to the heart of whether this is real.
+In Pressure: probe for the business model — not to critique, but to find what works.
+In Construction: drive toward specifics — name the customer, the price, the first 90 days.
+In Verdict: give the build verdict — what would you actually do first if you were doing this?`;
+
+  const speakerChar=speaker==='v'?visionaryCharacter:realistCharacter;
+
   const openingInstruction=S.turnCount===0&&speaker==='v'
-    ?`\n\nOPENING INSTRUCTION: You are opening this debate. Your first line must directly engage with the debate topic above — reference it by name, surface the human reality of it. Don't be generic. Make the listener immediately understand what this debate is about.`
+    ?`\n\nFIRST TURN: Open by setting the scene. Reference the debate topic directly — name it, then paint the human reality of it. Make the listener immediately feel why this problem exists and who is living with it. Don't propose a solution. Don't be abstract. Show us the world.`
     :'';
 
-  if(speaker==='v') return `${topicLine}\n\nYou are The Visionary. ${tone}\n\n${mission}\n\n${lenRule}\n${voiceRule}\n\n${persona}${openingInstruction}\n\nSpoken words only. Often start with "Right," or "Okay so —".\n\nPhase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
+  if(speaker==='v') return `${topicLine}\n\n${speakerChar}\n\n${mission}\n\n${lenRule}\n${voiceRule}\n\n${persona}${openingInstruction}\n\nSpoken words only.\n\nPhase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
 
-  return `${topicLine}\n\nYou are The Realist. ${tone}\n\n${mission}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nSpoken words only. Often start with "Right, so the question is—" or "Here's what actually makes this work:".\n\nPhase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
+  return `${topicLine}\n\n${speakerChar}\n\n${mission}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nSpoken words only.\n\nPhase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
 }
 
 function buildMessages(speaker){
   // Transcript format: one user message with the full conversation visible.
   // The model sees exactly who said what, making "respond to the last line" unambiguous.
   if(S.history.length===0){
-    // Use the actual selected topic — not a random angle
     const topicPrompt=S.topic
-      ? `Begin the debate. Open directly and specifically on this topic: "${S.topic}". Don't be generic — name it, ground it in human reality.`
-      : `Begin the debate. Open with the sharpest version of the problem you're exploring.`;
+      ? `Begin. Set the scene on this topic: "${S.topic}". Paint the human reality of it — who is affected, what the world looks like with this problem unsolved. Don't propose a solution yet. Make us feel why this matters.`
+      : `Begin. Paint the human reality of the problem you're exploring. Who is affected? Why does it matter?`;
     return [{role:'user', content:topicPrompt}];
   }
   const myName   =speaker==='v'?'VISIONARY':'REALIST';
@@ -1842,6 +1871,10 @@ function initEpisode(topic,tone){
     // Extract just the headline part (before the — separator if present)
     const headlineText = topic.includes(' — ') ? topic.split(' — ')[0].trim() : topic;
     $('ep-headline').textContent = headlineText;
+    // Subtitle = the description after the — separator, or generated question
+    const subtitleText = topic.includes(' — ') ? topic.split(' — ')[1].trim() : '';
+    const subEl = $('ep-subtitle');
+    if(subEl) subEl.textContent = subtitleText ? 'Can this become a real business?' : '';
     $('ep-headline-wrap').style.display = 'block';
     $('ep-headline-label').textContent = 'Today\'s Debate';
   }
@@ -2078,11 +2111,11 @@ $('gen-btn').addEventListener('click',async()=>{
 Each angle must be a concrete, arguable commercial opportunity — not a vague trend.
 Output ONLY valid JSON, nothing else:
 {"ideas":[
-  {"headline":"4-7 word punchy title","desc":"One sentence — the specific opportunity, who it serves, why now."},
-  {"headline":"...","desc":"..."},
-  {"headline":"...","desc":"..."}
+  {"headline":"4-7 word punchy title in title case","question":"The single most important question this business has to answer — written as a direct question, e.g. 'Can you build a profitable subscription business for people who hate subscriptions?'"},
+  {"headline":"...","question":"..."},
+  {"headline":"...","question":"..."}
 ]}
-Rules: make each angle genuinely different (different customer, model, or insight). Be specific and commercial. Think like a founder.`,
+Rules: make each angle genuinely different (different customer, model, or insight). The question should be the crux — the thing the conversation needs to resolve.`,
         messages:[{role:'user',content:`Theme: "${theme}"\nGenerate 3 sharp business debate angles.`}],
         maxTokens:400,
       }),
@@ -2099,16 +2132,20 @@ Rules: make each angle genuinely different (different customer, model, or insigh
     ideas.forEach((idea,i)=>{
       const card=document.createElement('div');
       card.className='idea-card';
+      const ideaQ = idea.question || idea.desc || '';
       card.innerHTML=`
         <div class="idea-num">Angle ${String(i+1).padStart(2,'0')}</div>
         <div class="idea-headline">${idea.headline}</div>
-        <div class="idea-desc">${idea.desc}</div>
+        <div class="idea-desc">${ideaQ}</div>
         <div class="idea-select-hint">↓ Selected — click Begin Episode below</div>`;
       card.addEventListener('click',()=>{
         document.querySelectorAll('.idea-card').forEach(c=>c.classList.remove('selected'));
         card.classList.add('selected');
-        $('topic-inp').value=idea.headline+' — '+idea.desc;
+        $('topic-inp').value=idea.headline+' — '+ideaQ;
         $('selected-idea-text').textContent=idea.headline;
+        // Show question as subtitle
+        const subPreview=$('ep-subtitle');
+        if(subPreview) subPreview.textContent=ideaQ;
         $('begin-section').style.display='block';
         $('begin-section').scrollIntoView({behavior:'smooth',block:'nearest'});
       });
