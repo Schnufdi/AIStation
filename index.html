@@ -541,7 +541,7 @@ body::after {
 }
 .tx-byline.v { color: var(--vis); } .tx-byline.o { color: var(--op); }
 .tx-mood { font-style: italic; text-transform: none; letter-spacing: 0; color: var(--ink3); font-size: .64em; font-family: var(--f-serif); }
-.tx-txt { font-family: var(--f-serif); font-size: .82rem; color: var(--ink2); line-height: 1.72; }
+.tx-txt { font-family: var(--f-serif); font-size: 1rem; color: var(--ink2); line-height: 1.75; }
 
 .ty-d {
   display: inline-block; width: 5px; height: 5px; border-radius: 50%;
@@ -549,6 +549,44 @@ body::after {
 }
 .ty-d:nth-child(2){animation-delay:.2s} .ty-d:nth-child(3){animation-delay:.4s}
 @keyframes tyd { 0%,80%,100%{transform:scale(.5);opacity:.4} 40%{transform:scale(1);opacity:1} }
+
+/* Episode headline */
+.ep-headline-wrap {
+  margin-bottom: 18px; padding-bottom: 18px;
+  border-bottom: 1px solid var(--wire);
+  animation: fadeup .5s ease forwards;
+}
+@keyframes fadeup { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.ep-headline-label {
+  font-family: var(--f-mono); font-size: .48rem;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 6px;
+}
+.ep-headline {
+  font-family: var(--f-disp); font-size: 1.7rem;
+  letter-spacing: .04em; line-height: 1.05; color: var(--ink);
+}
+
+/* Stage pill + countdown */
+.prog-lbls { display: flex; justify-content: space-between; align-items: center; margin-top: 7px; }
+.prog-stage-wrap { display: flex; align-items: center; }
+.prog-stage-pill {
+  font-family: var(--f-mono); font-size: .54rem;
+  letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+  padding: 3px 10px;
+  background: var(--gold-glow);
+  border: 1px solid rgba(232,160,48,.3);
+  color: var(--gold);
+  transition: all .4s;
+}
+.prog-stage-pill.wrapping { background: rgba(255,85,51,.08); border-color: rgba(255,85,51,.3); color: var(--vis); }
+.prog-countdown {
+  font-family: var(--f-mono); font-size: .62rem;
+  color: var(--ink3); letter-spacing: .06em;
+  transition: color .4s;
+}
+.prog-countdown.urgent { color: var(--vis); animation: urgentpulse 1.5s ease-in-out infinite; }
+@keyframes urgentpulse { 0%,100%{opacity:1} 50%{opacity:.5} }
 
 /* ── RIGHT PANEL ── */
 .col-r { padding-left: 22px; }
@@ -801,6 +839,12 @@ body::after {
     <div class="col-m">
       <div class="c-hed">Live Conversation</div>
 
+      <!-- Episode headline — shown once episode starts -->
+      <div class="ep-headline-wrap" id="ep-headline-wrap" style="display:none">
+        <div class="ep-headline-label">Episode</div>
+        <div class="ep-headline" id="ep-headline">—</div>
+      </div>
+
       <div class="now-spk idle" id="now-spk">
         <div class="ns-top">
           <div class="ns-who">
@@ -818,11 +862,17 @@ body::after {
         <div class="ns-txt" id="ns-text">Press play to begin the conversation.</div>
       </div>
 
+      <!-- Progress + stage + countdown -->
       <div class="prog-wrap">
         <div class="prog-track"><div class="prog-fill" id="prog"></div></div>
         <div class="prog-lbls">
-          <span class="prog-lbl" id="prog-phase">Opening</span>
-          <span class="prog-lbl" id="prog-pct">0%</span>
+          <div class="prog-stage-wrap">
+            <span class="prog-stage-pill" id="prog-stage-pill">Opening</span>
+            <span class="prog-lbl" id="prog-phase" style="display:none">Opening</span>
+          </div>
+          <div class="prog-right">
+            <span class="prog-countdown" id="prog-countdown">22 turns</span>
+          </div>
         </div>
       </div>
 
@@ -834,16 +884,16 @@ body::after {
 
       <div class="steer-hed" id="steer-section" style="display:none">Steer the Conversation</div>
       <div class="steer-btns" id="steer-btns" style="display:none">
-        <button class="s-btn" data-cmd="lock-that-in">Lock that in</button>
-        <button class="s-btn" data-cmd="go-deeper">Go deeper</button>
-        <button class="s-btn" data-cmd="off-track">Off track</button>
-        <button class="s-btn" data-cmd="challenge-that">Challenge that</button>
-        <button class="s-btn" data-cmd="compare-top-two">Compare top two</button>
-        <button class="s-btn" data-cmd="more-practical">More practical</button>
-        <button class="s-btn" data-cmd="more-original">More original</button>
-        <button class="s-btn" data-cmd="kill-that">Kill that</button>
-        <button class="s-btn" data-cmd="move-on">Move on</button>
-        <button class="s-btn" data-cmd="wrap-it-up">Wrap it up</button>
+        <button class="s-btn" data-cmd="go-deeper" data-steer="Go deeper on the current idea — more detail, more texture.">Go deeper</button>
+        <button class="s-btn" data-cmd="challenge-that" data-steer="Challenge the last point more directly — find the flaw.">Challenge that</button>
+        <button class="s-btn" data-cmd="more-practical" data-steer="Get more practical — real numbers, real customers, real steps.">More practical</button>
+        <button class="s-btn" data-cmd="more-original" data-steer="Push for a more original angle — this feels too conventional.">More original</button>
+        <button class="s-btn" data-cmd="off-track" data-steer="You're drifting — bring it back to the core idea.">Back on track</button>
+        <button class="s-btn" data-cmd="compare-top-two" data-steer="Compare the two strongest ideas on the table — which has more legs?">Compare top two</button>
+        <button class="s-btn" data-cmd="lock-that-in" data-steer="Lock in the current front-runner and build from there.">Lock that in</button>
+        <button class="s-btn" data-cmd="kill-that" data-steer="Kill that idea — it's not working. Move on to something stronger.">Kill that</button>
+        <button class="s-btn" data-cmd="move-on" data-steer="Move on to the next phase — you've explored this enough.">Move on</button>
+        <button class="s-btn" data-cmd="wrap-it-up" data-steer="Start wrapping up — land the plane and give a clear final verdict.">Wrap it up</button>
       </div>
 
       <div class="tx-hed"><span>Transcript</span><span id="turn-count">0 exchanges</span></div>
@@ -1006,6 +1056,8 @@ function setPhaseUI(p){
   const n=PHASES[p];
   $('phase-tag').textContent=n; $('ph-name').textContent=n; $('prog-phase').textContent=n;
   for(let i=0;i<5;i++) $('ph'+i).className='ph'+(i<p?' past':i===p?' now':'');
+  const pill=$('prog-stage-pill');
+  if(pill){ pill.textContent=n; pill.className='prog-stage-pill'+(p>=4?' wrapping':''); }
 }
 
 function setSpeakerUI(t){
@@ -1214,11 +1266,39 @@ async function speakText(text,sp){
 
 /* ═══ CORE LOOP ═══ */
 
+async function generateHeadline(){
+  try{
+    const resp=await fetch('/api/generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        system:`You generate punchy episode titles for a live AI business strategy conversation. 
+Output ONLY the headline — 4-8 words, title case, no quotes, no punctuation at the end. 
+Make it sound like a magazine cover or documentary title. Evocative, not generic.
+Examples: "The Infrastructure Gap Nobody Is Building", "Why Freelancers Are The New Enterprise", "Betting On The Loneliness Market"`,
+        messages:[{role:'user',content:`Topic: ${S.topic||'open business exploration'}. Tone: ${S.tone}. Generate the episode headline.`}],
+        maxTokens:40,
+      }),
+    });
+    if(!resp.ok) return;
+    const data=await resp.json();
+    const headline=(data.text||'').trim().replace(/^["']|["']$/g,'').trim();
+    if(headline){
+      $('ep-headline').textContent=headline;
+      $('ep-headline-wrap').style.display='block';
+    }
+  }catch(e){ /* silent — headline is optional */ }
+}
+
 async function loop(){
   let nextSp='v';
 
+  // Generate headline in parallel with first turn
   showTyping('v');
-  let current=await generateTurn('v');
+  const [current] = await Promise.all([
+    generateTurn('v'),
+    generateHeadline(),
+  ]);
   nextSp='o';
   let nextPromise=generateTurn('o').catch(()=>null);
   nextSp='v';
@@ -1248,10 +1328,16 @@ async function loop(){
       updateStatePanel(m);
     }
 
-    // Progress bar
-    const pct=Math.min(95,(S.turnCount/22)*100);
+    // Progress bar + countdown
+    const TOTAL_TURNS = 22;
+    const pct=Math.min(95,(S.turnCount/TOTAL_TURNS)*100);
     $('prog').style.width=pct+'%';
-    $('prog-pct').textContent=Math.round(pct)+'%';
+    const remaining=Math.max(0, TOTAL_TURNS - S.turnCount);
+    const cd=$('prog-countdown');
+    if(cd){
+      cd.textContent=remaining===0?'Final turn':`${remaining} turn${remaining!==1?'s':''} left`;
+      cd.className='prog-countdown'+(remaining<=4?' urgent':'');
+    }
     $('dateline-l').textContent=`Turn ${S.turnCount} — ${PHASES[S.phase]}`;
 
     // Play audio + generate next turn in parallel
@@ -1367,7 +1453,8 @@ document.querySelectorAll('.s-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     if(!S.running) return;
     const cmd=btn.dataset.cmd;
-    S.steerCmd=cmd;
+    // Use the natural language redirect text — this goes into the prompt
+    S.steerCmd=btn.dataset.steer||cmd;
     if(cmd==='lock-that-in'&&S.frontRunners.length){
       const idea=S.frontRunners[0];
       if(!S.locked.includes(idea)) S.locked.push(idea);
@@ -1376,7 +1463,13 @@ document.querySelectorAll('.s-btn').forEach(btn=>{
     if(cmd==='kill-that'){S.frontRunners=[]; $('sl-front').innerHTML='<div class="state-nil">Searching…</div>';}
     if(cmd==='wrap-it-up'){S.phase=4; setPhaseUI(4);}
     if(cmd==='move-on'&&S.phase<4){S.phase++; setPhaseUI(S.phase);}
-    btn.classList.add('hit'); setTimeout(()=>btn.classList.remove('hit'),500);
+    // Flash the button and show a redirect notice
+    btn.classList.add('hit');
+    setTimeout(()=>btn.classList.remove('hit'),800);
+    // Brief visual indicator in dateline
+    const prev=$('dateline-l').textContent;
+    $('dateline-l').textContent=`↗ Redirecting — ${btn.textContent}…`;
+    setTimeout(()=>{if(!S.running)return; $('dateline-l').textContent=prev;},2000);
   });
 });
 
