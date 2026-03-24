@@ -887,7 +887,7 @@ body::after {
           <div class="arc-phase-body">
             <div class="arc-phase-name">Opening</div>
             <div class="arc-phase-desc">Cast wide. Find the territory — who feels this problem, why now, what's the right frame. No one lands on an idea yet.</div>
-            <div class="arc-phase-turns">4 turns</div>
+            <div class="arc-phase-turns">3 turns</div>
           </div>
         </div>
         <div class="arc-phase">
@@ -895,7 +895,7 @@ body::after {
           <div class="arc-phase-body">
             <div class="arc-phase-name">Pressure</div>
             <div class="arc-phase-desc">Ideas come fast. The Realist gets forensic — finds the flaw, forces a stronger version. Friction peaks here. Weak ideas die.</div>
-            <div class="arc-phase-turns">8 turns</div>
+            <div class="arc-phase-turns">6 turns</div>
           </div>
         </div>
         <div class="arc-phase">
@@ -903,7 +903,7 @@ body::after {
           <div class="arc-phase-body">
             <div class="arc-phase-name">Construction</div>
             <div class="arc-phase-desc">One idea survives. Both hosts build together — customer, revenue, moat. The adversarial energy drops. Precision replaces speed.</div>
-            <div class="arc-phase-turns">6 turns</div>
+            <div class="arc-phase-turns">4 turns</div>
           </div>
         </div>
         <div class="arc-phase">
@@ -911,7 +911,7 @@ body::after {
           <div class="arc-phase-body">
             <div class="arc-phase-name">Verdict</div>
             <div class="arc-phase-desc">Hard close. One sentence from each. Pursue, pivot or kill — with exactly one reason. No hedge.</div>
-            <div class="arc-phase-turns">4 turns</div>
+            <div class="arc-phase-turns">3 turns</div>
           </div>
         </div>
       </div>
@@ -1128,14 +1128,14 @@ const OPENING_ANGLES = [
   "what do people do privately that they'd pay to do better, but no product exists because it's awkward to admit the need?",
 ];
 
-// 4 phases, 22 turns total
-// Opening: 0-3 (4 turns)  — cast wide, find the frame
-// Pressure: 4-11 (8 turns) — throw directions, challenge hard, kill the weak
-// Construction: 12-17 (6 turns) — lock the strongest, build it out
-// Verdict: 18-21 (4 turns, hard 3-turn close) — final stress test, clear position
+// 4 phases, 16 turns total — ~5 minutes at ElevenLabs pace
+// Opening: 0-2   (3 turns) — find the frame, who feels this, why now
+// Pressure: 3-8  (6 turns) — throw ideas, challenge hard, kill the weak ones
+// Construction: 9-12 (4 turns) — lock the strongest, build it precisely
+// Verdict: 13-15  (3 turns) — one sentence each, clear position, done
 const PHASES = ['Opening','Pressure','Construction','Verdict'];
-const PHASE_AT = [4,12,18,22]; // turn counts where phase advances
-const TOTAL_TURNS = 22;
+const PHASE_AT = [3,9,13,16]; // turn counts where phase advances
+const TOTAL_TURNS = 16;
 
 const MODEL_TYPES = {
   sub:{label:'Subscription',cls:'sub'},
@@ -1364,26 +1364,37 @@ function buildSystemPrompt(speaker){
   const meta=`\n\n---\nSIGNAL BLOCK (never spoken aloud):\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"1-3 word state","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
 
   const lenRule=S.turnCount===0
-    ? `LENGTH: Opening — 2-3 sentences. Set the scene, don't resolve it.`
+    ? `LENGTH: 2 sentences max. Open sharp — one observation, one question underneath it.`
     : S.phase===3
-    ? `LENGTH: Verdict phase — 1 sentence max. Clear, final, no hedging.`
-    : `LENGTH: 1-2 sentences. Punchy. Conversational. Talking, not presenting.`;
+    ? `LENGTH: 1 sentence. Final. No qualification.`
+    : `LENGTH: 1 sentence only. Make it land. If you need two, cut the first one.`;
 
-  const voiceRule=`VOICE: Sharp human, not a consultant. No jargon, no asterisks, no bullet-point thinking. Pull back to the human reality — who feels this, what does it cost them. Keep the thread.`;
+  const voiceRule=`VOICE: Sharp human, not a consultant. No jargon, no asterisks. Pull back to the human reality — who feels this, what does it cost them. Stay on topic.`;
 
-  // Per-phase persona instructions
+  // Per-phase persona — specific job per turn, not just a vibe
+  const turnInPhase = S.phase===0 ? S.turnCount
+    : S.phase===1 ? S.turnCount - 3
+    : S.phase===2 ? S.turnCount - 9
+    : S.turnCount - 13;
+
   const PHASE_PERSONA={
     v:{
-      'Opening':    `Your job: cast wide. Explore the territory — where does the problem live, who feels it, why now? Don't land on an idea yet. You're curious and slightly restless.`,
-      'Pressure':   `Your job: throw ideas fast and defend them hard. You're energised. When challenged, you escalate — find a stronger version of the idea, not a softer one. Build fast.`,
-      'Construction':`Your job: you've found something worth building. Get precise. Name it, describe the customer exactly, say how money flows. You're focused and increasingly excited.`,
-      'Verdict':    `Your job: make the case. 1 sentence — why this idea is worth pursuing. Committed, not qualified.`,
+      'Opening':    turnInPhase===0
+        ? `Turn job: open with the sharpest version of the problem — the human reality of it. Don't propose a solution yet.`
+        : `Turn job: push the frame further. Who specifically feels this the most? Name them.`,
+      'Pressure':   turnInPhase<3
+        ? `Turn job: throw a specific idea at the wall. Name it, say who it's for, say why now. Fast.`
+        : `Turn job: the Realist challenged you. Escalate — find a stronger version of the idea, not a softer one.`,
+      'Construction':`Turn job: we have the idea. Make it concrete — name the exact customer, say how money flows, say what the unfair advantage is.`,
+      'Verdict':    `Turn job: one sentence. Make the case for why this is worth pursuing. Committed.`,
     },
     o:{
-      'Opening':    `Your job: don't attack yet. Sharpen the frame — find the most interesting version of the question. You're clarifying, not challenging.`,
-      'Pressure':   `Your job: be forensic. Find the flaw in each direction and name it. Not mean — surgical. Force the Visionary to find a stronger idea, not defend a weak one.`,
-      'Construction':`Your job: become a builder. The adversarial phase is over. Help construct — push for specificity on customer, revenue, moat. You're still rigorous but now you're contributing.`,
-      'Verdict':    `Your job: give a real verdict. 1 sentence — pursue, pivot, or kill, and exactly why. No hedge.`,
+      'Opening':    `Turn job: don't attack yet — sharpen the frame. Find the most interesting version of this problem. Clarify, don't challenge.`,
+      'Pressure':   turnInPhase<3
+        ? `Turn job: find the one fatal flaw in what the Visionary just said. Name it precisely. One sentence.`
+        : `Turn job: they escalated. Either the stronger version holds up — say so — or find the new flaw. Force a decision.`,
+      'Construction':`Turn job: you're building now, not tearing down. Push for one missing specific — a number, a customer segment, a competitive angle.`,
+      'Verdict':    `Turn job: pursue, pivot, or kill. One sentence, one reason. No hedge.`,
     },
   };
 
