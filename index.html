@@ -663,6 +663,10 @@ body{
         <div class="input-row" style="margin-bottom:20px">
           <input id="api-key-inp" type="password" class="topic-inp" placeholder="sk-ant-…" style="font-family:var(--f-mono);font-size:.8rem"/>
         </div>
+        <div class="input-label" style="margin-bottom:6px">ElevenLabs API key <span style="color:var(--pale);font-weight:300;font-size:.85em">(optional — for real voices)</span></div>
+        <div class="input-row" style="margin-bottom:20px">
+          <input id="el-key-inp" type="password" class="topic-inp" placeholder="Leave blank to use browser voice" style="font-family:var(--f-mono);font-size:.8rem"/>
+        </div>
         <div class="input-label">Episode theme — or leave blank to explore freely</div>
         <div class="input-row">
           <input class="topic-inp" id="topic-inp" type="text" placeholder="e.g. the loneliness economy, tools for creative freelancers…"/>
@@ -1034,7 +1038,8 @@ async function generateTurn(speaker){
   return{sp:speaker,text,mood:meta.mood||'',meta};
 }
 
-// TTS
+// TTS — ElevenLabs with browser synth fallback
+const EL_VOICES={v:'JBFqnCBsd6RMkjVDRZzb',o:'nPczCjzI2devNBz1zQrb'};
 const synth=window.speechSynthesis;
 let voices=[];
 if(synth){const lv=()=>{voices=synth.getVoices()};lv();synth.onvoiceschanged=lv}
@@ -1045,7 +1050,7 @@ function getVoice(sp){
   if(sp==='v'&&gb.length)return gb[0];if(sp==='o'&&gb.length>1)return gb[1];
   return voices.find(v=>v.lang.startsWith('en'))||voices[0]||null;
 }
-function speakText(text,sp){
+function synthFallback(text,sp){
   return new Promise(resolve=>{
     if(!synth){setTimeout(resolve,Math.max(1400,text.split(' ').length*380));return}
     synth.cancel();
@@ -1055,6 +1060,30 @@ function speakText(text,sp){
     u.onend=resolve;u.onerror=resolve;
     synth.speak(u);
   });
+}
+async function speakText(text,sp){
+  const elKey=sessionStorage.getItem('el_key')||'';
+  if(elKey){
+    try{
+      const r=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${EL_VOICES[sp]}`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','xi-api-key':elKey},
+        body:JSON.stringify({text,model_id:'eleven_turbo_v2_5',voice_settings:{stability:0.45,similarity_boost:0.75,style:0.3,use_speaker_boost:true}}),
+      });
+      if(!r.ok)throw new Error('EL '+r.status);
+      const blob=await r.blob();
+      const url=URL.createObjectURL(blob);
+      const audio=new Audio(url);
+      return new Promise(resolve=>{
+        audio.onended=()=>{URL.revokeObjectURL(url);resolve()};
+        audio.onerror=()=>{URL.revokeObjectURL(url);resolve()};
+        audio.play().catch(()=>resolve());
+      });
+    }catch(e){
+      console.warn('ElevenLabs failed, using browser voice:',e.message);
+    }
+  }
+  return synthFallback(text,sp);
 }
 
 // Core loop — generate turn N+1 while turn N is playing
@@ -1206,6 +1235,9 @@ $('go-btn').addEventListener('click',async()=>{
   const key=$('api-key-inp').value.trim();
   if(!key){alert('Please enter your Anthropic API key first.');$('api-key-inp').focus();return;}
   sessionStorage.setItem('unscripted_key',key);
+  const elKey=$('el-key-inp').value.trim();
+  if(elKey)sessionStorage.setItem('el_key',elKey);
+  else sessionStorage.removeItem('el_key');
   const topic=$('topic-inp').value.trim();
   $('go-btn').disabled=true;$('load-hint').classList.add('on');
   await sleep(600);
