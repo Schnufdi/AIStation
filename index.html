@@ -1351,11 +1351,13 @@ document.querySelectorAll('.tone-btn').forEach(btn=>{
 });
 
 $('go-btn').addEventListener('click',async()=>{
-  const key=document.getElementById('api-key-inp').value.trim();
-  if(!key){alert('Please enter your Anthropic API key first.');document.getElementById('api-key-inp').focus();return;}
-  sessionStorage.setItem('unscripted_key',key);
-  const elKey=document.getElementById('el-key-inp').value.trim();
-  if(elKey)sessionStorage.setItem('el_key',elKey);else sessionStorage.removeItem('el_key');
+  const topic=$('topic-inp').value.trim();
+  const tone=document.querySelector('.tone-btn.active')?.dataset?.tone||'sharp';
+  $('go-btn').disabled=true;$('load-hint').classList.add('on');
+  await sleep(600);
+  $('load-hint').classList.remove('on');$('go-btn').disabled=false;
+  initEpisode(topic,tone);
+});
   const topic=$('topic-inp').value.trim();
   const tone=document.querySelector('.tone-btn.active')?.dataset.tone||'sharp';
   $('go-btn').disabled=true;$('load-hint').classList.add('on');
