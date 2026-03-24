@@ -1242,16 +1242,34 @@ function getVoice(sp){
   return voices.find(v=>v.lang.startsWith('en'))||voices[0]||null;
 }
 
-function speak(text,sp){
-  return new Promise(res=>{
-    if(!synth){setTimeout(res,Math.max(1400,text.split(' ').length*410));return}
-    synth.cancel();
-    const u=new SpeechSynthesisUtterance(text);
-    const v=getVoice(sp);if(v)u.voice=v;
-    u.rate=sp==='v'?1.03:.93;u.pitch=sp==='v'?1.06:.87;u.volume=1;
-    u.onend=res;u.onerror=res;
-    synth.speak(u);
-  });
+async function speak(text,sp){
+  try{
+    const res=await fetch('/api/speak',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text,speaker:sp})
+    });
+    if(!res.ok)throw new Error('TTS failed');
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    const audio=new Audio(url);
+    return new Promise(resolve=>{
+      audio.onended=()=>{URL.revokeObjectURL(url);resolve()};
+      audio.onerror=()=>resolve();
+      audio.play();
+    });
+  }catch(err){
+    // fallback: browser voice if ElevenLabs fails
+    return new Promise(res=>{
+      if(!synth){setTimeout(res,Math.max(1400,text.split(' ').length*410));return}
+      synth.cancel();
+      const u=new SpeechSynthesisUtterance(text);
+      const v=getVoice(sp);if(v)u.voice=v;
+      u.rate=sp==='v'?1.03:.93;u.pitch=sp==='v'?1.06:.87;u.volume=1;
+      u.onend=res;u.onerror=res;
+      synth.speak(u);
+    });
+  }
 }
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
