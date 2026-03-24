@@ -242,7 +242,27 @@ body{
 }
 .sug:hover{border-color:var(--ink);color:var(--ink)}
 
-.loading-hint{
+/* Tone selector */
+.tone-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+  max-width:640px;margin-bottom:8px;
+}
+.tone-btn{
+  padding:14px 16px;border:1px solid var(--rule);background:transparent;
+  text-align:left;cursor:pointer;transition:all .15s;
+  display:flex;flex-direction:column;gap:4px;
+}
+.tone-btn:hover{border-color:var(--ink);background:var(--paper2)}
+.tone-btn.active{border-color:var(--acc);background:var(--acc-lt)}
+.tone-name{
+  font-family:var(--f-mono);font-size:.62rem;font-weight:500;
+  letter-spacing:.04em;color:var(--ink);display:block;
+}
+.tone-btn.active .tone-name{color:var(--acc)}
+.tone-desc{
+  font-size:.72rem;color:var(--mid);line-height:1.45;display:block;
+}
+
   display:none;align-items:center;gap:8px;
   font-family:var(--f-mono);font-size:.65rem;color:var(--pale);letter-spacing:.06em;
   margin-top:12px;
@@ -599,6 +619,23 @@ body{
 .fbr-track{width:140px;height:2px;background:var(--rule);position:relative;margin-bottom:4px}
 .fbr-fill{position:absolute;left:0;top:0;height:100%;transition:width 1s,background 1s}
 .fbr-val{font-family:var(--f-mono);font-size:.65rem;color:var(--mid)}
+.tone-grid{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;
+  max-width:640px;margin-bottom:28px;
+}
+.tone-btn{
+  padding:14px 16px;text-align:left;
+  border:1px solid var(--rule);background:transparent;cursor:pointer;
+  transition:all .15s;border-radius:var(--r);
+}
+.tone-btn:hover{border-color:var(--ink2);background:var(--paper2)}
+.tone-btn.active{border-color:var(--acc);background:var(--acc-lt)}
+.tone-name{
+  font-family:var(--f-mono);font-size:.62rem;font-weight:500;
+  letter-spacing:.04em;color:var(--ink2);margin-bottom:5px;
+}
+.tone-btn.active .tone-name{color:var(--acc)}
+.tone-desc{font-size:.72rem;color:var(--mid);line-height:1.5}
 </style>
 </head>
 <body>
@@ -659,14 +696,7 @@ body{
       </div>
 
       <div class="input-section">
-        <div class="input-label" style="margin-bottom:6px">Anthropic API key</div>
-        <div class="input-row" style="margin-bottom:20px">
-          <input id="api-key-inp" type="password" class="topic-inp" placeholder="sk-ant-…" style="font-family:var(--f-mono);font-size:.8rem"/>
-        </div>
-        <div class="input-label" style="margin-bottom:6px">ElevenLabs API key <span style="color:var(--pale);font-weight:300;font-size:.85em">(optional — for real voices)</span></div>
-        <div class="input-row" style="margin-bottom:20px">
-          <input id="el-key-inp" type="password" class="topic-inp" placeholder="Leave blank to use browser voice" style="font-family:var(--f-mono);font-size:.8rem"/>
-        </div>
+
         <div class="input-label">Episode theme — or leave blank to explore freely</div>
         <div class="input-row">
           <input class="topic-inp" id="topic-inp" type="text" placeholder="e.g. the loneliness economy, tools for creative freelancers…"/>
@@ -679,6 +709,61 @@ body{
           <button class="sug" data-ex="behavioural health for high performers">high-performer health</button>
           <button class="sug" data-ex="the attention recession">attention recession</button>
           <button class="sug" data-ex="">surprise me</button>
+        </div>
+
+        <div class="input-label" style="margin-bottom:10px;margin-top:4px">Conversation tone</div>
+        <div class="tone-grid" id="tone-grid">
+          <button class="tone-btn active" data-tone="sharp">
+            <div class="tone-name">Sharp &amp; Adversarial</div>
+            <div class="tone-desc">They genuinely disagree. High friction, real tension. The best ideas survive the argument.</div>
+          </button>
+          <button class="tone-btn" data-tone="pitch">
+            <div class="tone-name">Founder Pitch</div>
+            <div class="tone-desc">The Visionary is selling. The Operator is the investor who's heard it all before. Every claim gets tested.</div>
+          </button>
+          <button class="tone-btn" data-tone="principles">
+            <div class="tone-name">First Principles</div>
+            <div class="tone-desc">Nothing is taken for granted. Strip every assumption back to zero and rebuild from the ground up.</div>
+          </button>
+          <button class="tone-btn" data-tone="scout">
+            <div class="tone-name">Optimistic Scouting</div>
+            <div class="tone-desc">Both hosts are looking for what could work. More building than tearing down. Energy over scepticism.</div>
+          </button>
+          <button class="tone-btn" data-tone="latenight">
+            <div class="tone-name">Late Night</div>
+            <div class="tone-desc">Looser, more speculative. Bigger swings. The kind of conversation that happens after the meeting.</div>
+          </button>
+          <button class="tone-btn" data-tone="boardroom">
+            <div class="tone-name">Board Room</div>
+            <div class="tone-desc">Formal, high stakes. Every claim needs evidence. This is the version you'd present to a serious investor.</div>
+          </button>
+        </div>
+        <div class="input-label" style="margin-top:24px;margin-bottom:12px">Conversation tone</div>
+        <div class="tone-grid" id="tone-grid">
+          <button class="tone-btn active" data-tone="sharp">
+            <span class="tone-name">Sharp & Unfiltered</span>
+            <span class="tone-desc">Direct debate. No softening. Ideas get stress-tested hard.</span>
+          </button>
+          <button class="tone-btn" data-tone="socratic">
+            <span class="tone-name">Socratic</span>
+            <span class="tone-desc">Question-led. Each turn peels back a layer. Slower, deeper.</span>
+          </button>
+          <button class="tone-btn" data-tone="contrarian">
+            <span class="tone-name">Contrarian Pressure</span>
+            <span class="tone-desc">The Operator pushes back on everything. Ideas must earn their place.</span>
+          </button>
+          <button class="tone-btn" data-tone="expansive">
+            <span class="tone-name">Expansive</span>
+            <span class="tone-desc">Ideas build on each other. Wide thinking before narrowing.</span>
+          </button>
+          <button class="tone-btn" data-tone="boardroom">
+            <span class="tone-name">Boardroom Ready</span>
+            <span class="tone-desc">Crisp, structured. Every idea lands with a "so what".</span>
+          </button>
+          <button class="tone-btn" data-tone="late-night">
+            <span class="tone-name">Late-Night Riff</span>
+            <span class="tone-desc">Looser, stranger. Follows tangents. Unexpected connections.</span>
+          </button>
         </div>
         <div class="loading-hint" id="load-hint">
           <div class="ld-dot"></div><div class="ld-dot"></div><div class="ld-dot"></div>
@@ -935,7 +1020,40 @@ const PHASES = ['Opening','Exploring','Narrowing','Building','Wrapping'];
 const PHASE_AT = [3,8,13,18,22];
 const MODEL_TYPES = {sub:{label:'Subscription',cls:'sub'},mkt:{label:'Marketplace',cls:'mkt'},lic:{label:'Licensing',cls:'lic'},b2b:{label:'B2B / Enterprise',cls:'b2b'},hw:{label:'Hardware',cls:'hw'}};
 
-let S = {running:false,paused:false,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0,topic:'',history:[],steerCmd:null};
+const TONES = {
+  sharp:{
+    label:'Sharp & Adversarial',
+    v:`You are combative in the best way — you make bold claims and defend them. You don't soften your positions. When challenged, you push back harder with evidence. The friction is the point.`,
+    o:`You are a tough interrogator. You don't accept claims at face value. You find the specific flaw in every argument and name it directly. You're not mean — you're rigorous. Make them work for every point.`,
+  },
+  pitch:{
+    label:'Founder Pitch',
+    v:`You are pitching this idea like your life depends on it. Energetic, persuasive, always finding the angle that makes it sound inevitable. You anticipate objections and pre-empt them.`,
+    o:`You are a seasoned investor who has heard a thousand pitches. You probe the assumptions, ask for the numbers, and find the one question the founder hasn't answered. Politely devastating.`,
+  },
+  principles:{
+    label:'First Principles',
+    v:`You reason from first principles. You question why things exist, not just how they work. You're comfortable pulling apart market assumptions that everyone else takes for granted.`,
+    o:`You are a systems thinker. You break every idea down to its atomic components and ask whether each one actually holds. Nothing is assumed. Everything must be justified from the ground up.`,
+  },
+  scout:{
+    label:'Optimistic Scouting',
+    v:`You are energised and constructive. You're looking for what could work, not what could fail. You build on ideas rather than tear them down. You find the signal in every direction.`,
+    o:`You are genuinely excited to find a good idea. You're still rigorous — but when something works, you say so clearly. You help shape and strengthen rather than just stress-test.`,
+  },
+  latenight:{
+    label:'Late Night',
+    v:`It's late and the filter is off. You're making bigger leaps, more speculative connections, wilder analogies. You say the things you wouldn't say in a formal meeting. The ideas are stranger and more interesting for it.`,
+    o:`You're relaxed and more willing to entertain the weird. You still bring commercial instinct but you're open to left-field thinking. The conversation can go somewhere unexpected.`,
+  },
+  boardroom:{
+    label:'Board Room',
+    v:`You are presenting to a serious audience. Measured, precise, evidence-led. Every claim is grounded. You're building a case, not exploring freely. The language is professional and the logic is airtight.`,
+    o:`You are a non-executive director with fiduciary responsibility. You need specifics: market size, defensibility, regulatory exposure, capital requirements. No vague optimism. Only what can be defended.`,
+  },
+};
+
+let S = {running:false,paused:false,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0,topic:'',history:[],steerCmd:null,tone:'sharp'};
 let timerRef=null;
 const $=id=>document.getElementById(id);
 
@@ -1002,8 +1120,10 @@ function buildSystemPrompt(speaker){
   const steer=S.steerCmd?`\n\nSTEERING SIGNAL: The listener pressed "${S.steerCmd}" — respond to this now.`:'';
   const baro=S.turnCount>2?`\n\nLIVE SCORES — Originality:${Math.round(_o)}/100 Market Gap:${Math.round(_g)}/100.${_o<40?' Originality is low — push for a less obvious angle.':''}${_g<40?' Market gap score is low — anchor to a real specific demand signal.':''}${Math.abs(_o-_g)>20?' The scores are diverging — work to close the gap.':''}`:'';
   const meta=`\n\nAfter your spoken lines output exactly this on a new line:\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
-  if(speaker==='v')return`You are The Visionary on a sharp unscripted business podcast. Warm, curious, culturally fluent. You read human desire before it becomes a market. You get excited mid-thought and make unexpected connections.\n\nStyle: start with "Right," or "Okay so —". Think out loud. 2-4 sentences. Spoken words only — no asterisks, no stage directions.\n\nRespond directly to what The Operator just said. Move the idea forward.\n\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: cast wide. Exploring: surface 2-3 directions. Narrowing: name and define the strongest. Building: stress-test model/customer/moat. Wrapping: land with clear verdict.${meta}`;
-  return`You are The Operator on a sharp unscripted business podcast. Commercially precise, dry, honest. You find structural reasons ideas fail. Not cynical — just honest. You ask the question no one wants to ask.\n\nStyle: "Sure. And who pays for that?" / "Here's the unit economics question:" / "The real problem is —". Concise, pointed. 2-4 sentences. Spoken words only — no asterisks, no stage directions.\n\nRespond directly to what The Visionary just said. React — don't repeat.\n\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: push back or sharpen. Exploring: unit economics test. Narrowing: lock in or challenge. Building: stress-test ruthlessly. Wrapping: clear commercial verdict.${meta}`;
+  const toneConfig=TONES[S.tone]||TONES.sharp;
+  const toneInstr=`\n\nTONE — ${toneConfig.label}: ${speaker==='v'?toneConfig.v:toneConfig.o}`;
+  if(speaker==='v')return`You are The Visionary on a sharp unscripted business podcast. Warm, curious, culturally fluent. You read human desire before it becomes a market. You get excited mid-thought and make unexpected connections.\n\nStyle: start with "Right," or "Okay so —". Think out loud. 2-4 sentences. Spoken words only — no asterisks, no stage directions.\n\nRespond directly to what The Operator just said. Move the idea forward.\n\nPhase: ${phase} (turn ${S.turnCount})${toneInstr}${steer}${baro}\n\nPhase guide — Opening: cast wide. Exploring: surface 2-3 directions. Narrowing: name and define the strongest. Building: stress-test model/customer/moat. Wrapping: land with clear verdict.${meta}`;
+  return`You are The Operator on a sharp unscripted business podcast. Commercially precise, dry, honest. You find structural reasons ideas fail. Not cynical — just honest. You ask the question no one wants to ask.\n\nStyle: "Sure. And who pays for that?" / "Here's the unit economics question:" / "The real problem is —". Concise, pointed. 2-4 sentences. Spoken words only — no asterisks, no stage directions.\n\nRespond directly to what The Visionary just said. React — don't repeat.\n\nPhase: ${phase} (turn ${S.turnCount})${toneInstr}${steer}${baro}\n\nPhase guide — Opening: push back or sharpen. Exploring: unit economics test. Narrowing: lock in or challenge. Building: stress-test ruthlessly. Wrapping: clear commercial verdict.${meta}`;
 }
 
 function buildMessages(speaker){
@@ -1017,23 +1137,18 @@ function buildMessages(speaker){
 }
 
 async function generateTurn(speaker){
-  const key=sessionStorage.getItem('unscripted_key')||'';
-  if(!key)throw new Error('No API key entered');
-  const steerSnapshot=S.steerCmd;S.steerCmd=null;
-
-  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+  S.steerCmd=null;
+  const resp=await fetch('/api/generate',{
     method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:buildSystemPrompt(speaker),messages:buildMessages(speaker)}),
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({system:buildSystemPrompt(speaker),messages:buildMessages(speaker)}),
   });
-  if(!resp.ok){const e=await resp.text();throw new Error(`API ${resp.status}: ${e.slice(0,120)}`);}
+  if(!resp.ok){const e=await resp.text();throw new Error(`Generate API ${resp.status}: ${e.slice(0,120)}`);}
   const data=await resp.json();
-  const raw=(data.content?.[0]?.text||'').trim();
-
+  const raw=(data.text||'').trim();
   const mi=raw.lastIndexOf('\nMETADATA:');
   let text=raw,meta={};
   if(mi!==-1){text=raw.slice(0,mi).trim();try{meta=JSON.parse(raw.slice(mi+'\nMETADATA:'.length).trim());}catch(e){}}
-
   S.history.push({sp:speaker,text});
   return{sp:speaker,text,mood:meta.mood||'',meta};
 }
@@ -1062,28 +1177,25 @@ function synthFallback(text,sp){
   });
 }
 async function speakText(text,sp){
-  const elKey=sessionStorage.getItem('el_key')||'';
-  if(elKey){
-    try{
-      const r=await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${EL_VOICES[sp]}`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json','xi-api-key':elKey},
-        body:JSON.stringify({text,model_id:'eleven_turbo_v2_5',voice_settings:{stability:0.45,similarity_boost:0.75,style:0.3,use_speaker_boost:true}}),
-      });
-      if(!r.ok)throw new Error('EL '+r.status);
-      const blob=await r.blob();
-      const url=URL.createObjectURL(blob);
-      const audio=new Audio(url);
-      return new Promise(resolve=>{
-        audio.onended=()=>{URL.revokeObjectURL(url);resolve()};
-        audio.onerror=()=>{URL.revokeObjectURL(url);resolve()};
-        audio.play().catch(()=>resolve());
-      });
-    }catch(e){
-      console.warn('ElevenLabs failed, using browser voice:',e.message);
-    }
+  try{
+    const r=await fetch('/api/speak',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text,speaker:sp}),
+    });
+    if(!r.ok)throw new Error('speak API '+r.status);
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    const audio=new Audio(url);
+    return new Promise(resolve=>{
+      audio.onended=()=>{URL.revokeObjectURL(url);resolve()};
+      audio.onerror=()=>{URL.revokeObjectURL(url);resolve()};
+      audio.play().catch(()=>resolve());
+    });
+  }catch(e){
+    console.warn('speak API failed, using browser voice:',e.message);
+    return synthFallback(text,sp);
   }
-  return synthFallback(text,sp);
 }
 
 // Core loop — generate turn N+1 while turn N is playing
@@ -1188,7 +1300,7 @@ $('play-btn').addEventListener('click',()=>{
     S.running=true;S.paused=false;$('play-btn').textContent='⏸';
     loop().catch(err=>{
       console.error('Loop error:',err);
-      alert('Error: '+err.message+'\n\nCheck your API key is entered correctly.');
+      alert('Error: '+err.message+'\n\nCheck Vercel environment variables ANTHROPIC_API_KEY and ELEVENLABS_API_KEY are set.');
       S.running=false;$('play-btn').textContent='▶';
     });
   }else if(S.running&&!S.paused){S.paused=true;$('play-btn').textContent='▶';if(synth)synth.pause();}
@@ -1203,8 +1315,7 @@ $('restart-btn').addEventListener('click',()=>{
   _o=0;_g=0;_oT=0;_gT=0;
   $('orig-fill').style.width='0';$('gap-fill').style.width='0';
   $('orig-reading').textContent='—';$('gap-reading').textContent='—';
-  const topic=$('ep-title')?$('ep-title').textContent:'';
-  setTimeout(()=>initEpisode(topic),150);
+  setTimeout(()=>initEpisode(S.topic,S.tone),150);
 });
 
 document.querySelectorAll('.sb').forEach(btn=>{
@@ -1220,8 +1331,8 @@ document.querySelectorAll('.sb').forEach(btn=>{
   });
 });
 
-function initEpisode(topic){
-  S={running:false,paused:false,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0,topic:topic||'',history:[],steerCmd:null};
+function initEpisode(topic,tone){
+  S={running:false,paused:false,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0,topic:topic||'',history:[],steerCmd:null,tone:tone||'sharp'};
   $('setup').style.display='none';$('episode').classList.add('on');
   $('steer-section').style.display='block';$('steer-btns').style.display='flex';
   $('live-badge').classList.add('on');$('dateline-l').textContent='Episode in progress';
@@ -1231,18 +1342,26 @@ function initEpisode(topic){
   timerRef=setInterval(()=>{if(!S.paused){S.elapsed++;const m=Math.floor(S.elapsed/60),sc=S.elapsed%60;$('clock').textContent=`${m}:${sc.toString().padStart(2,'0')}`;};},1000);
 }
 
+// Tone selection
+document.querySelectorAll('.tone-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tone-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
 $('go-btn').addEventListener('click',async()=>{
-  const key=$('api-key-inp').value.trim();
-  if(!key){alert('Please enter your Anthropic API key first.');$('api-key-inp').focus();return;}
+  const key=document.getElementById('api-key-inp').value.trim();
+  if(!key){alert('Please enter your Anthropic API key first.');document.getElementById('api-key-inp').focus();return;}
   sessionStorage.setItem('unscripted_key',key);
-  const elKey=$('el-key-inp').value.trim();
-  if(elKey)sessionStorage.setItem('el_key',elKey);
-  else sessionStorage.removeItem('el_key');
+  const elKey=document.getElementById('el-key-inp').value.trim();
+  if(elKey)sessionStorage.setItem('el_key',elKey);else sessionStorage.removeItem('el_key');
   const topic=$('topic-inp').value.trim();
+  const tone=document.querySelector('.tone-btn.active')?.dataset.tone||'sharp';
   $('go-btn').disabled=true;$('load-hint').classList.add('on');
   await sleep(600);
   $('load-hint').classList.remove('on');$('go-btn').disabled=false;
-  initEpisode(topic);
+  initEpisode(topic,tone);
 });
 
 $('topic-inp').addEventListener('keydown',e=>{if(e.key==='Enter')$('go-btn').click()});
