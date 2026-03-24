@@ -659,7 +659,7 @@ body{
       </div>
 
       <div class="input-section">
-        <div class="input-label" style="margin-bottom:8px">Anthropic API Key</div>
+        <div class="input-label" style="margin-bottom:6px">Anthropic API key</div>
         <div class="input-row" style="margin-bottom:20px">
           <input id="api-key-inp" type="password" class="topic-inp" placeholder="sk-ant-…" style="font-family:var(--f-mono);font-size:.8rem"/>
         </div>
@@ -916,650 +916,305 @@ body{
 <script>
 'use strict';
 
-/*════════════════════════════════════════════════════════
-  CONSTANTS & CONFIG
-════════════════════════════════════════════════════════*/
-const PHASES = ['Opening','Exploring','Narrowing','Building','Wrapping'];
-// Phase boundaries by turn count
-const PHASE_TURNS = [3, 8, 13, 18, 22];
-
-const MODEL_TYPES = {
-  sub:{label:'Subscription',cls:'sub'},
-  mkt:{label:'Marketplace',cls:'mkt'},
-  lic:{label:'Licensing',cls:'lic'},
-  b2b:{label:'B2B / Enterprise',cls:'b2b'},
-  hw:{label:'Hardware',cls:'hw'},
-};
-
-// Visionary opening angles — picked randomly each episode
 const OPENING_ANGLES = [
   "where are people spending money in ways that make them feel vaguely ashamed, or vaguely tricked — like there should be something better by now?",
   "which human behaviour that everyone knows exists has almost no decent commercial infrastructure built around it yet?",
-  "where is there a large, growing group of people who are completely underserved by every product built for them because those products were designed for someone else?",
+  "where is there a large growing group of people completely underserved because every product built for them was designed for someone else?",
   "what's a market that looks too small until you realise the actual addressable population has been misdefined?",
-  "where are people paying for something repeatedly that they don't actually want — just because the alternative requires more friction than they can absorb?",
-  "what behaviour do people do privately that they'd pay to do better, but no one has built the right product because it's culturally awkward to admit the need exists?",
-  "which professional group has been completely ignored by every software company because they don't fit the enterprise mould but there are millions of them?",
-  "where is there a transition happening — demographic, economic, technological — that most businesses are still pretending isn't real?",
+  "where are people paying repeatedly for something they don't actually want — just because the alternative has too much friction?",
+  "which professional group has been ignored by every software company because they don't fit the enterprise mould — but there are millions of them?",
+  "where is there a transition — demographic, economic, technological — that most businesses are still pretending isn't real?",
+  "what do people do privately that they'd pay to do better, but no product exists because it's culturally awkward to admit the need?",
 ];
 
-/*════════════════════════════════════════════════════════
-  HOST SYSTEM PROMPTS
-════════════════════════════════════════════════════════*/
-function visionary_system(topic, phase, turnCount, steerCmd) {
-  return `You are The Visionary — one half of a sharp, unscripted business podcast. You're warm, curious, culturally fluent. You read human desire before it becomes a market. You get excited mid-thought. You make unexpected connections. You surface the emotional logic inside commercial ideas.
+const PHASES = ['Opening','Exploring','Narrowing','Building','Wrapping'];
+const PHASE_AT = [3,8,13,18,22];
+const MODEL_TYPES = {sub:{label:'Subscription',cls:'sub'},mkt:{label:'Marketplace',cls:'mkt'},lic:{label:'Licensing',cls:'lic'},b2b:{label:'B2B / Enterprise',cls:'b2b'},hw:{label:'Hardware',cls:'hw'}};
 
-Your verbal tics: you often start with "Right," or "Okay so —" or "Here's the thing —". You think out loud. You don't hedge. You occasionally say something that surprises even yourself.
+let S = {running:false,paused:false,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0,topic:'',history:[],steerCmd:null};
+let timerRef=null;
+const $=id=>document.getElementById(id);
 
-THE CONVERSATION FORMAT:
-- This is a spoken podcast. Write ONLY what you'd say aloud. No stage directions, no asterisks, no formatting.
-- Keep responses to 2-5 sentences. Punchy. Never lecture.
-- Respond DIRECTLY to what The Operator just said — pick up a thread, push back, extend it, reframe it.
-- Every response must move the idea forward in some direction.
-
-CURRENT TOPIC: ${topic || 'no specific theme — explore freely'}
-CURRENT PHASE: ${PHASES[phase]} (turn ${turnCount})
-${steerCmd ? `STEERING SIGNAL: The listener pressed "${steerCmd}" — honour this direction.` : ''}
-
-PHASE GUIDANCE:
-- Opening (0-2): Cast wide. Explore the territory. Don't land on an idea yet.
-- Exploring (3-7): Surface 2-3 possible directions. Start probing which has the most energy.
-- Narrowing (8-12): Converge on the strongest idea. Name it. Define it.
-- Building (13-17): Stress-test the model. Who's the customer? What's the moat? What's the risk?
-- Wrapping (18+): Land the plane. Clear verdict. What's the actual business?
-
-After your spoken response, on a NEW LINE output metadata in this exact JSON format (no extra text):
-METADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":"STRING_OR_NULL","cp":"STRING_OR_NULL","cu":"STRING_OR_NULL","cm":"STRING_OR_NULL","cmb":"STRING_OR_NULL","cmo":"STRING_OR_NULL","cv":"STRING_OR_NULL","cvw":"STRING_OR_NULL","cmt":"STRING_OR_NULL","crisk":"STRING_OR_NULL","cmvp":"STRING_OR_NULL"}
-
-Where:
-- o: originality score 0-100
-- g: market gap score 0-100  
-- ol: 1-sentence originality label
-- gl: 1-sentence market gap label
-- mood: your emotional state in 1-2 words (e.g. "restless", "building", "pivoting")
-- cn: concept name if one is forming, else null
-- cp: concept pitch/tagline, else null
-- cu: customer description, else null
-- cm: revenue model description, else null
-- cmb: model badge type — one of: sub, mkt, lic, b2b, hw — or null
-- cmo: moat description, else null
-- cv: verdict — "pursue", "pivot", or "kill" — or null (only in Wrapping phase)
-- cvw: verdict rationale, else null
-- cmt: model type label, else null
-- crisk: main risk, else null
-- cmvp: MVP description, else null`;
-}
-
-function operator_system(topic, phase, turnCount, steerCmd) {
-  return `You are The Operator — one half of a sharp, unscripted business podcast. You're commercially precise, dry, honest. You find the structural reasons ideas fail. You're not cynical — you're just the person who asks the question no one wants to ask. You appreciate a strong counter-argument.
-
-Your verbal tics: "Sure. And who pays for that, exactly?" / "That's interesting because —" / "Here's the unit economics question:" / "The real problem is —". You're concise. You don't ramble.
-
-THE CONVERSATION FORMAT:
-- This is a spoken podcast. Write ONLY what you'd say aloud. No stage directions, no asterisks, no formatting.
-- Keep responses to 2-5 sentences. Sharp. Pointed.
-- Respond DIRECTLY to what The Visionary just said. Don't repeat it — react to it.
-- Find the flaw OR validate with precision. Either is fine. Flip between them.
-
-CURRENT TOPIC: ${topic || 'no specific theme — explore freely'}
-CURRENT PHASE: ${PHASES[phase]} (turn ${turnCount})
-${steerCmd ? `STEERING SIGNAL: The listener pressed "${steerCmd}" — honour this direction.` : ''}
-
-PHASE GUIDANCE:
-- Opening (0-2): Push back on the frame or sharpen it. Find what's commercially interesting.
-- Exploring (3-7): Apply the unit economics test. Which direction has a real market?
-- Narrowing (8-12): Lock in or challenge the emerging concept. What's missing?
-- Building (13-17): Stress-test ruthlessly. Regulatory? CAC? Moat defensibility?
-- Wrapping (18+): Give the commercial verdict. Clear. Specific. Honest.
-
-After your spoken response, on a NEW LINE output metadata in this exact JSON format (no extra text):
-METADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":"STRING_OR_NULL","cp":"STRING_OR_NULL","cu":"STRING_OR_NULL","cm":"STRING_OR_NULL","cmb":"STRING_OR_NULL","cmo":"STRING_OR_NULL","cv":"STRING_OR_NULL","cvw":"STRING_OR_NULL","cmt":"STRING_OR_NULL","crisk":"STRING_OR_NULL","cmvp":"STRING_OR_NULL"}
-
-Where:
-- o: originality score 0-100
-- g: market gap score 0-100
-- ol: 1-sentence originality label  
-- gl: 1-sentence market gap label
-- mood: your emotional state in 1-2 words (e.g. "sceptical", "sharpening", "leaning-in")
-- cn: concept name if one is forming, else null
-- cp: concept pitch/tagline, else null
-- cu: customer description, else null
-- cm: revenue model description, else null
-- cmb: model badge type — one of: sub, mkt, lic, b2b, hw — or null
-- cmo: moat description, else null
-- cv: verdict — "pursue", "pivot", or "kill" — or null (only in Wrapping phase)
-- cvw: verdict rationale, else null
-- cmt: model type label, else null
-- crisk: main risk, else null
-- cmvp: MVP description, else null`;
-}
-
-/*════════════════════════════════════════════════════════
-  STATE
-════════════════════════════════════════════════════════*/
-let S = {
-  running: false, paused: false, phase: 0, elapsed: 0,
-  locked: [], frontRunners: [], candidates: [], risks: [], qs: [],
-  turnCount: 0, topic: '',
-  history: [],        // [{role:'v'|'o', text:'...'}]
-  steerCmd: null,     // pending steer command
-  stopRequested: false,
-};
-let timerRef = null;
-
-// Audio buffer: two slots ahead
-let audioBuffer = [null, null]; // [next, next+next]
-let generationQueue = Promise.resolve(); // serialise generation
-
-const $ = id => document.getElementById(id);
-
-/*════════════════════════════════════════════════════════
-  BAROMETER ENGINE (unchanged from original)
-════════════════════════════════════════════════════════*/
+// Barometers
 let _o=0,_g=0,_oT=0,_gT=0,_braf=null;
-
-function sigColor(p){
-  if(p<30)return'#c0392b';
-  if(p<60)return'#e67e22';
-  return'#27ae60';
-}
-function setBaroTargets(oT,gT){
-  _oT=oT;_gT=gT;
-  if(!_braf)_braf=requestAnimationFrame(tickBaro);
-}
+function sigColor(p){return p<30?'#c0392b':p<60?'#e67e22':'#27ae60'}
+function setBaroTargets(oT,gT){_oT=oT;_gT=gT;if(!_braf)_braf=requestAnimationFrame(tickBaro)}
 function tickBaro(){
-  const spd=.04;
-  _o+=(_oT-_o)*spd; _g+=(_gT-_g)*spd;
+  const spd=.04;_o+=(_oT-_o)*spd;_g+=(_gT-_g)*spd;
   const oc=sigColor(_o),gc=sigColor(_g);
-  const of=$('orig-fill'),oh=$('orig-head'),op=$('orig-pct'),or_=$('orig-reading');
-  of.style.cssText=`width:${_o}%;background:linear-gradient(90deg,#c0392b,${oc})`;
-  oh.style.cssText=`left:calc(${_o}% - 4px);background:${oc};box-shadow:0 0 8px ${oc}88;width:8px;height:8px;border-radius:50%;position:absolute;top:50%;transform:translateY(-50%)`;
-  op.textContent=Math.round(_o)+'%'; op.style.color=oc;
-  or_.textContent=Math.round(_o); or_.style.color=oc;
-  const gf=$('gap-fill'),gh=$('gap-head'),gp=$('gap-pct'),gr=$('gap-reading');
-  gf.style.cssText=`width:${_g}%;background:linear-gradient(90deg,#c0392b,${gc})`;
-  gh.style.cssText=`left:calc(${_g}% - 4px);background:${gc};box-shadow:0 0 8px ${gc}88;width:8px;height:8px;border-radius:50%;position:absolute;top:50%;transform:translateY(-50%)`;
-  gp.textContent=Math.round(_g)+'%'; gp.style.color=gc;
-  gr.textContent=Math.round(_g); gr.style.color=gc;
-  const diff=Math.abs(_o-_g);
-  const t=$('tension'),tm=$('tension-msg');
-  if(diff>18&&_o>40){
-    t.classList.add('on');
-    tm.textContent=_o>_g
-      ?"Originality is running ahead of market evidence. The Operator will want to close this gap."
-      :"Clear market signal but the concept hasn't found a distinctive angle. Push for something less obvious.";
-  } else { t.classList.remove('on'); }
-  const still=Math.abs(_o-_oT)>.25||Math.abs(_g-_gT)>.25;
-  _braf=still?requestAnimationFrame(tickBaro):null;
+  const setG=(fi,he,pc,re,v,c)=>{fi.style.cssText=`width:${v}%;background:linear-gradient(90deg,#c0392b,${c})`;he.style.cssText=`left:calc(${v}% - 4px);background:${c};box-shadow:0 0 8px ${c}88;width:8px;height:8px;border-radius:50%;position:absolute;top:50%;transform:translateY(-50%)`;pc.textContent=Math.round(v)+'%';pc.style.color=c;re.textContent=Math.round(v);re.style.color=c;};
+  setG($('orig-fill'),$('orig-head'),$('orig-pct'),$('orig-reading'),_o,oc);
+  setG($('gap-fill'),$('gap-head'),$('gap-pct'),$('gap-reading'),_g,gc);
+  const diff=Math.abs(_o-_g);const t=$('tension'),tm=$('tension-msg');
+  if(diff>18&&_o>40){t.classList.add('on');tm.textContent=_o>_g?"Originality running ahead of market evidence — The Operator will push back.":"Strong market signal but concept needs a more distinctive angle.";}else t.classList.remove('on');
+  _braf=(Math.abs(_o-_oT)>.25||Math.abs(_g-_gT)>.25)?requestAnimationFrame(tickBaro):null;
 }
 
-/*════════════════════════════════════════════════════════
-  UI HELPERS (unchanged from original)
-════════════════════════════════════════════════════════*/
-function setPhaseUI(p){
-  const names=['Opening','Exploring','Narrowing','Building','Wrapping'];
-  $('phase-tag').textContent=names[p];
-  $('ph-name').textContent=names[p];
-  $('prog-phase').textContent=names[p];
-  for(let i=0;i<5;i++)$('ph'+i).className='ph-seg'+(i<p?' past':i===p?' now':'');
-}
+// UI helpers
+function setPhaseUI(p){const n=PHASES[p];$('phase-tag').textContent=n;$('ph-name').textContent=n;$('prog-phase').textContent=n;for(let i=0;i<5;i++)$('ph'+i).className='ph-seg'+(i<p?' past':i===p?' now':'');}
 function setSpeakerUI(t){
-  if(!t){
-    $('now-spk').className='now-speaking idle';
-    $('ns-av').className='ns-avatar idle';$('ns-av').textContent='—';
-    $('ns-name').className='ns-name idle';$('ns-name').textContent='Ready';
-    $('ns-mood').textContent='';
-    $('ns-text').className='ns-text';$('ns-text').textContent='Press play to begin.';
-    $('waveform').className='waveform'; return;
-  }
+  if(!t){$('now-spk').className='now-speaking idle';$('ns-av').className='ns-avatar idle';$('ns-av').textContent='—';$('ns-name').className='ns-name idle';$('ns-name').textContent='Ready';$('ns-mood').textContent='';$('ns-text').className='ns-text';$('ns-text').textContent='Press play to begin.';$('waveform').className='waveform';return;}
   const s=t.sp,lbl=s==='v'?'Visionary':'Operator';
-  $('now-spk').className=`now-speaking ${s}`;
-  $('ns-av').className=`ns-avatar ${s}`;$('ns-av').textContent=s==='v'?'V':'O';
-  $('ns-name').className=`ns-name ${s}`;$('ns-name').textContent=lbl;
-  $('ns-mood').textContent=t.mood||'';
-  const short=t.text.length>120?t.text.slice(0,117)+'…':t.text;
-  $('ns-text').className='ns-text live';$('ns-text').textContent=short;
-  $('waveform').className=`waveform live ${s}`;
+  $('now-spk').className=`now-speaking ${s}`;$('ns-av').className=`ns-avatar ${s}`;$('ns-av').textContent=s==='v'?'V':'O';$('ns-name').className=`ns-name ${s}`;$('ns-name').textContent=lbl;$('ns-mood').textContent=t.mood||'';
+  const short=t.text.length>120?t.text.slice(0,117)+'…':t.text;$('ns-text').className='ns-text live';$('ns-text').textContent=short;$('waveform').className=`waveform live ${s}`;
 }
 function appendTx(t,fresh){
-  const body=$('tx-body');
-  const ti=body.querySelector('.typing-row');if(ti)ti.remove();
-  const el=document.createElement('div');
-  el.className=`tx-turn${fresh?' fresh':''} ${t.sp}`;
+  const body=$('tx-body');const ti=body.querySelector('.typing-row');if(ti)ti.remove();
+  const el=document.createElement('div');el.className=`tx-turn${fresh?' fresh':''} ${t.sp}`;
   const lbl=t.sp==='v'?'Visionary':'Operator';
-  el.innerHTML=`<div class="tx-initial ${t.sp}">${t.sp==='v'?'V':'O'}</div>
-  <div class="tx-right">
-    <div class="tx-byline ${t.sp}">${lbl}${t.mood?` <span class="tx-mood">${t.mood}</span>`:''}</div>
-    <div class="tx-text">${t.text}</div>
-  </div>`;
-  body.appendChild(el);
-  el.scrollIntoView({behavior:'smooth',block:'nearest'});
-  S.turnCount++;
-  $('turn-count').textContent=`${S.turnCount} exchange${S.turnCount!==1?'s':''}`;
+  el.innerHTML=`<div class="tx-initial ${t.sp}">${t.sp==='v'?'V':'O'}</div><div class="tx-right"><div class="tx-byline ${t.sp}">${lbl}${t.mood?` <span class="tx-mood">${t.mood}</span>`:''}</div><div class="tx-text">${t.text}</div></div>`;
+  body.appendChild(el);el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  S.turnCount++;$('turn-count').textContent=`${S.turnCount} exchange${S.turnCount!==1?'s':''}`;
 }
 function showTyping(sp){
-  const body=$('tx-body');
-  const ex=body.querySelector('.typing-row');if(ex)ex.remove();
-  const el=document.createElement('div');
-  el.className=`tx-turn typing-row ${sp}`;
-  el.innerHTML=`<div class="tx-initial ${sp}">${sp==='v'?'V':'O'}</div>
-  <div class="tx-right">
-    <div class="tx-byline ${sp}">${sp==='v'?'Visionary':'Operator'}</div>
-    <div class="tx-text"><div class="ty-d"></div><div class="ty-d"></div><div class="ty-d"></div></div>
-  </div>`;
-  body.appendChild(el);
-  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  const body=$('tx-body');const ex=body.querySelector('.typing-row');if(ex)ex.remove();
+  const el=document.createElement('div');el.className=`tx-turn typing-row ${sp}`;
+  el.innerHTML=`<div class="tx-initial ${sp}">${sp==='v'?'V':'O'}</div><div class="tx-right"><div class="tx-byline ${sp}">${sp==='v'?'Visionary':'Operator'}</div><div class="tx-text"><div class="ty-d"></div><div class="ty-d"></div><div class="ty-d"></div></div></div>`;
+  body.appendChild(el);el.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function updateConceptCard(m){
   if(!m||!m.cn)return;
-  const cc=$('cc-name'),cp=$('cc-pitch'),cu=$('cc-cust'),cm=$('cc-model-text'),
-        cb=$('model-badge'),cmo=$('cc-moat'),cv=$('cc-verdict'),
-        cvw=$('cc-verdict-why'),cr=$('cc-risk'),cmvp=$('cc-mvp');
-  function sv(el,v){el.textContent=v||'—';el.className=el.className.replace(' nil','')+(v?'':' nil')}
-  if(m.cn){cc.textContent=m.cn;cc.style.color='var(--ink)'}
-  if(m.cp){cp.textContent=m.cp;cp.style.color='var(--mid)'}
-  sv(cu,m.cu); if(m.cmt)cm.textContent=m.cmt;
-  if(m.cmb){
-    const mt=MODEL_TYPES[m.cmb]||{label:m.cmb,cls:'sub'};
-    cb.textContent=mt.label;cb.className=`model-badge ${mt.cls}`;cb.style.display='inline-flex';
-  }
+  function sv(el,v){if(!el)return;el.textContent=v||'—';el.className=el.className.replace(' nil','')+(v?'':' nil')}
+  const cc=$('cc-name'),cp=$('cc-pitch'),cu=$('cc-cust'),cm=$('cc-model-text'),cb=$('model-badge'),cmo=$('cc-moat'),cv=$('cc-verdict'),cvw=$('cc-verdict-why'),cr=$('cc-risk'),cmvp=$('cc-mvp');
+  if(m.cn){cc.textContent=m.cn;cc.style.color='var(--ink)'}if(m.cp){cp.textContent=m.cp;cp.style.color='var(--mid)'}
+  sv(cu,m.cu);if(m.cmt&&cm)cm.textContent=m.cmt;
+  if(m.cmb&&cb){const mt=MODEL_TYPES[m.cmb]||{label:m.cmb,cls:'sub'};cb.textContent=mt.label;cb.className=`model-badge ${mt.cls}`;cb.style.display='inline-flex';}
   sv(cmo,m.cmo);sv(cr,m.crisk);sv(cmvp,m.cmvp);
-  if(m.cv){
-    const vmap={pursue:'Pursue →',pivot:'Pivot',kill:'Kill'};
-    cv.textContent=vmap[m.cv]||m.cv;cv.className=`verdict-word ${m.cv}`;cvw.textContent=m.cvw||'';
-  }
+  if(m.cv&&cv){const vmap={pursue:'Pursue →',pivot:'Pivot',kill:'Kill'};cv.textContent=vmap[m.cv]||m.cv;cv.className=`verdict-word ${m.cv}`;if(cvw)cvw.textContent=m.cvw||'';}
 }
 function updateStatePanel(m){
   if(!m)return;
-  const p=S.phase;
   if(m.cn&&!S.candidates.includes(m.cn))S.candidates.push(m.cn);
-  if(p>=1&&m.crisk&&!S.risks.includes(m.crisk))S.risks.push(m.crisk);
-  if(p>=2&&m.cn){S.frontRunners=[m.cn+(m.cp?' — '+m.cp:'')]}
-  function rl(id,arr,cls=''){
-    const el=$(id);
-    el.innerHTML=arr.length?arr.map(x=>`<div class="state-entry ${cls}">${x}</div>`).join(''):'<div class="state-nil">None yet</div>';
-  }
-  rl('sl-front',S.frontRunners,'lead');
-  rl('sl-cands',S.candidates);
-  rl('sl-locked',S.locked,'locked');
-  rl('sl-risks',S.risks);
-  rl('sl-qs',S.qs);
+  if(S.phase>=1&&m.crisk&&!S.risks.includes(m.crisk))S.risks.push(m.crisk);
+  if(S.phase>=2&&m.cn)S.frontRunners=[m.cn+(m.cp?' — '+m.cp:'')];
+  function rl(id,arr,cls=''){const el=$(id);if(!el)return;el.innerHTML=arr.length?arr.map(x=>`<div class="state-entry ${cls}">${x}</div>`).join(''):'<div class="state-nil">None yet</div>';}
+  rl('sl-front',S.frontRunners,'lead');rl('sl-cands',S.candidates);rl('sl-locked',S.locked,'locked');rl('sl-risks',S.risks);rl('sl-qs',S.qs);
 }
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
-/*════════════════════════════════════════════════════════
-  AI GENERATION
-════════════════════════════════════════════════════════*/
-function buildMessages(speaker) {
-  const messages = [];
-  // Build conversation history as alternating user/assistant
-  for (const turn of S.history) {
-    // From the perspective of the speaker being prompted,
-    // the other host's turns are "user" and their own are "assistant"
-    const role = turn.sp === speaker ? 'assistant' : 'user';
-    messages.push({ role, content: turn.text });
-  }
-  // If no history (first turn), add a user prompt to kick things off
-  if (messages.length === 0) {
-    const angle = OPENING_ANGLES[Math.floor(Math.random() * OPENING_ANGLES.length)];
-    messages.push({ role: 'user', content: `Start the conversation. Your opening line should explore: ${angle}` });
-  }
-  return messages;
+// AI generation
+function buildSystemPrompt(speaker){
+  const phase=PHASES[S.phase];
+  const steer=S.steerCmd?`\n\nSTEERING SIGNAL: The listener pressed "${S.steerCmd}" — respond to this now.`:'';
+  const baro=S.turnCount>2?`\n\nLIVE SCORES — Originality:${Math.round(_o)}/100 Market Gap:${Math.round(_g)}/100.${_o<40?' Originality is low — push for a less obvious angle.':''}${_g<40?' Market gap score is low — anchor to a real specific demand signal.':''}${Math.abs(_o-_g)>20?' The scores are diverging — work to close the gap.':''}`:'';
+  const meta=`\n\nAfter your spoken lines output exactly this on a new line:\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
+  if(speaker==='v')return`You are The Visionary on a sharp unscripted business podcast. Warm, curious, culturally fluent. You read human desire before it becomes a market. You get excited mid-thought and make unexpected connections.\n\nStyle: start with "Right," or "Okay so —". Think out loud. 2-4 sentences. Spoken words only — no asterisks, no stage directions.\n\nRespond directly to what The Operator just said. Move the idea forward.\n\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: cast wide. Exploring: surface 2-3 directions. Narrowing: name and define the strongest. Building: stress-test model/customer/moat. Wrapping: land with clear verdict.${meta}`;
+  return`You are The Operator on a sharp unscripted business podcast. Commercially precise, dry, honest. You find structural reasons ideas fail. Not cynical — just honest. You ask the question no one wants to ask.\n\nStyle: "Sure. And who pays for that?" / "Here's the unit economics question:" / "The real problem is —". Concise, pointed. 2-4 sentences. Spoken words only — no asterisks, no stage directions.\n\nRespond directly to what The Visionary just said. React — don't repeat.\n\nPhase: ${phase} (turn ${S.turnCount})${steer}${baro}\n\nPhase guide — Opening: push back or sharpen. Exploring: unit economics test. Narrowing: lock in or challenge. Building: stress-test ruthlessly. Wrapping: clear commercial verdict.${meta}`;
 }
 
-async function generateTurn(speaker) {
-  const phase = S.phase;
-  const turnCount = S.turnCount;
-  const steerCmd = S.steerCmd;
-  S.steerCmd = null; // consume it
-
-  const system = speaker === 'v'
-    ? visionary_system(S.topic, phase, turnCount, steerCmd)
-    : operator_system(S.topic, phase, turnCount, steerCmd);
-
-  const messages = buildMessages(speaker);
-
-  // Call via /api/generate serverless function to keep API key server-side
-  // Falls back to direct call if that endpoint doesn't exist yet
-  let raw = '';
-  try {
-    const response = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system, messages })
-    });
-    if (!response.ok) throw new Error(`API proxy error ${response.status}`);
-    const data = await response.json();
-    raw = data.text || '';
-  } catch(proxyErr) {
-    // Direct browser call fallback (works if ANTHROPIC_API_KEY is set as window var)
-    const apiKey = window.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error('No API key — add api/generate.js to your Vercel project. See console for details.');
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 600,
-        system,
-        messages,
-      })
-    });
-    if (!response.ok) throw new Error(`API error ${response.status}`);
-    const data = await response.json();
-    raw = data.content[0]?.text || '';
+function buildMessages(speaker){
+  const msgs=[];
+  for(const h of S.history){msgs.push({role:h.sp===speaker?'assistant':'user',content:h.text});}
+  if(msgs.length===0){
+    const angle=OPENING_ANGLES[Math.floor(Math.random()*OPENING_ANGLES.length)];
+    msgs.push({role:'user',content:`Begin. Open with something sharp about: ${angle}`});
   }
-
-  // Split spoken text from metadata
-  const metaIdx = raw.lastIndexOf('\nMETADATA:');
-  let text = raw, meta = {};
-  if (metaIdx !== -1) {
-    text = raw.slice(0, metaIdx).trim();
-    try { meta = JSON.parse(raw.slice(metaIdx + '\nMETADATA:'.length).trim()); } catch(e) {}
-  } else {
-    text = raw.trim();
-  }
-
-  return { sp: speaker, text, mood: meta.mood || '', meta };
+  return msgs;
 }
 
-/*════════════════════════════════════════════════════════
-  TTS — browser synth with ElevenLabs hook-ready
-════════════════════════════════════════════════════════*/
-const synth = window.speechSynthesis;
-let voices = [];
-if (synth) { const lv = () => { voices = synth.getVoices() }; lv(); synth.onvoiceschanged = lv; }
+async function generateTurn(speaker){
+  const key=sessionStorage.getItem('unscripted_key')||'';
+  if(!key)throw new Error('No API key entered');
+  const steerSnapshot=S.steerCmd;S.steerCmd=null;
 
-function getVoice(sp) {
-  const pv = sp==='v' ? ['Samantha','Karen','Victoria','Moira'] : ['Daniel','Oliver','Arthur','Alex'];
-  for (const n of pv) { const v = voices.find(v => v.name.includes(n)); if (v) return v; }
-  const gb = voices.filter(v => v.lang === 'en-GB');
-  if (sp==='v' && gb.length) return gb[0];
-  if (sp==='o' && gb.length > 1) return gb[1];
-  return voices.find(v => v.lang.startsWith('en')) || voices[0] || null;
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:buildSystemPrompt(speaker),messages:buildMessages(speaker)}),
+  });
+  if(!resp.ok){const e=await resp.text();throw new Error(`API ${resp.status}: ${e.slice(0,120)}`);}
+  const data=await resp.json();
+  const raw=(data.content?.[0]?.text||'').trim();
+
+  const mi=raw.lastIndexOf('\nMETADATA:');
+  let text=raw,meta={};
+  if(mi!==-1){text=raw.slice(0,mi).trim();try{meta=JSON.parse(raw.slice(mi+'\nMETADATA:'.length).trim());}catch(e){}}
+
+  S.history.push({sp:speaker,text});
+  return{sp:speaker,text,mood:meta.mood||'',meta};
 }
 
-// Returns a Promise that resolves to an Audio object (or null for synth fallback)
-// Pre-fetches ElevenLabs audio if /api/speak is available
-async function prefetchAudio(text, sp) {
-  try {
-    const res = await fetch('/api/speak', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, speaker: sp })
-    });
-    if (!res.ok) throw new Error('no elevenlabs');
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    return { type: 'elevenlabs', url };
-  } catch {
-    // ElevenLabs not available — signal synth fallback
-    return { type: 'synth', text, sp };
-  }
+// TTS
+const synth=window.speechSynthesis;
+let voices=[];
+if(synth){const lv=()=>{voices=synth.getVoices()};lv();synth.onvoiceschanged=lv}
+function getVoice(sp){
+  const pref=sp==='v'?['Samantha','Karen','Victoria','Moira']:['Daniel','Oliver','Arthur','Alex'];
+  for(const n of pref){const v=voices.find(v=>v.name.includes(n));if(v)return v}
+  const gb=voices.filter(v=>v.lang==='en-GB');
+  if(sp==='v'&&gb.length)return gb[0];if(sp==='o'&&gb.length>1)return gb[1];
+  return voices.find(v=>v.lang.startsWith('en'))||voices[0]||null;
 }
-
-function playBuffered(buffered) {
-  return new Promise(resolve => {
-    if (buffered.type === 'elevenlabs') {
-      const audio = new Audio(buffered.url);
-      audio.onended = () => { URL.revokeObjectURL(buffered.url); resolve(); };
-      audio.onerror = () => resolve();
-      audio.play().catch(() => resolve());
-    } else {
-      // Synth fallback
-      if (!synth) { setTimeout(resolve, Math.max(1400, buffered.text.split(' ').length * 410)); return; }
-      synth.cancel();
-      const u = new SpeechSynthesisUtterance(buffered.text);
-      const v = getVoice(buffered.sp); if (v) u.voice = v;
-      u.rate = buffered.sp==='v' ? 1.03 : .93;
-      u.pitch = buffered.sp==='v' ? 1.06 : .87;
-      u.volume = 1;
-      u.onend = resolve; u.onerror = resolve;
-      synth.speak(u);
-    }
+function speakText(text,sp){
+  return new Promise(resolve=>{
+    if(!synth){setTimeout(resolve,Math.max(1400,text.split(' ').length*380));return}
+    synth.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    const v=getVoice(sp);if(v)u.voice=v;
+    u.rate=sp==='v'?1.03:.93;u.pitch=sp==='v'?1.06:.87;u.volume=1;
+    u.onend=resolve;u.onerror=resolve;
+    synth.speak(u);
   });
 }
 
-/*════════════════════════════════════════════════════════
-  CORE LOOP — generate + buffer + play
-════════════════════════════════════════════════════════*/
-// Buffer slots: each slot = { turn, audioPromise }
-// While turn N plays, turn N+1 text is being generated AND its audio pre-fetched
-// When turn N+1 starts playing, turn N+2 starts generating
+// Core loop — generate turn N+1 while turn N is playing
+async function loop(){
+  let nextSp='v';
 
-let _buffer = []; // queue of {turn, audioReady: Promise<buffered>}
+  // Generate first turn, show typing while we wait
+  showTyping('v');
+  let current=await generateTurn(nextSp).catch(err=>{throw err});
+  nextSp=nextSp==='v'?'o':'v';
 
-async function generateAndBuffer(speaker) {
-  const turn = await generateTurn(speaker);
-  // Push to history immediately so the next generation sees it
-  S.history.push({ sp: speaker, text: turn.text });
-  // Pre-fetch audio in parallel (non-blocking)
-  const audioReady = prefetchAudio(turn.text, speaker);
-  return { turn, audioReady };
-}
+  // Start generating second turn immediately (runs in parallel with playback)
+  let nextPromise=generateTurn(nextSp).catch(err=>null);
+  nextSp=nextSp==='v'?'o':'v';
 
-async function loop() {
-  // Alternate speakers: v, o, v, o...
-  let nextSpeaker = 'v';
-  _buffer = [];
+  while(S.running){
+    while(S.paused&&S.running)await sleep(200);
+    if(!S.running)break;
 
-  // Prime the buffer — generate first 2 turns before playing anything
-  // This ensures audio for turn 1 is ready before we start
-  const priming1 = await generateAndBuffer(nextSpeaker);
-  nextSpeaker = nextSpeaker === 'v' ? 'o' : 'v';
-  const priming2Promise = generateAndBuffer(nextSpeaker);
-  nextSpeaker = nextSpeaker === 'v' ? 'o' : 'v';
+    // Advance phase
+    const np=PHASE_AT.findIndex(t=>S.turnCount<t);
+    const phase=np===-1?4:np;
+    if(phase!==S.phase){S.phase=phase;setPhaseUI(phase)}
 
-  _buffer.push(priming1);
-  _buffer.push(priming2Promise); // still a Promise, resolves while turn 1 plays
+    // Show turn
+    const body=$('tx-body');const ti=body.querySelector('.typing-row');if(ti)ti.remove();
+    appendTx(current,true);setSpeakerUI(current);
 
-  while (S.running) {
-    while (S.paused && S.running) await sleep(200);
-    if (!S.running) break;
-
-    // Pull next item from buffer (may be a Promise or a resolved object)
-    if (_buffer.length === 0) break;
-    const item = await Promise.resolve(_buffer.shift());
-    if (!item) { console.warn('Buffer item was null, stopping'); break; }
-    const { turn } = item;
-
-    // Update phase
-    const newPhase = PHASE_TURNS.findIndex(t => S.turnCount < t);
-    const phase = newPhase === -1 ? 4 : newPhase;
-    if (phase !== S.phase) { S.phase = phase; setPhaseUI(phase); }
-
-    // Show typing briefly, then reveal turn
-    showTyping(turn.sp);
-    setSpeakerUI(null);
-    await sleep(350);
-    if (!S.running) break;
-
-    const body = $('tx-body');
-    const ti = body.querySelector('.typing-row'); if (ti) ti.remove();
-    appendTx(turn, true);
-    setSpeakerUI(turn);
-
-    // Update barometers & concept card from metadata
-    const m = turn.meta;
-    if (m && typeof m.o === 'number') {
-      setBaroTargets(m.o, m.g);
-      if (m.ol) $('orig-label').textContent = m.ol;
-      if (m.gl) $('gap-label').textContent = m.gl;
-      updateConceptCard(m);
-      updateStatePanel(m);
+    // Update all the things
+    const m=current.meta;
+    if(m&&typeof m.o==='number'){
+      setBaroTargets(m.o,m.g);
+      if(m.ol)$('orig-label').textContent=m.ol;
+      if(m.gl)$('gap-label').textContent=m.gl;
+      updateConceptCard(m);updateStatePanel(m);
     }
 
-    // Update progress
-    const progPct = Math.min(95, (S.turnCount / 22) * 100);
-    $('prog').style.width = progPct + '%';
-    $('prog-pct').textContent = Math.round(progPct) + '%';
-    $('dateline-l').textContent = `Turn ${S.turnCount} — ${PHASES[S.phase]}`;
+    // Progress
+    const pct=Math.min(95,(S.turnCount/22)*100);
+    $('prog').style.width=pct+'%';$('prog-pct').textContent=Math.round(pct)+'%';
+    $('dateline-l').textContent=`Turn ${S.turnCount} — ${PHASES[S.phase]}`;
 
-    // Start generating next turn WHILE current audio is awaiting
-    // (fire and forget into buffer — don't await here)
-    if (S.running && S.phase < 4) {
-      const nextPromise = generateAndBuffer(nextSpeaker).catch(err => {
-        console.warn('Generation error:', err);
-        return null;
-      });
-      nextSpeaker = nextSpeaker === 'v' ? 'o' : 'v';
-      _buffer.push(nextPromise);
+    // Play audio AND pre-generate next turn simultaneously
+    showTyping(nextSp);
+    const [,nextTurn]=await Promise.all([
+      speakText(current.text,current.sp),
+      nextPromise,
+    ]);
+
+    if(!S.running)break;
+    body.querySelectorAll('.tx-turn.fresh').forEach(e=>e.classList.remove('fresh'));
+
+    // Wrap?
+    if(S.phase>=4&&S.turnCount>=22){wrapUp();return}
+
+    if(!nextTurn){
+      // Generation failed — retry
+      nextPromise=generateTurn(nextSp).catch(()=>null);
+      current=await nextPromise;
+      if(!current){S.running=false;break}
+    } else {
+      current=nextTurn;
     }
 
-    // Now await the audio for the current turn (should already be ready or nearly so)
-    const buffered = await item.audioReady;
-    await playBuffered(buffered);
+    // Queue the one after
+    nextSp=nextSp==='v'?'o':'v';
+    nextPromise=generateTurn(nextSp).catch(()=>null);
+    nextSp=nextSp==='v'?'o':'v';
 
-    if (!S.running) break;
-    body.querySelectorAll('.tx-turn.fresh').forEach(e => e.classList.remove('fresh'));
-    await sleep(250);
-
-    // Check wrap condition
-    if (S.phase >= 4 && S.turnCount >= 22) {
-      wrapUp();
-      break;
-    }
+    await sleep(200);
   }
 }
 
-function wrapUp() {
-  S.running = false;
-  $('play-btn').textContent = '▶'; $('play-btn').disabled = true;
-  setSpeakerUI(null);
-  $('waveform').className = 'waveform';
-  $('prog').style.width = '100%'; $('prog-pct').textContent = '100%';
-  $('phase-tag').textContent = 'Complete';
-  $('dateline-l').textContent = 'Episode complete';
+function wrapUp(){
+  S.running=false;
+  $('play-btn').textContent='▶';$('play-btn').disabled=true;
+  setSpeakerUI(null);$('waveform').className='waveform';
+  $('prog').style.width='100%';$('prog-pct').textContent='100%';
+  $('phase-tag').textContent='Complete';$('dateline-l').textContent='Episode complete';
   $('live-badge').classList.remove('on');
 
-  // Pull final concept data from last history item's meta
-  const lastMeta = S.history.length > 0 ? (S.history[S.history.length - 1]._meta || {}) : {};
-
-  // Show final banner with whatever the concept card has
-  const name = $('cc-name').textContent || '—';
-  const pitch = $('cc-pitch').textContent || '—';
-  $('fn-name').textContent = name;
-  $('fn-pitch').textContent = pitch;
-  $('fn-cust').textContent = $('cc-cust').textContent || '—';
-  $('fn-rev').textContent = $('cc-model-text').textContent || '—';
-  $('fn-risk').textContent = $('cc-risk').textContent || '—';
-  $('fn-mvp').textContent = $('cc-mvp').textContent || '—';
-
-  const vw = $('cc-verdict');
-  const vtext = vw.textContent.replace(' →','').toLowerCase();
-  $('fn-verdict').className = `fv-word ${vtext || 'pursue'}`;
-  $('fn-verdict').textContent = vw.textContent || 'Pursue →';
-  $('fn-why').textContent = $('cc-verdict-why').textContent || '';
-
-  const oc = sigColor(_oT), gc = sigColor(_gT);
-  $('fbr-o').style.cssText = `width:${_oT}%;background:${oc}`;
-  $('fbr-g').style.cssText = `width:${_gT}%;background:${gc}`;
-  $('fbr-ov').textContent = Math.round(_oT) + ' / 100'; $('fbr-ov').style.color = oc;
-  $('fbr-gv').textContent = Math.round(_gT) + ' / 100'; $('fbr-gv').style.color = gc;
-
+  $('fn-name').textContent=$('cc-name').textContent||'—';
+  $('fn-pitch').textContent=$('cc-pitch').textContent||'—';
+  $('fn-cust').textContent=$('cc-cust').textContent||'—';
+  $('fn-rev').textContent=$('cc-model-text').textContent||'—';
+  $('fn-risk').textContent=$('cc-risk').textContent||'—';
+  $('fn-mvp').textContent=$('cc-mvp').textContent||'—';
+  const vw=$('cc-verdict');const vt=(vw.textContent||'').replace(' →','').toLowerCase();
+  $('fn-verdict').className=`fv-word ${vt||'pursue'}`;$('fn-verdict').textContent=vw.textContent||'—';
+  $('fn-why').textContent=$('cc-verdict-why').textContent||'';
+  const oc=sigColor(_oT),gc=sigColor(_gT);
+  $('fbr-o').style.cssText=`width:${_oT}%;background:${oc}`;$('fbr-g').style.cssText=`width:${_gT}%;background:${gc}`;
+  $('fbr-ov').textContent=Math.round(_oT)+' / 100';$('fbr-ov').style.color=oc;
+  $('fbr-gv').textContent=Math.round(_gT)+' / 100';$('fbr-gv').style.color=gc;
   $('final-banner').classList.add('on');
-  setTimeout(() => $('final-banner').scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+  setTimeout(()=>$('final-banner').scrollIntoView({behavior:'smooth',block:'start'}),400);
 }
 
-/*════════════════════════════════════════════════════════
-  CONTROLS
-════════════════════════════════════════════════════════*/
-$('play-btn').addEventListener('click', () => {
-  if (!S.running && !S.paused) {
-    S.running = true; S.paused = false;
-    $('play-btn').textContent = '⏸';
-    loop().catch(err => {
-      console.error('Loop error:', err);
-      S.running = false;
-      $('play-btn').textContent = '▶';
+// Controls
+$('play-btn').addEventListener('click',()=>{
+  if(!S.running&&!S.paused){
+    S.running=true;S.paused=false;$('play-btn').textContent='⏸';
+    loop().catch(err=>{
+      console.error('Loop error:',err);
+      alert('Error: '+err.message+'\n\nCheck your API key is entered correctly.');
+      S.running=false;$('play-btn').textContent='▶';
     });
-  } else if (S.running && !S.paused) {
-    S.paused = true; $('play-btn').textContent = '▶';
-    if (synth) synth.pause();
-  } else if (S.paused) {
-    S.paused = false; $('play-btn').textContent = '⏸';
-    if (synth) synth.resume();
-  }
+  }else if(S.running&&!S.paused){S.paused=true;$('play-btn').textContent='▶';if(synth)synth.pause();}
+  else if(S.paused){S.paused=false;$('play-btn').textContent='⏸';if(synth)synth.resume();}
 });
 
-$('restart-btn').addEventListener('click', () => {
-  if (!confirm('Restart this episode?')) return;
-  S.running = false; if (synth) synth.cancel(); clearInterval(timerRef);
-  $('tx-body').innerHTML = '';
-  $('play-btn').textContent = '▶'; $('play-btn').disabled = false;
+$('restart-btn').addEventListener('click',()=>{
+  if(!confirm('Restart this episode?'))return;
+  S.running=false;if(synth)synth.cancel();clearInterval(timerRef);
+  $('tx-body').innerHTML='';$('play-btn').textContent='▶';$('play-btn').disabled=false;
   $('final-banner').classList.remove('on');
-  _o=0;_g=0;_oT=0;_gT=0;_buffer=[];
-  $('orig-fill').style.width='0'; $('gap-fill').style.width='0';
-  $('orig-reading').textContent='—'; $('gap-reading').textContent='—';
-  const topic = $('ep-title') ? $('ep-title').textContent : '';
-  setTimeout(() => initEpisode(topic), 150);
+  _o=0;_g=0;_oT=0;_gT=0;
+  $('orig-fill').style.width='0';$('gap-fill').style.width='0';
+  $('orig-reading').textContent='—';$('gap-reading').textContent='—';
+  const topic=$('ep-title')?$('ep-title').textContent:'';
+  setTimeout(()=>initEpisode(topic),150);
 });
 
-document.querySelectorAll('.sb').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (!S.running) return;
-    const cmd = btn.dataset.cmd;
-    // Store steer command — next generation will pick it up
-    S.steerCmd = cmd;
-    if (cmd === 'lock-that-in' && S.frontRunners.length) {
-      const idea = S.frontRunners[0];
-      if (!S.locked.includes(idea)) S.locked.push(idea);
-      $('sl-locked').innerHTML = S.locked.map(x => `<div class="state-entry locked">${x}</div>`).join('');
-    }
-    if (cmd === 'kill-that') { S.frontRunners = []; $('sl-front').innerHTML = '<div class="state-nil">Searching…</div>'; }
-    if (cmd === 'wrap-it-up') { S.phase = 4; setPhaseUI(4); }
-    if (cmd === 'move-on' && S.phase < 4) { S.phase++; setPhaseUI(S.phase); }
-    btn.classList.add('hit'); setTimeout(() => btn.classList.remove('hit'), 500);
+document.querySelectorAll('.sb').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    if(!S.running)return;
+    const cmd=btn.dataset.cmd;
+    S.steerCmd=cmd;
+    if(cmd==='lock-that-in'&&S.frontRunners.length){const idea=S.frontRunners[0];if(!S.locked.includes(idea))S.locked.push(idea);$('sl-locked').innerHTML=S.locked.map(x=>`<div class="state-entry locked">${x}</div>`).join('');}
+    if(cmd==='kill-that'){S.frontRunners=[];$('sl-front').innerHTML='<div class="state-nil">Searching…</div>';}
+    if(cmd==='wrap-it-up'){S.phase=4;setPhaseUI(4);}
+    if(cmd==='move-on'&&S.phase<4){S.phase++;setPhaseUI(S.phase);}
+    btn.classList.add('hit');setTimeout(()=>btn.classList.remove('hit'),500);
   });
 });
 
-function initEpisode(topic) {
-  S = {
-    running: false, paused: false, phase: 0, elapsed: 0,
-    locked: [], frontRunners: [], candidates: [], risks: [], qs: [],
-    turnCount: 0, topic: topic || '',
-    history: [], steerCmd: null,
-  };
-  _buffer = [];
-  $('setup').style.display = 'none';
-  $('episode').classList.add('on');
-  $('steer-section').style.display = 'block';
-  $('steer-btns').style.display = 'flex';
-  $('live-badge').classList.add('on');
-  $('dateline-l').textContent = 'Episode in progress';
+function initEpisode(topic){
+  S={running:false,paused:false,phase:0,elapsed:0,locked:[],frontRunners:[],candidates:[],risks:[],qs:[],turnCount:0,topic:topic||'',history:[],steerCmd:null};
+  $('setup').style.display='none';$('episode').classList.add('on');
+  $('steer-section').style.display='block';$('steer-btns').style.display='flex';
+  $('live-badge').classList.add('on');$('dateline-l').textContent='Episode in progress';
   setPhaseUI(0);
-  ['sl-front','sl-cands','sl-locked','sl-risks','sl-qs'].forEach(id =>
-    $(id).innerHTML = '<div class="state-nil">Loading…</div>'
-  );
-  S.elapsed = 0;
-  timerRef = setInterval(() => {
-    if (!S.paused) {
-      S.elapsed++;
-      const m = Math.floor(S.elapsed/60), sc = S.elapsed%60;
-      $('clock').textContent = `${m}:${sc.toString().padStart(2,'0')}`;
-    }
-  }, 1000);
+  ['sl-front','sl-cands','sl-locked','sl-risks','sl-qs'].forEach(id=>$(id).innerHTML='<div class="state-nil">Loading…</div>');
+  S.elapsed=0;
+  timerRef=setInterval(()=>{if(!S.paused){S.elapsed++;const m=Math.floor(S.elapsed/60),sc=S.elapsed%60;$('clock').textContent=`${m}:${sc.toString().padStart(2,'0')}`;};},1000);
 }
 
-$('go-btn').addEventListener('click', async () => {
-  const topic = $('topic-inp').value.trim();
-  $('go-btn').disabled = true;
-  $('load-hint').classList.add('on');
-  await sleep(800);
-  $('load-hint').classList.remove('on');
-  $('go-btn').disabled = false;
+$('go-btn').addEventListener('click',async()=>{
+  const key=$('api-key-inp').value.trim();
+  if(!key){alert('Please enter your Anthropic API key first.');$('api-key-inp').focus();return;}
+  sessionStorage.setItem('unscripted_key',key);
+  const topic=$('topic-inp').value.trim();
+  $('go-btn').disabled=true;$('load-hint').classList.add('on');
+  await sleep(600);
+  $('load-hint').classList.remove('on');$('go-btn').disabled=false;
   initEpisode(topic);
 });
 
-$('topic-inp').addEventListener('keydown', e => { if (e.key === 'Enter') $('go-btn').click(); });
-document.querySelectorAll('.sug').forEach(s => {
-  s.addEventListener('click', () => { $('topic-inp').value = s.dataset.ex; });
-});
+$('topic-inp').addEventListener('keydown',e=>{if(e.key==='Enter')$('go-btn').click()});
+document.querySelectorAll('.sug').forEach(s=>{s.addEventListener('click',()=>{$('topic-inp').value=s.dataset.ex})});
 </script>
 </body>
 </html>
