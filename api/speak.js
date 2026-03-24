@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   // Your two voice IDs — find these on elevenlabs.io/voice-library
   const VOICES = {
     v: 'cgSgspJ2msm6clMCkdW9',  // Charlotte — warm, expressive (Visionary)
-    o: 'onwK4e9ZLuTAKqWW03F9',  // Daniel — measured, clear (Operator)
+    o: 'NFG5qt843uXKj4pFvR7C',  // Daniel — measured, clear (Operator)
   };
 
   const voiceId = VOICES[speaker] || VOICES.v;
