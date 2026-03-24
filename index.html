@@ -1112,7 +1112,7 @@ function buildSystemPrompt(speaker){
      +(_g<40?' Market gap score low — anchor to a real demand signal.':'')
      +(Math.abs(_o-_g)>20?' Scores diverging — work to close the gap.':'')
     :'';
-  const meta=`\n\nAfter your spoken lines, on a NEW LINE output exactly:\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
+  const meta=`\n\nIMPORTANT: After your spoken lines, output ONLY this on a completely new line — no other text after it:\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"STRING","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
 
   const lenRule=S.turnCount===0
     ? `LENGTH: This is the opening — 3 sentences max. Set the frame, don't resolve it.`
@@ -1149,12 +1149,17 @@ async function generateTurn(speaker){
   if(!resp.ok){const e=await resp.text(); throw new Error(`Generate ${resp.status}: ${e.slice(0,120)}`);}
   const data=await resp.json();
   const raw=(data.text||'').trim();
-  const mi=raw.lastIndexOf('\nMETADATA:');
+
+  // Parse metadata — handle \nMETADATA:, METADATA: on same line, or missing newline
   let text=raw, meta={};
-  if(mi!==-1){
-    text=raw.slice(0,mi).trim();
-    try{meta=JSON.parse(raw.slice(mi+'\nMETADATA:'.length).trim());}catch(e){}
+  const metaMatch=raw.match(/\n?METADATA:\s*(\{[\s\S]*\})\s*$/);
+  if(metaMatch){
+    text=raw.slice(0,raw.indexOf(metaMatch[0])).trim();
+    try{meta=JSON.parse(metaMatch[1]);}catch(e){}
   }
+  // Safety net — strip anything that looks like JSON leak
+  text=text.replace(/\{["']?o["']?\s*:\s*\d[\s\S]*$/,'').trim();
+
   S.history.push({sp:speaker, text});
   return {sp:speaker, text, mood:meta.mood||'', meta};
 }
