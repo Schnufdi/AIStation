@@ -680,6 +680,31 @@ body::after {
 }
 .ns-mood-pip.live { color: var(--gold); }
 
+/* ── Arc Director (right panel) ── */
+.arc-countdown-wrap { display: flex; align-items: baseline; gap: 8px; margin-bottom: 18px; }
+.arc-countdown {
+  font-family: var(--f-disp); font-size: 3rem; letter-spacing: .04em; line-height: 1;
+  color: var(--ink); transition: color .4s;
+}
+.arc-countdown.urgent { color: var(--vis); animation: urgentpulse 1.5s ease-in-out infinite; }
+.arc-countdown-label { font-family: var(--f-mono); font-size: .5rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink4); }
+.arc-timeline { margin-bottom: 16px; }
+.arc-tl-track { height: 3px; background: var(--bg5); position: relative; margin-bottom: 8px; }
+.arc-tl-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--gold); width: 0%; transition: width 1s linear; box-shadow: 0 0 6px var(--gold); }
+.arc-tl-needle { position: absolute; top: 50%; width: 2px; height: 12px; background: var(--gold); transform: translate(-50%,-50%); left: 0%; transition: left 1s linear; box-shadow: 0 0 8px var(--gold); }
+.arc-tl-phases { display: flex; width: 100%; border-top: 1px solid var(--wire); }
+.arc-tl-phase { padding-top: 6px; border-right: 1px solid var(--wire); padding-right: 4px; overflow: hidden; }
+.arc-tl-phase:last-child { border-right: none; }
+.arc-tl-phase-name { font-family: var(--f-mono); font-size: .44rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink4); margin-bottom: 2px; transition: color .4s; }
+.arc-tl-phase-name.active { color: var(--gold); }
+.arc-tl-phase-time { font-family: var(--f-mono); font-size: .4rem; color: var(--ink4); opacity: .45; }
+.arc-nudge { background: var(--bg3); border: 1px solid var(--wire2); border-left: 2px solid var(--gold); padding: 12px 14px; margin-bottom: 18px; transition: border-color .4s; }
+.arc-nudge.urgent { border-left-color: var(--vis); }
+.arc-nudge-phase { font-family: var(--f-mono); font-size: .5rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: 5px; transition: color .4s; }
+.arc-nudge.urgent .arc-nudge-phase { color: var(--vis); }
+.arc-nudge-msg { font-family: var(--f-serif); font-style: italic; font-size: .78rem; color: var(--ink2); line-height: 1.55; }
+.arc-concept-sep { border-top: 1px solid var(--wire); margin-bottom: 16px; }
+
 .cc-label {
   font-family: var(--f-mono); font-size: .48rem;
   letter-spacing: .22em; text-transform: uppercase; color: var(--ink4); margin-bottom: 12px;
@@ -1063,10 +1088,51 @@ body::after {
 
     <!-- RIGHT -->
     <div class="col-r">
-      <div class="c-hed">Concept in Progress</div>
+      <div class="c-hed">Arc Director</div>
+
+      <!-- COUNTDOWN -->
+      <div class="arc-countdown-wrap">
+        <div class="arc-countdown" id="arc-countdown">5:00</div>
+        <div class="arc-countdown-label">remaining</div>
+      </div>
+
+      <!-- LIVE ARC TIMELINE -->
+      <div class="arc-timeline">
+        <div class="arc-tl-track">
+          <div class="arc-tl-fill" id="arc-tl-fill"></div>
+          <div class="arc-tl-needle" id="arc-tl-needle"></div>
+        </div>
+        <div class="arc-tl-phases">
+          <div class="arc-tl-phase" style="width:20%">
+            <div class="arc-tl-phase-name" id="tlp0">Opening</div>
+            <div class="arc-tl-phase-time">0:00–1:00</div>
+          </div>
+          <div class="arc-tl-phase" style="width:40%">
+            <div class="arc-tl-phase-name" id="tlp1">Pressure</div>
+            <div class="arc-tl-phase-time">1:00–3:00</div>
+          </div>
+          <div class="arc-tl-phase" style="width:20%">
+            <div class="arc-tl-phase-name" id="tlp2">Construction</div>
+            <div class="arc-tl-phase-time">3:00–4:00</div>
+          </div>
+          <div class="arc-tl-phase" style="width:20%">
+            <div class="arc-tl-phase-name" id="tlp3">Verdict</div>
+            <div class="arc-tl-phase-time">4:00–5:00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE NUDGE -->
+      <div class="arc-nudge" id="arc-nudge">
+        <div class="arc-nudge-phase" id="arc-nudge-phase">—</div>
+        <div class="arc-nudge-msg" id="arc-nudge-msg">Press play to begin.</div>
+      </div>
+
+      <!-- CONCEPT CARD (below nudge) -->
+      <div class="arc-concept-sep"></div>
       <div class="cc-label">Working concept</div>
       <div class="cc-name" id="cc-name">—</div>
-      <div class="cc-pitch" id="cc-pitch">The idea is forming. Check back as the conversation develops.</div>
+      <div class="cc-pitch" id="cc-pitch">The idea is forming.</div>
       <div class="cc-facts">
         <div class="cf-row"><div class="cf-key">Customer</div><div class="cf-val nil" id="cc-cust">Emerging</div></div>
         <div class="cf-row">
@@ -1353,13 +1419,24 @@ function buildSystemPrompt(speaker){
 
   // Gear change signal — fired once on phase transition
   const gearSignal=S.gearChange
-    ?`\n\nGEAR CHANGE: The conversation just shifted to ${S.gearChange} phase. Acknowledge the shift naturally in your response — don't announce it, just change gear.`
+    ?`\n\nGEAR CHANGE: The conversation just shifted to ${S.gearChange} phase. Change gear — don't announce it.`
     :'';
 
-  // Topic anchor every 4 turns
   const anchor=S.topicAnchor&&S.topic
-    ?`\n\nTOPIC ANCHOR: Original topic is "${S.topic}". If the conversation has drifted, bring it back — naturally, not abruptly.`
+    ?`\n\nTOPIC ANCHOR: Original topic is "${S.topic}". If drifted, bring it back naturally.`
     :'';
+
+  // Real-time clock — AI knows exactly where it is in the 5 minutes
+  const elapsed=S.elapsed||0;
+  const remaining=Math.max(0,300-elapsed);
+  const rm=Math.floor(remaining/60), rs=remaining%60;
+  const em2=Math.floor(elapsed/60), es2=elapsed%60;
+  const timeContext=elapsed>0
+    ?`\n\nTIME: ${em2}:${es2.toString().padStart(2,'0')} elapsed, ${rm}:${rs.toString().padStart(2,'0')} remaining of 5:00.`
+      +(remaining<=60?' UNDER 1 MINUTE — start closing now.':'')
+      +(remaining<=30?' FINAL TURNS — give your verdict this response.':'')
+    :'';
+  const nudge=S.currentNudge?`\n\nDIRECTOR CUE: "${S.currentNudge}"`:'';
 
   const meta=`\n\n---\nSIGNAL BLOCK (never spoken aloud):\nMETADATA:{"o":NUMBER,"g":NUMBER,"ol":"STRING","gl":"STRING","mood":"1-3 word state","cn":NULL_OR_STRING,"cp":NULL_OR_STRING,"cu":NULL_OR_STRING,"cm":NULL_OR_STRING,"cmb":NULL_OR_"sub"|"mkt"|"lic"|"b2b"|"hw","cmo":NULL_OR_STRING,"cv":NULL_OR_"pursue"|"pivot"|"kill","cvw":NULL_OR_STRING,"cmt":NULL_OR_STRING,"crisk":NULL_OR_STRING,"cmvp":NULL_OR_STRING}`;
 
@@ -1400,9 +1477,9 @@ function buildSystemPrompt(speaker){
 
   const persona=PHASE_PERSONA[speaker][phase]||'';
 
-  if(speaker==='v') return `You are The Visionary on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nOften start with "Right," or "Okay so —". Spoken words only.\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase} (turn ${S.turnCount})${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
+  if(speaker==='v') return `You are The Visionary on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nOften start with "Right," or "Okay so —". Spoken words only.\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
 
-  return `You are The Realist on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nOften start with "Sure. And who actually pays for that?" or "Here's what I keep coming back to:". Spoken words only.\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase} (turn ${S.turnCount})${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
+  return `You are The Realist on a sharp unscripted business podcast. ${tone}\n\n${lenRule}\n${voiceRule}\n\n${persona}\n\nOften start with "Sure. And who actually pays for that?" or "Here's what I keep coming back to:". Spoken words only.\n\nTopic: ${S.topic||'open exploration'} | Phase: ${phase}${timeContext}${nudge}${steer}${baro}${gearSignal}${anchor}${moodInstruction}${meta}`;
 }
 
 function buildMessages(speaker){
@@ -1567,16 +1644,6 @@ async function loop(){
     while(S.paused&&S.running) await sleep(200);
     if(!S.running) break;
 
-    // Advance phase — inject gear-change signal on transition
-    const np=PHASE_AT.findIndex(t=>S.turnCount<t);
-    const phase=np===-1?PHASES.length-1:np;
-    if(phase!==S.phase){
-      S.phase=phase;
-      setPhaseUI(phase);
-      // Gear-change signal — next prompt will see this
-      S.gearChange=PHASES[phase];
-    }
-
     // Topic anchor every 4 turns
     if(S.turnCount>0&&S.turnCount%4===0&&S.topic){
       S.topicAnchor=true;
@@ -1617,7 +1684,7 @@ async function loop(){
 
     if(!S.running) break;
     body.querySelectorAll('.tx-turn.fresh').forEach(e=>e.classList.remove('fresh'));
-    if(S.phase>=3&&S.turnCount>=TOTAL_TURNS){ wrapUp(); return; }
+    if(S.elapsed >= 300){ wrapUp(); return; }
 
     // Resolve next turn — retry once if null
     let resolved=nextTurn;
@@ -1672,6 +1739,7 @@ function initEpisode(topic,tone){
     moodHistory:{ v:[], o:[] },
     gearChange:null,
     topicAnchor:false,
+    currentNudge:'',
   };
   $('setup').style.display='none';
   $('episode').classList.add('on');
@@ -1683,14 +1751,97 @@ function initEpisode(topic,tone){
   ['sl-front','sl-cands','sl-locked','sl-risks','sl-qs'].forEach(id=>{
     $(id).innerHTML='<div class="state-nil">Loading…</div>';
   });
-  S.elapsed=0;
-  timerRef=setInterval(()=>{
-    if(!S.paused){
-      S.elapsed++;
-      const m=Math.floor(S.elapsed/60), sc=S.elapsed%60;
-      $('clock').textContent=`${m}:${sc.toString().padStart(2,'0')}`;
+  // Time-based episode: 5 minutes = 300 seconds
+  // Phase windows (seconds): Opening 0-60, Pressure 60-180, Construction 180-240, Verdict 240-300
+  const PHASE_WINDOWS = [60, 180, 240, 300];
+  const PHASE_NUDGES = {
+    'Opening': [
+      'Find the sharpest version of the problem. Who feels it acutely? Why now?',
+      'Don\'t land on ideas yet — explore the territory. 30 seconds left in Opening.',
+    ],
+    'Pressure': [
+      'Throw a specific idea at the wall. Name it, say who it\'s for.',
+      'Challenge it hard. Find the flaw — force a stronger version.',
+      'One idea should be emerging. Start testing it.',
+      '30 seconds left in Pressure — start signalling a direction.',
+    ],
+    'Construction': [
+      'Lock the strongest idea. Get precise: exact customer, how money flows.',
+      'What\'s the unfair advantage? Name the moat.',
+      '30 seconds left — make sure the concept is fully defined.',
+    ],
+    'Verdict': [
+      'Verdict time. One sentence each. Pursue, pivot, or kill.',
+      'Closing — land it. Clear final position, no hedging.',
+      'Final turn. Close it out.',
+    ],
+  };
+
+  S.elapsed = 0;
+  timerRef = setInterval(()=>{
+    if(S.paused || !S.running) return;
+    S.elapsed++;
+
+    // Countdown display
+    const remaining = Math.max(0, 300 - S.elapsed);
+    const rm = Math.floor(remaining/60);
+    const rs = remaining % 60;
+    const cdEl = $('arc-countdown');
+    if(cdEl){
+      cdEl.textContent = `${rm}:${rs.toString().padStart(2,'0')}`;
+      cdEl.className = 'arc-countdown' + (remaining <= 30 ? ' urgent' : '');
     }
-  },1000);
+
+    // Timeline fill + needle
+    const pct = Math.min(100, (S.elapsed / 300) * 100);
+    const fillEl = $('arc-tl-fill');
+    const needleEl = $('arc-tl-needle');
+    if(fillEl) fillEl.style.width = pct + '%';
+    if(needleEl) needleEl.style.left = pct + '%';
+
+    // Time-based phase advancement
+    const newPhase = PHASE_WINDOWS.findIndex(w => S.elapsed < w);
+    const tPhase = newPhase === -1 ? PHASES.length - 1 : newPhase;
+    if(tPhase !== S.phase){
+      S.phase = tPhase;
+      setPhaseUI(tPhase);
+      S.gearChange = PHASES[tPhase];
+    }
+
+    // Active phase labels on timeline
+    ['tlp0','tlp1','tlp2','tlp3'].forEach((id,i)=>{
+      const el = $(id); if(el) el.className = 'arc-tl-phase-name' + (i === S.phase ? ' active' : '');
+    });
+
+    // Nudge message — update every 15 seconds
+    if(S.elapsed % 15 === 0 || S.elapsed === 1){
+      const nudgePhase = PHASES[S.phase];
+      const nudgeList = PHASE_NUDGES[nudgePhase] || [];
+      // Pick nudge based on time within phase
+      const phaseStart = S.phase === 0 ? 0 : PHASE_WINDOWS[S.phase-1];
+      const phaseElapsed = S.elapsed - phaseStart;
+      const nudgeIdx = Math.min(Math.floor(phaseElapsed / 15), nudgeList.length - 1);
+      const nudgeEl = $('arc-nudge');
+      const nudgePhaseEl = $('arc-nudge-phase');
+      const nudgeMsgEl = $('arc-nudge-msg');
+      if(nudgeEl && nudgePhaseEl && nudgeMsgEl){
+        nudgePhaseEl.textContent = nudgePhase;
+        nudgeMsgEl.textContent = nudgeList[nudgeIdx] || '';
+        nudgeEl.className = 'arc-nudge' + (remaining <= 60 ? ' urgent' : '');
+      }
+      // Store current nudge in state so AI can see it
+      S.currentNudge = nudgeList[nudgeIdx] || '';
+    }
+
+    // Also update header clock (elapsed)
+    const em = Math.floor(S.elapsed/60), es = S.elapsed%60;
+    $('clock').textContent = `${em}:${es.toString().padStart(2,'0')}`;
+
+    // Hard stop at 5 minutes
+    if(S.elapsed >= 300 && S.running){
+      wrapUp();
+    }
+  }, 1000);
 }
 
 /* ═══ EVENT LISTENERS ═══ */
