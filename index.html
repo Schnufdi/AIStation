@@ -683,6 +683,7 @@ body::after {
   transition: color .3s;
 }
 .implied-q:first-child { color: var(--ink2); border-left-width: 2px; }
+.implied-q-sub { color: var(--ink4); font-size: .78rem; margin-top: 3px; border-left-color: var(--wire2); }
 
 /* Stage pill + countdown */
 .prog-lbls { display: flex; justify-content: space-between; align-items: center; margin-top: 7px; }
@@ -1580,7 +1581,9 @@ function buildSystemPrompt(speaker){
   const phaseJob=PHASE_JOBS[phase]||PHASE_JOBS['Opening'];
   const persona=`${phaseJob.job}\n${phaseJob[speaker]||''}`;
 
-  const topicLine=S.topic?`DEBATE TOPIC: "${S.topic}"`:'DEBATE TOPIC: open business exploration';
+  const headlinePart = S.episodeHeadline || (S.topic ? S.topic.split(' — ')[0] : 'Open exploration');
+  const questionPart = S.episodeQuestion || (S.topic && S.topic.includes(' — ') ? S.topic.split(' — ').slice(1).join(' — ') : '');
+  const topicLine = `DEBATE TOPIC: "${headlinePart}"${questionPart ? `\nCENTRAL QUESTION: "${questionPart}"` : ''}`;
 
   // Visionary always opens — sets the scene, paints the world, establishes WHY this matters
   // Realist follows — asks the HOW questions that build the business
@@ -1761,10 +1764,14 @@ Generate 2-3 implied questions.`}],
     // Store for use in the opening prompt
     S.impliedQuestions=questions;
 
-    // Show as subtitle — never touch ep-headline
+    // Append implied questions to subtitle — never touch ep-headline
+    // The first question (from the card) stays, implied questions go below
     const subEl=$('ep-subtitle');
     if(subEl){
-      subEl.innerHTML=questions.map(q=>`<span class="implied-q">${q}</span>`).join('');
+      // Keep any existing content (the card question), add implied questions below
+      const existing = subEl.innerHTML;
+      const newPills = questions.map(q=>`<span class="implied-q implied-q-sub">${q}</span>`).join('');
+      subEl.innerHTML = existing + newPills;
     }
   }catch(e){ /* silent */ }
 }
@@ -1890,6 +1897,8 @@ function initEpisode(topic,tone){
     topicAnchor:false,
     currentNudge:'',
     impliedQuestions:[],
+    episodeHeadline:'',
+    episodeQuestion:'',
   };
   $('setup').style.display='none';
   $('episode').classList.add('on');
@@ -1902,14 +1911,29 @@ function initEpisode(topic,tone){
   // Claude will later refine it — but the user should see what they picked right away
   if(topic){
     // Extract just the headline part (before the — separator if present)
-    const headlineText = topic.includes(' — ') ? topic.split(' — ')[0].trim() : topic;
+    // Headline = what the user selected — NEVER touched again after this
+    const parts = topic.split(' — ');
+    const headlineText = parts[0].trim();
+    const questionText = parts.slice(1).join(' — ').trim(); // everything after the first —
+
     $('ep-headline').textContent = headlineText;
-    // Subtitle = the description after the — separator, or generated question
-    const subtitleText = topic.includes(' — ') ? topic.split(' — ')[1].trim() : '';
-    const subEl = $('ep-subtitle');
-    if(subEl) subEl.textContent = subtitleText ? 'Can this become a real business?' : '';
     $('ep-headline-wrap').style.display = 'block';
-    $('ep-headline-label').textContent = 'Today\'s Debate';
+    $('ep-headline-label').textContent = 'Today's Debate';
+
+    // Subtitle = the question from the selected card
+    const subEl = $('ep-subtitle');
+    if(subEl){
+      subEl.innerHTML = '';
+      if(questionText){
+        const span = document.createElement('span');
+        span.className = 'implied-q';
+        span.textContent = questionText;
+        subEl.appendChild(span);
+      }
+    }
+    // Store headline and question separately for use in prompts
+    S.episodeHeadline = headlineText;
+    S.episodeQuestion = questionText;
   }
   setPhaseUI(0);
   ['sl-front','sl-cands','sl-locked','sl-risks','sl-qs'].forEach(id=>{
@@ -1943,8 +1967,11 @@ function initEpisode(topic,tone){
 
   S.elapsed = 0;
   timerRef = setInterval(()=>{
-    if(S.paused || !S.running) return;
-    S.elapsed++;
+    // Visual arc always updates — even when paused, show where we are
+    // State/AI updates only when actively running
+    const isActive = S.running && !S.paused;
+    if(!isActive && S.elapsed === 0) return; // nothing to show yet
+    if(isActive) S.elapsed++;
 
     // Countdown display
     const remaining = Math.max(0, 300 - S.elapsed);
@@ -1963,38 +1990,38 @@ function initEpisode(topic,tone){
     if(fillEl) fillEl.style.width = pct + '%';
     if(needleEl) needleEl.style.left = pct + '%';
 
-    // Time-based phase advancement
-    const newPhase = PHASE_WINDOWS.findIndex(w => S.elapsed < w);
-    const tPhase = newPhase === -1 ? PHASES.length - 1 : newPhase;
-    if(tPhase !== S.phase){
-      S.phase = tPhase;
-      setPhaseUI(tPhase);
-      S.gearChange = PHASES[tPhase];
-    }
-
-    // Active phase labels on timeline
+    // Phase labels always update visually
     ['tlp0','tlp1','tlp2','tlp3'].forEach((id,i)=>{
       const el = $(id); if(el) el.className = 'arc-tl-phase-name' + (i === S.phase ? ' active' : '');
     });
 
-    // Nudge message — update every 15 seconds
-    if(S.elapsed % 15 === 0 || S.elapsed === 1){
-      const nudgePhase = PHASES[S.phase];
-      const nudgeList = PHASE_NUDGES[nudgePhase] || [];
-      // Pick nudge based on time within phase
-      const phaseStart = S.phase === 0 ? 0 : PHASE_WINDOWS[S.phase-1];
-      const phaseElapsed = S.elapsed - phaseStart;
-      const nudgeIdx = Math.min(Math.floor(phaseElapsed / 15), nudgeList.length - 1);
-      const nudgeEl = $('arc-nudge');
-      const nudgePhaseEl = $('arc-nudge-phase');
-      const nudgeMsgEl = $('arc-nudge-msg');
-      if(nudgeEl && nudgePhaseEl && nudgeMsgEl){
-        nudgePhaseEl.textContent = nudgePhase;
-        nudgeMsgEl.textContent = nudgeList[nudgeIdx] || '';
-        nudgeEl.className = 'arc-nudge' + (remaining <= 60 ? ' urgent' : '');
+    if(isActive){
+      // Time-based phase advancement
+      const newPhase = PHASE_WINDOWS.findIndex(w => S.elapsed < w);
+      const tPhase = newPhase === -1 ? PHASES.length - 1 : newPhase;
+      if(tPhase !== S.phase){
+        S.phase = tPhase;
+        setPhaseUI(tPhase);
+        S.gearChange = PHASES[tPhase];
       }
-      // Store current nudge in state so AI can see it
-      S.currentNudge = nudgeList[nudgeIdx] || '';
+
+      // Nudge message — update every 15 seconds
+      if(S.elapsed % 15 === 0 || S.elapsed === 1){
+        const nudgePhase = PHASES[S.phase];
+        const nudgeList = PHASE_NUDGES[nudgePhase] || [];
+        const phaseStart = S.phase === 0 ? 0 : PHASE_WINDOWS[S.phase-1];
+        const phaseElapsed = S.elapsed - phaseStart;
+        const nudgeIdx = Math.min(Math.floor(phaseElapsed / 15), nudgeList.length - 1);
+        const nudgeEl = $('arc-nudge');
+        const nudgePhaseEl = $('arc-nudge-phase');
+        const nudgeMsgEl = $('arc-nudge-msg');
+        if(nudgeEl && nudgePhaseEl && nudgeMsgEl){
+          nudgePhaseEl.textContent = nudgePhase;
+          nudgeMsgEl.textContent = nudgeList[nudgeIdx] || '';
+          nudgeEl.className = 'arc-nudge' + (remaining <= 60 ? ' urgent' : '');
+        }
+        S.currentNudge = nudgeList[nudgeIdx] || '';
+      }
     }
 
     // Also update header clock (elapsed)
