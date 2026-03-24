@@ -1176,15 +1176,17 @@ function buildSystemPrompt(speaker){
 }
 
 function buildMessages(speaker){
-  const msgs=[];
-  for(const h of S.history){
-    msgs.push({role:h.sp===speaker?'assistant':'user', content:h.text});
-  }
-  if(msgs.length===0){
+  // Transcript format: one user message with the full conversation visible.
+  // The model sees exactly who said what, making "respond to the last line" unambiguous.
+  if(S.history.length===0){
     const angle=OPENING_ANGLES[Math.floor(Math.random()*OPENING_ANGLES.length)];
-    msgs.push({role:'user', content:`Begin. Open with something sharp about: ${angle}`});
+    return [{role:'user', content:`Begin the conversation. Your opening line should tackle this angle: ${angle}`}];
   }
-  return msgs;
+  const myName   =speaker==='v'?'VISIONARY':'OPERATOR';
+  const transcript=S.history.map(h=>(h.sp==='v'?'[VISIONARY]':'[OPERATOR]')+': '+h.text).join('\n\n');
+  const lastLabel =S.history[S.history.length-1].sp==='v'?'VISIONARY':'OPERATOR';
+  const steerLine =S.steerCmd?`\n\nLISTENER STEERING: "${S.steerCmd}" — let this shape your response naturally.`:'';
+  return [{role:'user', content:`Here is the conversation so far:\n\n${transcript}\n\n---\nYou are ${myName}. ${lastLabel} just spoke. Respond directly to their last point.${steerLine}`}];
 }
 
 async function generateTurn(speaker){
@@ -1195,22 +1197,25 @@ async function generateTurn(speaker){
     body:JSON.stringify({
       system:buildSystemPrompt(speaker),
       messages:buildMessages(speaker),
-      maxTokens: S.turnCount === 0 ? 300 : 180,
+      maxTokens: S.turnCount===0 ? 320 : 200,
     }),
   });
   if(!resp.ok){const e=await resp.text(); throw new Error(`Generate ${resp.status}: ${e.slice(0,120)}`);}
   const data=await resp.json();
   const raw=(data.text||'').trim();
 
-  // Parse metadata — handle \nMETADATA:, METADATA: on same line, or missing newline
+  // Parse metadata — robust match regardless of newline format
   let text=raw, meta={};
-  const metaMatch=raw.match(/\n?METADATA:\s*(\{[\s\S]*\})\s*$/);
+  const metaMatch=raw.match(/\n?METADATA:\s*(\{[\s\S]*?\})\s*$/);
   if(metaMatch){
     text=raw.slice(0,raw.indexOf(metaMatch[0])).trim();
     try{meta=JSON.parse(metaMatch[1]);}catch(e){}
   }
-  // Safety net — strip anything that looks like JSON leak
-  text=text.replace(/\{["']?o["']?\s*:\s*\d[\s\S]*$/,'').trim();
+  // Strip any leaked JSON from the spoken text
+  text=text.replace(/\{["'\s]*o["'\s]*:\s*\d[\s\S]*$/,'').trim();
+
+  // Guard: empty text cascades into blank rows — skip and return null
+  if(!text) return null;
 
   S.history.push({sp:speaker, text});
   return {sp:speaker, text, mood:meta.mood||'', meta};
@@ -1295,10 +1300,12 @@ async function loop(){
 
   // Generate headline in parallel with first turn
   showTyping('v');
-  const [current] = await Promise.all([
+  const [firstTurn] = await Promise.all([
     generateTurn('v'),
     generateHeadline(),
   ]);
+  if(!firstTurn){ S.running=false; $('play-btn').textContent='▶'; return; }
+  let current=firstTurn;
   nextSp='o';
   let nextPromise=generateTurn('o').catch(()=>null);
   nextSp='v';
@@ -1352,7 +1359,14 @@ async function loop(){
 
     if(S.phase>=4&&S.turnCount>=22){wrapUp(); return}
 
-    current=nextTurn||await generateTurn(nextSp).catch(err=>{throw err});
+    // nextTurn may be null if text was empty — retry once before giving up
+    let resolved = nextTurn;
+    if(!resolved){
+      resolved = await generateTurn(nextSp).catch(()=>null);
+    }
+    if(!resolved){ S.running=false; break; } // give up cleanly
+
+    current=resolved;
     nextSp=nextSp==='v'?'o':'v';
     nextPromise=generateTurn(nextSp).catch(()=>null);
     nextSp=nextSp==='v'?'o':'v';
